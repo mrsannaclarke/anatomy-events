@@ -26,10 +26,6 @@ export default function TabLayout() {
     config,
   } = useAuthFramework();
 
-  if (isHydrating) {
-    return <AppLoadingScreen />;
-  }
-
   if (status === 'signed_out') {
     return (
       <View style={styles.authContainer}>
@@ -57,6 +53,10 @@ export default function TabLayout() {
         )}
       </View>
     );
+  }
+
+  if (isHydrating) {
+    return <AppLoadingScreen />;
   }
 
   const canViewAdminTab = canAccessAdminToolsForViewer;

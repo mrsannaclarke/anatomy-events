@@ -335,7 +335,8 @@
       "Google sign-in hang guard (2026-04-17): added a 20-second timeout around `promptAsync()` so login spinner cannot run indefinitely; timed-out attempts now show a retry message.",
       "Generators & Files permission/filter update (2026-04-17): non-admin staff now only see art upload/save controls plus the blue `Copy Email to Clipboard` action; generated contract/license open/email actions are admin/super-admin only. Added tap-glow feedback across all buttons on this page.",
       "Payout display consistency pass (2026-04-17): Pay Schedule completed summary and by-year totals now show only Total/Artist/Counter (modifier rollup removed). Added client-name fallback when opening Staff Assignements from payout pages by passing `clientName` query, and standardized payout-page event-type icon circles on Pay + Payout Ledger card headers.",
-      "Pay card interaction trim (2026-04-17): removed client-name click-through from Pay Schedule `Assigned Events` cards so names are display-only and no longer open Staff Assignements."
+      "Pay card interaction trim (2026-04-17): removed client-name click-through from Pay Schedule `Assigned Events` cards so names are display-only and no longer open Staff Assignements.",
+      "Startup loading-gate update (2026-04-17): removed root pre-auth loading-screen boot gate and changed tabs auth gating so signed-out users see login immediately; loading screen now appears only during signed-in hydration."
     ],
     "production_policy": {
       "public_anyone_with_link": false,

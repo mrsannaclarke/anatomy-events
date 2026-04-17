@@ -1,12 +1,9 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { EventsProvider } from '@/context/events-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthFrameworkProvider } from '@/lib/auth-framework';
@@ -17,8 +14,6 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [fontsLoaded, fontLoadError] = useFonts(MaterialIcons.font);
-  const [bootReady, setBootReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -53,21 +48,6 @@ export default function RootLayout() {
     }
     touchIcon.setAttribute('href', iconHref);
   }, []);
-
-  useEffect(() => {
-    const hardTimeout = setTimeout(() => setBootReady(true), 3200);
-    return () => clearTimeout(hardTimeout);
-  }, []);
-
-  useEffect(() => {
-    if (!fontsLoaded && !fontLoadError) return;
-    const timeout = setTimeout(() => setBootReady(true), 850);
-    return () => clearTimeout(timeout);
-  }, [fontLoadError, fontsLoaded]);
-
-  if (!bootReady) {
-    return <AppLoadingScreen />;
-  }
 
   return (
     <AuthFrameworkProvider>
