@@ -36,7 +36,7 @@ export const GUEST_PASSWORD = 'Tomma3021!';
 // - Excludes Sienna per request
 // - Adds Veda
 export const STAFF_PERMISSIONS: StaffPermission[] = [
-  { name: 'Tomma', authType: 'artist', roles: ['artist', 'counter'] },
+  { name: 'Tomma', authType: 'admin', roles: ['artist', 'counter', 'admin'] },
   { name: 'Shy', authType: 'artist', roles: ['artist', 'counter'] },
   { name: 'Megan', authType: 'artist', roles: ['artist', 'counter'] },
   { name: 'Sisi', authType: 'artist', roles: ['artist', 'counter'] },
@@ -61,7 +61,7 @@ export const GUEST_ALLOWED_NAMES: string[] = STAFF_PERMISSIONS.map((entry) => en
 // Google allowlist scaffold mirrored from Pickles (Sienna removed).
 // This is a future-auth config only; login is not enforced right now.
 export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
-  { email: 'tattoosbytomma@gmail.com', displayName: 'Tomma', matchNames: ['Tomma'], canViewInfo: false, authType: 'artist' },
+  { email: 'tattoosbytomma@gmail.com', displayName: 'Tomma', matchNames: ['Tomma'], canViewInfo: true, authType: 'admin' },
   { email: 'ladyshytattoos@gmail.com', displayName: 'Lady Shy', matchNames: ['Lady Shy', 'Shy'], canViewInfo: false, authType: 'artist' },
   {
     email: 'events.anatomytattoo@gmail.com',
@@ -96,10 +96,10 @@ export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
   { email: 'breannenorling@gmail.com', displayName: 'Bree', matchNames: ['Bree', 'Breanne'], canViewInfo: true, authType: 'admin' },
   {
     email: 'anatomytattoo@gmail.com',
-    displayName: 'Megan',
-    matchNames: ['Megan'],
-    canViewInfo: false,
-    authType: 'artist',
+    displayName: 'Tomma',
+    matchNames: ['Tomma'],
+    canViewInfo: true,
+    authType: 'admin',
   },
   { email: 'mrs.annaclarke@gmail.com', displayName: 'Anna', matchNames: ['Anna'], canViewInfo: true, authType: 'super_admin' },
   { email: 'admin@anatomytattoo.com', displayName: 'Anna', matchNames: ['Anna'], canViewInfo: true, authType: 'super_admin' },
