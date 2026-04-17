@@ -18,7 +18,7 @@ export default function TabLayout() {
     isHydrating,
     viewerName,
     effectiveAuthType,
-    canAccessAdminTools,
+    canAccessAdminToolsForViewer,
     resolvePermissionsForName,
     signInWithGoogle,
     signOut,
@@ -59,7 +59,8 @@ export default function TabLayout() {
     );
   }
 
-  const canViewAdminTab = canAccessAdminTools;
+  const canViewAdminTab = canAccessAdminToolsForViewer;
+  const canViewPricingTab = canAccessAdminToolsForViewer;
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canViewPayTab =
     status === 'bypass' ||
@@ -109,6 +110,7 @@ export default function TabLayout() {
         options={{
           title: 'Pricing Calculator',
           tabBarLabel: 'Pricing',
+          href: canViewPricingTab ? undefined : null,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="dollarsign" color={color} />,
         }}
       />

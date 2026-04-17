@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { getCounterStaffChargeFromSchedule, getPricingScheduleRow } from '@/constants/pricing-schedule';
 import { useEvents } from '@/context/events-context';
 import { lookupDrivingDistanceMiles } from '@/lib/address-distance';
+import { useAuthFramework } from '@/lib/auth-framework';
 import {
   PRICING_SCHEDULE_BY_YEAR,
   computeEventTotals,
@@ -149,6 +150,7 @@ function ChoiceChips({
 export default function PricingScreen() {
   const router = useRouter();
   const { events, createEvent, updateEvent, setSelectedEventId } = useEvents();
+  const { canAccessAdminToolsForViewer } = useAuthFramework();
   const yearOptions = useMemo(
     () =>
       Object.keys(PRICING_SCHEDULE_BY_YEAR)
@@ -512,6 +514,20 @@ export default function PricingScreen() {
         setIsSavingEntry(false);
       }
     });
+  }
+
+  if (!canAccessAdminToolsForViewer) {
+    return (
+      <View style={styles.page}>
+        <View style={styles.card}>
+          <ThemedText style={styles.sectionTitle}>Pricing Calculator</ThemedText>
+          <ThemedText style={styles.helperText}>This page is only visible to admins and super admins.</ThemedText>
+          <Pressable style={styles.secondaryButton} onPress={() => router.replace('/')}>
+            <ThemedText style={styles.secondaryButtonText}>Back to Events</ThemedText>
+          </Pressable>
+        </View>
+      </View>
+    );
   }
 
   return (

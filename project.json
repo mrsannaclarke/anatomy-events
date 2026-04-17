@@ -329,7 +329,8 @@
       "Pay dropdown restriction update (2026-04-17): person-picker dropdown on Pay Schedule is now admin/super-admin only; staff/non-admin users always see their own payout schedule with no person dropdown.",
       "Event-card action restriction update (2026-04-17): non-admin users now see only `Notes` and `Generators & Files` actions on roster cards; `Client Details` and `Staff Assignements` actions are admin/super-admin only.",
       "Pay card role-position tweak (2026-04-17): moved `Role: ...` under the client header on the left side of payout cards, sharing the same row as the right-aligned payout breakdown.",
-      "Viewer-effective permission hardening (2026-04-17): added `canAccessAdminToolsForViewer` in auth context and switched Events, Pay, Client Details, Notes status editing, Audit Log, Admin Promotion, and Payout Ledger gating to viewer-effective admin checks; in `View As` non-admin mode admin tools are hidden and Staff Assignements route is blocked."
+      "Viewer-effective permission hardening (2026-04-17): added `canAccessAdminToolsForViewer` in auth context and switched Events, Pay, Client Details, Notes status editing, Audit Log, Admin Promotion, and Payout Ledger gating to viewer-effective admin checks; in `View As` non-admin mode admin tools are hidden and Staff Assignements route is blocked.",
+      "Admin-only tab hardening (2026-04-17): Pricing Calculator and Admin tabs are now hidden unless viewer-effective role is admin/super-admin, and Pricing route itself now blocks non-admin viewers with a restricted-access message."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
