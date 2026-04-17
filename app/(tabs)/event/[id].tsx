@@ -11,6 +11,7 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
+import { STAFF_PERMISSIONS } from '@/constants/auth-permissions';
 import {
   getContrastTextForHex,
   getStaffColor,
@@ -82,6 +83,9 @@ const COUNTER_STAFF_OPTIONS = [
   'Kevin',
   'Veda',
 ];
+const DEFAULT_ARTIST_OPTIONS = STAFF_PERMISSIONS.filter((entry) => entry.roles.includes('artist')).map(
+  (entry) => entry.name,
+);
 
 const ARTIST_ALIAS_TO_CANONICAL: Record<string, string> = {
   tomma: 'Tomma',
@@ -227,7 +231,7 @@ export default function EventDetailScreen() {
   const canAccessStaffAssignments = canAccessAdminToolsForViewer || Boolean(viewerPermission?.roles.includes('admin'));
   const [sheetSyncStatus, setSheetSyncStatus] = useState('');
   const [sheetSyncError, setSheetSyncError] = useState('');
-  const [availableArtistNames, setAvailableArtistNames] = useState<string[]>([]);
+  const [availableArtistNames, setAvailableArtistNames] = useState<string[]>(DEFAULT_ARTIST_OPTIONS);
   const [artistLoadError, setArtistLoadError] = useState('');
   const [artistSelectionNote, setArtistSelectionNote] = useState('');
   const [counterSelectionNote, setCounterSelectionNote] = useState('');
@@ -461,10 +465,12 @@ export default function EventDetailScreen() {
         setArtistLoadError('');
         const names = await pullActiveArtistsFromSheet(SHEET_SYNC_CONFIG);
         if (!isMounted) return;
-        setAvailableArtistNames(names);
+        setAvailableArtistNames((current) =>
+          mergeUniqueNames(names, mergeUniqueNames(current, DEFAULT_ARTIST_OPTIONS)),
+        );
       } catch (error) {
         if (!isMounted) return;
-        setAvailableArtistNames([]);
+        setAvailableArtistNames((current) => mergeUniqueNames(current, DEFAULT_ARTIST_OPTIONS));
         setArtistLoadError(error instanceof Error ? error.message : 'Unable to load available artists.');
       }
     }
@@ -474,6 +480,17 @@ export default function EventDetailScreen() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!selectedArtistNames.length) return;
+    setAvailableArtistNames((current) => {
+      const merged = mergeUniqueNames(current, selectedArtistNames);
+      if (merged.length === current.length && merged.every((name, index) => name === current[index])) {
+        return current;
+      }
+      return merged;
+    });
+  }, [selectedArtistNames]);
 
   useEffect(() => {
     if (!eventId) return;

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -18,6 +18,7 @@ import {
   type CalendarMatch,
 } from '@/lib/calendar-sync';
 import { computeEventTotals, formatCurrency } from '@/lib/event-math';
+import { readLatestCommunicationByEventIds, type EventActivityEntry } from '@/lib/event-activity-log';
 import { pullEventsFromSheet } from '@/lib/sheets-sync';
 import type { EventRecord } from '@/types/events';
 
@@ -321,6 +322,19 @@ function buildLedgerDateLine(event: EventRecord): string {
   return parts.join(' • ');
 }
 
+function formatCommunicationTimestamp(value: string): string {
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return value;
+  return new Date(parsed).toLocaleString();
+}
+
+function formatCommunicationPreview(entry: EventActivityEntry): string {
+  const normalizedMessage = entry.message.replace(/\s+/g, ' ').trim();
+  const previewMessage =
+    normalizedMessage.length > 300 ? `${normalizedMessage.slice(0, 300).trimEnd()}…` : normalizedMessage;
+  return `${entry.actor} • ${formatCommunicationTimestamp(entry.timestamp)} • ${previewMessage}`;
+}
+
 export default function EventsScreen() {
   const router = useRouter();
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
@@ -329,6 +343,9 @@ export default function EventsScreen() {
   const [sheetSyncStatus, setSheetSyncStatus] = useState('Loading events from sheet...');
   const [sheetSyncError, setSheetSyncError] = useState('');
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
+  const [latestCommunicationByEventId, setLatestCommunicationByEventId] = useState<Record<string, EventActivityEntry>>(
+    {},
+  );
   const [actionFeedbackKey, setActionFeedbackKey] = useState<string | null>(null);
   const hasAttemptedAutoPull = useRef(false);
   const actionFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -345,10 +362,16 @@ export default function EventsScreen() {
       return aDate - bDate;
     };
 
-  const openEvents = events.filter((event) => !isClosedProject(event));
-  const depositCompletedEvents = openEvents.filter(isDepositCompleted).sort(sortByEventDate);
-  const otherOpenEvents = openEvents.filter((event) => !isDepositCompleted(event)).sort(sortByEventDate);
-  const visibleEvents = [...depositCompletedEvents, ...otherOpenEvents];
+  const visibleEvents = useMemo(() => {
+    const openEvents = events.filter((event) => !isClosedProject(event));
+    const depositCompletedEvents = openEvents.filter(isDepositCompleted).sort(sortByEventDate);
+    const otherOpenEvents = openEvents.filter((event) => !isDepositCompleted(event)).sort(sortByEventDate);
+    return [...depositCompletedEvents, ...otherOpenEvents];
+  }, [events]);
+  const visibleEventIdsKey = useMemo(
+    () => visibleEvents.map((event) => event.id).filter(Boolean).join('|'),
+    [visibleEvents],
+  );
   const hiddenClosedCount = Math.max(events.length - visibleEvents.length, 0);
 
   function openEvent(
@@ -450,6 +473,27 @@ export default function EventsScreen() {
     };
   }, [events]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadLatestCommunicationPreviews() {
+      const visibleEventIds = visibleEventIdsKey ? visibleEventIdsKey.split('|').filter(Boolean) : [];
+      if (!visibleEventIds.length) {
+        setLatestCommunicationByEventId({});
+        return;
+      }
+
+      const latestByEventId = await readLatestCommunicationByEventIds(visibleEventIds);
+      if (!isMounted) return;
+      setLatestCommunicationByEventId(latestByEventId);
+    }
+
+    void loadLatestCommunicationPreviews();
+    return () => {
+      isMounted = false;
+    };
+  }, [visibleEventIdsKey]);
+
   useEffect(
     () => () => {
       if (actionFeedbackTimeoutRef.current) {
@@ -524,6 +568,7 @@ export default function EventsScreen() {
         const venueDisplayLabel = getVenueDisplayLabel(event.venueName, event.eventAddress);
         const formattedAddress = locationIsTbd ? '' : formatAddressForRoster(event.eventAddress);
         const venueLinkLabel = event.venueName.trim() || 'Map Link';
+        const latestCommunication = latestCommunicationByEventId[event.id] || null;
         return (
           <View key={event.id} style={styles.card}>
             <View style={styles.cardTopRow}>
@@ -615,6 +660,13 @@ export default function EventsScreen() {
               <ThemedText style={styles.editHint}>
                 Last Appt: {formatCalendarMatchDate(lastAppointment.start)}
               </ThemedText>
+            ) : null}
+            {latestCommunication ? (
+              <View style={styles.communicationPreviewBox}>
+                <ThemedText style={styles.communicationPreviewText}>
+                  {formatCommunicationPreview(latestCommunication)}
+                </ThemedText>
+              </View>
             ) : null}
             <View style={styles.cardBottomActionRow}>
               <View style={styles.actionIconRow}>
@@ -992,5 +1044,19 @@ const styles = StyleSheet.create({
     marginTop: 6,
     color: '#7f93ab',
     fontSize: 13,
+  },
+  communicationPreviewBox: {
+    marginTop: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#4b5f89',
+    backgroundColor: '#1b2436',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  communicationPreviewText: {
+    color: '#dce7ff',
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

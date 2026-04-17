@@ -13,6 +13,8 @@ export type EventActivityEntry = {
   statusTo?: string;
 };
 
+export type EventLatestCommunicationMap = Record<string, EventActivityEntry>;
+
 const EVENT_ACTIVITY_STORAGE_KEY = 'anatomy_events_activity_log_v1';
 const EVENT_ACTIVITY_MAX_ENTRIES = 2000;
 
@@ -51,6 +53,35 @@ export async function readEventActivityLog(eventId: string): Promise<EventActivi
   if (!key) return [];
   const all = await readAllEventActivityEntries();
   return all.filter((entry) => entry.eventId === key);
+}
+
+export async function readLatestCommunicationByEventIds(eventIds: string[]): Promise<EventLatestCommunicationMap> {
+  const requested = Array.from(new Set(eventIds.map((entry) => String(entry || '').trim()).filter(Boolean)));
+  if (requested.length === 0) return {};
+
+  const requestedSet = new Set(requested);
+  const all = await readAllEventActivityEntries();
+  const latestByEventId: EventLatestCommunicationMap = {};
+
+  all.forEach((entry) => {
+    if (entry.type !== 'staff_note') return;
+    if (!requestedSet.has(entry.eventId)) return;
+
+    const existing = latestByEventId[entry.eventId];
+    if (!existing) {
+      latestByEventId[entry.eventId] = entry;
+      return;
+    }
+
+    const existingTimestamp = Date.parse(existing.timestamp);
+    const nextTimestamp = Date.parse(entry.timestamp);
+    if (Number.isNaN(existingTimestamp) || Number.isNaN(nextTimestamp)) return;
+    if (nextTimestamp > existingTimestamp) {
+      latestByEventId[entry.eventId] = entry;
+    }
+  });
+
+  return latestByEventId;
 }
 
 export async function appendEventActivityLog(input: {
