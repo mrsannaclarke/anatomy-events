@@ -47,7 +47,7 @@
       "credit_flow": "manual credit in Staff Directory -> push outbound to target artist sheets (not inbound pull)"
     },
     "web_app_deployment_id": "AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA",
-    "web_app_deployment_version": 3
+    "web_app_deployment_version": 6
   },
   "current_rules": {
     "home_page": {
@@ -390,7 +390,8 @@
       "Clean-source V2 credit architecture upgrade (2026-04-17): staging script includes dedicated `Credit Sources` tab for per-artist external-sheet mappings. Initial architecture now finalized to outbound credit writes from `Staff Directory.Current Credit` into mapped target sheets.",
       "Clean-source V2 deployment advanced to `@2` (2026-04-17): redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with clean architecture + artist credit-source support. App still not pointed to staging source.",
       "Clean-source V2 credit-direction update (2026-04-17): changed credit integration to outbound writes. `Staff Directory.Current Credit` is now source-of-truth, and `Credit Sources` stores target spreadsheet/tab/cell mappings for `v2PushStaffCredits` to write credits into external artist sheets.",
-      "Clean-source V2 deployment advanced to `@3` (2026-04-17): redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with outbound credit-write flow (`v2PushStaffCredits`). App still not pointed to staging source."
+      "Clean-source V2 deployment advanced to `@6` (2026-04-17): force-pushed latest script and redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with outbound credit-write flow (`v2PushStaffCredits`) plus staff-license sync (`v2SyncStaffLicensesFromArtistSource`). App still not pointed to staging source.",
+      "Clean-source V2 staff-license sync (2026-04-17): added `v2SyncStaffLicensesFromArtistSource` to pull `Artist License Source` records into `Staff Directory` (`ED Entry`, aliases, license number, license active, assignment) so TFL generation data is preserved in the new source model."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
