@@ -17,7 +17,7 @@
     "web_app_exec_url": "https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec"
   },
   "staging_next_source_links": {
-    "status": "staging_script_v2_deployed_not_connected_to_app",
+    "status": "staging_script_v2_credit_push_not_connected_to_app",
     "cutover_requires_explicit_approval": true,
     "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1312428019#gid=1312428019",
     "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
@@ -41,11 +41,13 @@
       "v2_features": [
         "normalized tabs: Events/Staff Directory/Pricing Rules/Credit Sources/Generated Files/Audit Log/Settings",
         "seed core data action (staff + pricing + artist credit placeholders)",
-        "artist credit snapshot pull from external spreadsheets via Credit Sources mapping",
+        "artist credit outbound write to external spreadsheets via Credit Sources mapping",
         "legacy Event Details -> Events migration helper with update/insert behavior"
-      ]
+      ],
+      "credit_flow": "manual credit in Staff Directory -> push outbound to target artist sheets (not inbound pull)"
     },
-    "web_app_deployment_id": "AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA"
+    "web_app_deployment_id": "AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA",
+    "web_app_deployment_version": 3
   },
   "current_rules": {
     "home_page": {
@@ -385,8 +387,10 @@
       "Sparkle artist-palette upgrade (2026-04-17): sparkles now derive from the actual artist color map (auto-collected from artist staff permissions), with higher star count, brighter tinting, and faster twinkle cadence for a more colorful animated background.",
       "Clean-source V2 scaffold (2026-04-17): created isolated Apps Script workspace at `/Users/Anna/Documents/Project Files/Event Details Project/clean-source-v2` targeting new script `1SdEeFX...` + sheet `1iT9aWn...`, with reset/bootstrap, legacy migration helper, and staging API endpoints. App source link remains unchanged pending explicit cutover approval.",
       "Clean-source V2 deployment checkpoint (2026-04-17): pushed scaffold to new Apps Script project (`1SdEeFX...`) and created deployment `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` for staging validation only. App remains on current production source until explicit cutover approval.",
-      "Clean-source V2 credit architecture upgrade (2026-04-17): staging script now includes dedicated `Credit Sources` tab and refresh flow to pull per-artist credit values from external sheets/cells, writing snapshots to Staff Directory. This directly supports artist pay-sheet credit links while keeping source isolated from production app linkage.",
-      "Clean-source V2 deployment advanced to `@2` (2026-04-17): redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with clean architecture + artist credit-source support. App still not pointed to staging source."
+      "Clean-source V2 credit architecture upgrade (2026-04-17): staging script includes dedicated `Credit Sources` tab for per-artist external-sheet mappings. Initial architecture now finalized to outbound credit writes from `Staff Directory.Current Credit` into mapped target sheets.",
+      "Clean-source V2 deployment advanced to `@2` (2026-04-17): redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with clean architecture + artist credit-source support. App still not pointed to staging source.",
+      "Clean-source V2 credit-direction update (2026-04-17): changed credit integration to outbound writes. `Staff Directory.Current Credit` is now source-of-truth, and `Credit Sources` stores target spreadsheet/tab/cell mappings for `v2PushStaffCredits` to write credits into external artist sheets.",
+      "Clean-source V2 deployment advanced to `@3` (2026-04-17): redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with outbound credit-write flow (`v2PushStaffCredits`). App still not pointed to staging source."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
