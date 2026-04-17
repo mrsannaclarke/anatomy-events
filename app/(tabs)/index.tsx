@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { CALENDAR_SYNC_CONFIG } from '@/constants/calendar-sync';
 import { getStaffColor } from '@/constants/staff-colors';
 import { useEvents } from '@/context/events-context';
@@ -370,7 +371,7 @@ export default function EventsScreen() {
     actionFeedbackTimeoutRef.current = setTimeout(() => {
       setActionFeedbackKey((current) => (current === nextKey ? null : current));
       actionFeedbackTimeoutRef.current = null;
-    }, 260);
+    }, 3000);
   }
 
   function handleCreateEvent() {
@@ -701,7 +702,7 @@ export default function EventsScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,

@@ -5,9 +5,10 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Linking, Platform, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Image, Linking, Platform, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { useEvents } from '@/context/events-context';
 import { useAuthFramework } from '@/lib/auth-framework';
@@ -963,7 +964,7 @@ export default function EventGeneratorsFilesScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
@@ -974,7 +975,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   topRow: {
     flexDirection: 'row',

@@ -1,9 +1,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { useAuthFramework } from '@/lib/auth-framework';
 
@@ -95,7 +96,7 @@ export default function AdminScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,

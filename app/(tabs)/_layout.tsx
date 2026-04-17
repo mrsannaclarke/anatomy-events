@@ -1,10 +1,11 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { Colors } from '@/constants/theme';
@@ -208,7 +209,7 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   authContainer: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
     alignItems: 'flex-start',
     justifyContent: 'center',
     padding: 24,

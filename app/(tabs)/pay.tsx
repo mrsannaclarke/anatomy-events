@@ -1,8 +1,9 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { getHistoricalArtistBreakdownOverride } from '@/constants/historical-payout-truth';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
@@ -524,7 +525,7 @@ export default function PayScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,

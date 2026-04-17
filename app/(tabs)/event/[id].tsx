@@ -2,7 +2,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import {
   getContrastTextForHex,
   getStaffColor,
@@ -915,7 +915,7 @@ export default function EventDetailScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
@@ -949,7 +949,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   hero: {
     backgroundColor: '#111a24',

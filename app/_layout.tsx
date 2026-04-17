@@ -2,8 +2,10 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { RainbowSparkleBackground } from '@/components/ui/rainbow-sparkle-background';
 import { EventsProvider } from '@/context/events-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthFrameworkProvider } from '@/lib/auth-framework';
@@ -53,13 +55,22 @@ export default function RootLayout() {
     <AuthFrameworkProvider>
       <EventsProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
+          <View style={styles.appShell}>
+            <RainbowSparkleBackground />
+            <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'How It Works' }} />
-          </Stack>
+            </Stack>
+          </View>
           <StatusBar style="auto" />
         </ThemeProvider>
       </EventsProvider>
     </AuthFrameworkProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  appShell: {
+    flex: 1,
+  },
+});

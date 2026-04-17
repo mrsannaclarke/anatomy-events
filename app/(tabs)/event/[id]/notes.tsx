@@ -1,9 +1,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { CALENDAR_SYNC_CONFIG } from '@/constants/calendar-sync';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { useEvents } from '@/context/events-context';
@@ -89,7 +90,7 @@ export default function EventNotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { events, setSelectedEventId, updateEvent } = useEvents();
-  const { status: authStatus, user, viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
+  const { status: authStatus, user, effectiveAuthType } = useAuthFramework();
 
   const [activityEntries, setActivityEntries] = useState<EventActivityEntry[]>([]);
   const [isLoadingActivity, setIsLoadingActivity] = useState(true);
@@ -104,8 +105,7 @@ export default function EventNotesScreen() {
   const event = events.find((item) => item.id === id);
   const eventId = event?.id || '';
   const actorName = useMemo(() => resolveActorName({ status: authStatus, user }), [authStatus, user]);
-  const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
-  const canEditStatus = canAccessAdminToolsForViewer || Boolean(viewerPermission?.roles.includes('admin'));
+  const canEditStatus = effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
 
   useEffect(() => {
     if (!eventId) return;
@@ -360,7 +360,7 @@ export default function EventNotesScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   topRow: {
     flexDirection: 'row',

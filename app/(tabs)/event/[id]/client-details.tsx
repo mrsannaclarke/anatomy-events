@@ -1,9 +1,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { getPricingScheduleRow, parsePricingPlanYear } from '@/constants/pricing-schedule';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { useEvents } from '@/context/events-context';
@@ -698,7 +699,7 @@ export default function EventClientDetailsScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
@@ -709,7 +710,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   topRow: {
     flexDirection: 'row',

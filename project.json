@@ -339,7 +339,8 @@
       "Startup loading-gate update (2026-04-17): removed root pre-auth loading-screen boot gate and changed tabs auth gating so signed-out users see login immediately; loading screen now appears only during signed-in hydration.",
       "Tomma admin mapping update (2026-04-17): `anatomytattoo@gmail.com` now maps to Tomma (`admin`) and Tomma is configured as admin in both staff permissions and allowlist (`tattoosbytomma@gmail.com` + `anatomytattoo@gmail.com`); temporary forced non-admin override for `anatomytattoo@gmail.com` was removed.",
       "Admin promotion roster grouping (2026-04-17): Admin Promotion page now groups allowlisted rows by person display name, shows all login emails on the same row, and applies promote/remove actions across that person’s grouped login emails.",
-      "Admin capability policy update (2026-04-17): admins can promote staff to admin but cannot remove admin promotions; only super admins can remove promotions. `anatomytattoo@gmail.com` remains admin for Admin/Audit access but is now blocked from payout surfaces (Pay tab + Payout Ledger) and from admin-promotion actions."
+      "Admin capability policy update (2026-04-17): admins can promote staff to admin but cannot remove admin promotions; only super admins can remove promotions. `anatomytattoo@gmail.com` remains admin for Admin/Audit access but is now blocked from payout surfaces (Pay tab + Payout Ledger) and from admin-promotion actions.",
+      "UI polish + role lock pass (2026-04-17): added shared 3-second tap glow behavior to app buttons via `GlowPressable`, added a global rainbow sparkle dark-blue app background layer (with page canvases set transparent so cards/tables stay foreground), and locked Notes status editing to admin/super-admin while keeping status visible to staff."
     ],
     "production_policy": {
       "public_anyone_with_link": false,

@@ -1,8 +1,9 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
+import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { getCounterStaffChargeFromSchedule, getPricingScheduleRow } from '@/constants/pricing-schedule';
 import { useEvents } from '@/context/events-context';
@@ -286,7 +287,7 @@ export default function PricingScreen() {
     headerActionFeedbackTimeoutRef.current = setTimeout(() => {
       setHeaderActionFeedback((current) => (current === action ? null : current));
       headerActionFeedbackTimeoutRef.current = null;
-    }, 260);
+    }, 3000);
   }
 
   useEffect(
@@ -930,7 +931,7 @@ export default function PricingScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#0b1117',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: 16,
