@@ -240,7 +240,7 @@ export default function ShopProfitScreen() {
 
   function openEventDetails(event: EventRecord) {
     upsertEventFromRemote(event);
-    router.push(`/event/${event.id}`);
+    router.push(`/event/${event.id}?returnTo=${encodeURIComponent('/shop-profit')}`);
   }
 
   function toggleEventBreakdown(eventId: string) {
@@ -669,6 +669,8 @@ export default function ShopProfitScreen() {
         const completedAt = getCompletedAtDisplayLabel(card.event);
         const eventTypeVisual = getEventTypeVisual(card.event.eventType);
         const isExpanded = Boolean(expandedEventIds[card.event.id]);
+        const showAssignCounterPrompt =
+          card.counterUnassignedTotal > 0.01 && !isExplicitCounterNoneSelection(card.event.counterNames);
         const showShopBreakdown = Math.abs(card.shopTotal - card.shopModifierBreakdown.baseOther) > 0.01;
         const computedTotals = computeEventTotals(card.event);
         const artistNamesForSchedule = parseNames(card.event.artistNames);
@@ -713,7 +715,7 @@ export default function ShopProfitScreen() {
               <ThemedText style={styles.eventMoneyLineSecondary}>
                 Staff Involved: Artists {card.staffTypeCounts.artistCount} • Counter {card.staffTypeCounts.counterCount}
               </ThemedText>
-              {card.counterUnassignedTotal > 0.01 ? (
+              {showAssignCounterPrompt ? (
                 <Pressable style={styles.inlineAssignCounterButton} onPress={() => openEventDetails(card.event)}>
                   <ThemedText style={styles.inlineAssignCounterButtonText}>
                     Counter (Unassigned) {formatCurrency(card.counterUnassignedTotal)} • Assign Counter
@@ -850,7 +852,7 @@ export default function ShopProfitScreen() {
 
                 <View style={styles.fullBreakdownSectionHeaderRow}>
                   <ThemedText style={styles.fullBreakdownSectionTitle}>Staff Allocation</ThemedText>
-                  {card.counterUnassignedTotal > 0.01 ? (
+                  {showAssignCounterPrompt ? (
                     <Pressable style={styles.assignCounterButton} onPress={() => openEventDetails(card.event)}>
                       <ThemedText style={styles.assignCounterButtonText}>Assign Counter</ThemedText>
                     </Pressable>
@@ -885,7 +887,7 @@ export default function ShopProfitScreen() {
                     );
                   })
                 )}
-                {card.counterUnassignedTotal > 0.01 ? (
+                {showAssignCounterPrompt ? (
                   <ThemedText style={styles.fullBreakdownPrimaryLine}>
                     • Counter (Unassigned) {formatCurrency(card.counterUnassignedTotal)}
                   </ThemedText>

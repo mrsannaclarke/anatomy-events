@@ -207,7 +207,7 @@ function mergeUniqueNames(existing: string[], incoming: string[]): string[] {
 }
 
 export default function EventDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, returnTo } = useLocalSearchParams<{ id: string; returnTo?: string | string[] }>();
   const router = useRouter();
   const { events, updateEvent, setSelectedEventId, upsertEventFromRemote } = useEvents();
   const scrollRef = useRef<ScrollView>(null);
@@ -580,11 +580,20 @@ export default function EventDetailScreen() {
 
   const currentEvent = event;
   const typeVisual = getEventTypeVisual(currentEvent.eventType);
+  const requestedReturnTo = Array.isArray(returnTo) ? returnTo[0] : returnTo;
+
+  function handleBackPress() {
+    if (requestedReturnTo === '/shop-profit') {
+      router.replace('/shop-profit');
+      return;
+    }
+    router.back();
+  }
 
   return (
     <ScrollView ref={scrollRef} style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.topMenuRow}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={handleBackPress}>
           <MaterialIcons name="arrow-back" size={14} color="#cde0f5" />
           <ThemedText style={styles.backButtonText}>Back</ThemedText>
         </Pressable>
