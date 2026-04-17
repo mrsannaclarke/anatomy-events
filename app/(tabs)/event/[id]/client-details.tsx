@@ -122,7 +122,7 @@ export default function EventClientDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { events, setSelectedEventId, updateEvent, upsertEventFromRemote, removeEvent } = useEvents();
-  const { status, user, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { viewerName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
 
   const [isEditable, setIsEditable] = useState(false);
   const [isSavingToSheet, setIsSavingToSheet] = useState(false);
@@ -132,10 +132,6 @@ export default function EventClientDetailsScreen() {
 
   const event = events.find((item) => item.id === id);
 
-  const viewerName =
-    status === 'bypass'
-      ? 'Anna'
-      : user?.matchNames?.[0] || user?.displayName?.split(' ')[0] || '';
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canAccessClientDetails =
     canAccessAdminTools ||

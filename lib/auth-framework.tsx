@@ -31,6 +31,8 @@ type AuthFrameworkContextValue = {
   status: 'bypass' | 'signed_out' | 'signed_in';
   isHydrating: boolean;
   user: FrameworkUser | null;
+  viewerName: string;
+  viewerOverrideName: string | null;
   effectiveAuthType: AuthType | null;
   canAccessAdminTools: boolean;
   errorMessage: string | null;
@@ -43,6 +45,7 @@ type AuthFrameworkContextValue = {
   getEffectiveAuthTypeForEmail: (email: string) => AuthType | null;
   isEmailAdminEffective: (email: string) => boolean;
   setAdminPromotion: (email: string, enabled: boolean) => Promise<void>;
+  setViewerOverrideName: (name: string | null) => void;
   resolvePermissionsForName: (name: string) => StaffPermission | null;
   resolveGoogleAllowlistUser: (email: string) => AllowedGoogleUser | null;
   signInWithGoogle: () => Promise<void>;
@@ -53,6 +56,7 @@ type AuthFrameworkContextValue = {
 const AuthFrameworkContext = createContext<AuthFrameworkContextValue | null>(null);
 const ADMIN_PROMOTION_STORAGE_KEY = 'anatomy-events.admin-promotion-overrides.v1';
 const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
+const VIEWER_OVERRIDE_STORAGE_KEY = 'anatomy-events.viewer-override-name.v1';
 
 function readWebStorage(key: string): string | null {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
@@ -178,6 +182,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   const [isHydrating, setIsHydrating] = useState<boolean>(AUTH_FRAMEWORK_CONFIG.requireAuth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [promotedAdminEmails, setPromotedAdminEmails] = useState<string[]>([]);
+  const [viewerOverrideName, setViewerOverrideNameState] = useState<string | null>(null);
 
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
@@ -218,6 +223,31 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     }
 
     void hydratePromotions();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function hydrateViewerOverride() {
+      try {
+        let raw = await AsyncStorage.getItem(VIEWER_OVERRIDE_STORAGE_KEY);
+        if (!raw) raw = readWebStorage(VIEWER_OVERRIDE_STORAGE_KEY);
+        if (!isMounted || !raw) return;
+        const parsed = JSON.parse(raw) as unknown;
+        if (typeof parsed !== 'string') return;
+        const resolved = resolvePermissionsForNameInternal(parsed);
+        if (!resolved) return;
+        setViewerOverrideNameState(resolved.name);
+      } catch {
+        if (!isMounted) return;
+        setViewerOverrideNameState(null);
+      }
+    }
+
+    void hydrateViewerOverride();
     return () => {
       isMounted = false;
     };
@@ -391,6 +421,60 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     return effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
   }, [effectiveAuthType, status]);
 
+  useEffect(() => {
+    const hasAdminAccess =
+      status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
+    if (!hasAdminAccess && viewerOverrideName) {
+      setViewerOverrideNameState(null);
+    }
+  }, [effectiveAuthType, status, viewerOverrideName]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        if (viewerOverrideName) {
+          const serialized = JSON.stringify(viewerOverrideName);
+          await AsyncStorage.setItem(VIEWER_OVERRIDE_STORAGE_KEY, serialized);
+          writeWebStorage(VIEWER_OVERRIDE_STORAGE_KEY, serialized);
+        } else {
+          await AsyncStorage.removeItem(VIEWER_OVERRIDE_STORAGE_KEY);
+          removeWebStorage(VIEWER_OVERRIDE_STORAGE_KEY);
+        }
+      } catch {
+        // Ignore persistence failures.
+      }
+    })();
+  }, [viewerOverrideName]);
+
+  function setViewerOverrideName(name: string | null) {
+    const hasAdminAccess =
+      status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
+    if (!hasAdminAccess) return;
+
+    const requested = String(name || '').trim();
+    if (!requested) {
+      setViewerOverrideNameState(null);
+      return;
+    }
+
+    const permission = resolvePermissionsForNameInternal(requested);
+    if (!permission) return;
+    if (!permission.roles.includes('artist') && !permission.roles.includes('counter')) return;
+    setViewerOverrideNameState(permission.name);
+  }
+
+  const viewerName = useMemo(() => {
+    const hasAdminAccess =
+      status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
+    if (hasAdminAccess && viewerOverrideName) {
+      return viewerOverrideName;
+    }
+    if (status === 'bypass') return 'Anna';
+    if (user?.matchNames?.length) return user.matchNames[0];
+    if (user?.displayName) return user.displayName.split(' ')[0] || '';
+    return '';
+  }, [effectiveAuthType, status, user?.displayName, user?.matchNames, viewerOverrideName]);
+
   async function signInWithGoogle() {
     if (!AUTH_FRAMEWORK_CONFIG.enableGoogleSignIn) {
       setErrorMessage('Google sign-in framework is configured but currently disabled.');
@@ -456,6 +540,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     status,
     isHydrating,
     user,
+    viewerName,
+    viewerOverrideName,
     effectiveAuthType,
     canAccessAdminTools,
     errorMessage,
@@ -471,6 +557,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
       return effective === 'super_admin' || effective === 'admin';
     },
     setAdminPromotion,
+    setViewerOverrideName,
     resolvePermissionsForName: resolvePermissionsForNameInternal,
     resolveGoogleAllowlistUser: resolveGoogleAllowlistUserInternal,
     signInWithGoogle,

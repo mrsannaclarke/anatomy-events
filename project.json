@@ -318,7 +318,9 @@
       "Pay visibility delegation update (2026-04-17): non-admin users remain limited to own payout by default, with explicit exceptions Megan -> Jacob, Tomma -> Kevin/Jayden/Veda, and Shy -> Jason; admin/super-admin retain full staff visibility.",
       "Shop Profit allocation correction (2026-04-17): when counter selection is explicitly `None`, counter fee is now routed into Shop Total/Shop Base instead of `Counter (Unassigned)`, and Full Allocation `Staff Allocation` excludes shop-captured payout lines to keep section totals consistent.",
       "Payout-ledger counter assignment UX fix (2026-04-17): opening Staff Assignements from Admin > Payout Ledger now carries `returnTo=/shop-profit` so the Back button returns to Payout Ledger context; `Assign Counter` prompts are also hidden when counter field is explicitly set to `None`.",
-      "Bottom tab safe-area spacing tweak (2026-04-17): increased bottom tab bar height by ~10px and shifted tab item content upward so icons keep current size while leaving extra room for iOS home-indicator slider."
+      "Bottom tab safe-area spacing tweak (2026-04-17): increased bottom tab bar height by ~10px and shifted tab item content upward so icons keep current size while leaving extra room for iOS home-indicator slider.",
+      "Admin profile-view testing mode (2026-04-17): Admin Tools now includes `View As Profile` chips that let admin/super-admin sessions (including `anatomytattoo@gmail.com`) switch active viewer name to staff profiles such as Megan without signing out; viewer override persists locally until reset to `Default`.",
+      "Lucky legal-name alias hardening (2026-04-17): added `Jessie/Jesse Smith` aliases to Lucky normalization in both sheet-sync import and Staff Assignements parser so staff-facing identity remains `Lucky` while state-license generation pathways continue resolving through Artist License Source legal records."
     ],
     "production_policy": {
       "public_anyone_with_link": false,

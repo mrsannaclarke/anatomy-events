@@ -16,7 +16,7 @@ export default function TabLayout() {
   const {
     status,
     isHydrating,
-    user,
+    viewerName,
     effectiveAuthType,
     canAccessAdminTools,
     resolvePermissionsForName,
@@ -60,10 +60,6 @@ export default function TabLayout() {
   }
 
   const canViewAdminTab = canAccessAdminTools;
-  const viewerName =
-    status === 'bypass'
-      ? 'Anna'
-      : user?.matchNames?.[0] || user?.displayName?.split(' ')[0] || '';
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canViewPayTab =
     status === 'bypass' ||

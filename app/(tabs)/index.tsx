@@ -323,16 +323,12 @@ function buildLedgerDateLine(event: EventRecord): string {
 export default function EventsScreen() {
   const router = useRouter();
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
-  const { status, user, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { viewerName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sheetSyncStatus, setSheetSyncStatus] = useState('Loading events from sheet...');
   const [sheetSyncError, setSheetSyncError] = useState('');
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
   const hasAttemptedAutoPull = useRef(false);
-  const viewerName =
-    status === 'bypass'
-      ? 'Anna'
-      : user?.matchNames?.[0] || user?.displayName?.split(' ')[0] || '';
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canViewAdminMoney =
     canAccessAdminTools ||

@@ -98,36 +98,13 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 export default function PayScreen() {
   const router = useRouter();
   const { events } = useEvents();
-  const { status, user, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { viewerName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
 
-  const { defaultViewerName, viewerPermission } = useMemo(() => {
-    if (status === 'bypass') {
-      return {
-        defaultViewerName: 'Anna',
-        viewerPermission: resolvePermissionsForName('Anna'),
-      };
-    }
-
-    const candidateNames = uniqueByNormalizedName([
-      ...(user?.matchNames ?? []),
-      user?.displayName ? user.displayName.split(' ')[0] || '' : '',
-    ]);
-
-    for (const candidate of candidateNames) {
-      const permission = resolvePermissionsForName(candidate);
-      if (permission) {
-        return {
-          defaultViewerName: permission.name,
-          viewerPermission: permission,
-        };
-      }
-    }
-
-    return {
-      defaultViewerName: candidateNames[0] || '',
-      viewerPermission: null,
-    };
-  }, [resolvePermissionsForName, status, user?.displayName, user?.matchNames]);
+  const defaultViewerName = viewerName;
+  const viewerPermission = useMemo(() => {
+    if (!defaultViewerName) return null;
+    return resolvePermissionsForName(defaultViewerName);
+  }, [defaultViewerName, resolvePermissionsForName]);
 
   const canViewAnyPayTable = canAccessAdminTools;
 
