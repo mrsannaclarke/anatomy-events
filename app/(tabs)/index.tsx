@@ -325,6 +325,8 @@ export default function EventsScreen() {
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
   const { status, user, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sheetSyncStatus, setSheetSyncStatus] = useState('Loading events from sheet...');
+  const [sheetSyncError, setSheetSyncError] = useState('');
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
   const hasAttemptedAutoPull = useRef(false);
   const viewerName =
@@ -349,6 +351,7 @@ export default function EventsScreen() {
   const depositCompletedEvents = openEvents.filter(isDepositCompleted).sort(sortByEventDate);
   const otherOpenEvents = openEvents.filter((event) => !isDepositCompleted(event)).sort(sortByEventDate);
   const visibleEvents = [...depositCompletedEvents, ...otherOpenEvents];
+  const hiddenClosedCount = Math.max(events.length - visibleEvents.length, 0);
 
   function openEvent(
     id: string,
@@ -367,9 +370,15 @@ export default function EventsScreen() {
   }
 
   const refreshFromSheet = useCallback(async () => {
+    setSheetSyncError('');
+    setSheetSyncStatus('Syncing with Event Details...');
     try {
       const pulledEvents = await pullEventsFromSheet(SHEET_SYNC_CONFIG);
       replaceEvents(pulledEvents);
+      const hiddenCount = pulledEvents.filter((event) => isClosedProject(event)).length;
+      setSheetSyncStatus(
+        `Synced ${pulledEvents.length} events. Showing ${pulledEvents.length - hiddenCount} open event${pulledEvents.length - hiddenCount === 1 ? '' : 's'}.`,
+      );
       fireAndForgetAuditLog({
         eventType: 'sheet_pull',
         status: 'success',
@@ -380,10 +389,13 @@ export default function EventsScreen() {
       });
     } catch (error) {
       console.warn('Unable to pull events from sheet.', error);
+      const message = error instanceof Error ? error.message : 'Unable to pull events from sheet.';
+      setSheetSyncError(message);
+      setSheetSyncStatus('Showing currently cached events.');
       fireAndForgetAuditLog({
         eventType: 'sheet_pull',
         status: 'error',
-        message: error instanceof Error ? error.message : 'Unable to pull events from sheet.',
+        message,
       });
     }
   }, [replaceEvents]);
@@ -445,6 +457,25 @@ export default function EventsScreen() {
         <Pressable onPress={handleCreateEvent} style={styles.createButton}>
           <ThemedText style={styles.createButtonText}>+ New Event</ThemedText>
         </Pressable>
+      </View>
+      <View style={styles.syncCard}>
+        <View style={styles.syncHeaderRow}>
+          <ThemedText style={styles.syncLabel}>Sheet Sync</ThemedText>
+          <Pressable
+            style={styles.syncRefreshButton}
+            onPress={() => {
+              void handlePullToRefresh();
+            }}>
+            <MaterialIcons name="sync" size={13} color="#cfe2ff" />
+            <ThemedText style={styles.syncRefreshButtonText}>Refresh</ThemedText>
+          </Pressable>
+        </View>
+        <ThemedText style={styles.syncText}>{sheetSyncStatus}</ThemedText>
+        <ThemedText style={styles.syncHint}>
+          {events.length} loaded from sheet/local cache • {visibleEvents.length} visible • {hiddenClosedCount} hidden
+          (completed/cancelled)
+        </ThemedText>
+        {sheetSyncError ? <ThemedText style={styles.syncErrorText}>{sheetSyncError}</ThemedText> : null}
       </View>
 
       {visibleEvents.map((event) => {
@@ -638,6 +669,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 2,
+  },
+  syncCard: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#26415f',
+    backgroundColor: '#0f1721',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    gap: 4,
+  },
+  syncHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  syncLabel: {
+    color: '#cbe0f8',
+    fontWeight: '700',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  syncText: {
+    color: '#c8dbf0',
+    fontSize: 13,
+  },
+  syncHint: {
+    color: '#8da5bf',
+    fontSize: 12,
+  },
+  syncErrorText: {
+    color: '#ffb2bf',
+    fontSize: 12,
+  },
+  syncRefreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#395d84',
+    backgroundColor: '#1a2d43',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  syncRefreshButtonText: {
+    color: '#cfe2ff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   createButton: {
     backgroundColor: '#2b74d9',

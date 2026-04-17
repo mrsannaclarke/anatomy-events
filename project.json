@@ -307,7 +307,8 @@
       "Custom Flash split visibility (2026-04-16): expanded `Pay Schedule Percent Source` now shows Custom Flash Artist-vs-Shop split as percentages and amounts when a custom flash fee exists, using event-level custom flash totals (`Custom Flash Fee` and `Custom Flash Shop`).",
       "Google auth enforcement activation (2026-04-16): wired Expo Google OAuth sign-in flow (`expo-auth-session`) into `AuthFrameworkProvider`, enabled `requireAuth` + Google sign-in in auth config, and added a signed-out gate screen in tabs with allowlist enforcement by login email.",
       "Android auth identifier alignment (2026-04-16): set Expo Android package id to `com.anatomytattoo.anatomyevents` in app config so Android OAuth client package and app runtime identifier stay consistent.",
-      "GitHub Pages deployment wiring (2026-04-16): configured Expo web baseUrl to `/anatomy-events`, added `gh-pages` deploy tooling, and added npm scripts `predeploy` (`expo export -p web`) and `deploy` (`gh-pages --nojekyll -d dist`) for direct GitHub Pages publishing."
+      "GitHub Pages deployment wiring (2026-04-16): configured Expo web baseUrl to `/anatomy-events`, added `gh-pages` deploy tooling, and added npm scripts `predeploy` (`expo export -p web`) and `deploy` (`gh-pages --nojekyll -d dist`) for direct GitHub Pages publishing.",
+      "Boot + sync visibility pass (2026-04-16): added a branded loading screen in root layout while core icon fonts initialize, and added an Events page `Sheet Sync` status panel with explicit counts for loaded vs visible vs hidden (completed/cancelled) rows and on-card refresh control."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
