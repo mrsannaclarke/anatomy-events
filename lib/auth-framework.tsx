@@ -59,6 +59,7 @@ const ADMIN_PROMOTION_STORAGE_KEY = 'anatomy-events.admin-promotion-overrides.v1
 const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
 const VIEWER_OVERRIDE_STORAGE_KEY = 'anatomy-events.viewer-override-name.v1';
 const TEMP_FORCE_NON_ADMIN_EMAILS = new Set(['anatomytattoo@gmail.com']);
+const GOOGLE_SIGN_IN_TIMEOUT_MS = 20000;
 
 function readWebStorage(key: string): string | null {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
@@ -442,7 +443,19 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     }
 
     setErrorMessage(null);
-    const result = await promptAsync();
+    type PromptResult = Awaited<ReturnType<typeof promptAsync>>;
+    const result = (await Promise.race([
+      promptAsync(),
+      new Promise<PromptResult | { type: 'timeout' }>((resolve) => {
+        setTimeout(() => resolve({ type: 'timeout' }), GOOGLE_SIGN_IN_TIMEOUT_MS);
+      }),
+    ])) as PromptResult | { type: 'timeout' };
+
+    if (result.type === 'timeout') {
+      setErrorMessage('Google sign-in timed out. Close any Google popup and try again.');
+      return;
+    }
+
     if (result.type === 'cancel' || result.type === 'dismiss') {
       setErrorMessage('Google sign-in was cancelled.');
     }

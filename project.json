@@ -331,7 +331,8 @@
       "Pay card role-position tweak (2026-04-17): moved `Role: ...` under the client header on the left side of payout cards, sharing the same row as the right-aligned payout breakdown.",
       "Viewer-effective permission hardening (2026-04-17): added `canAccessAdminToolsForViewer` in auth context and switched Events, Pay, Client Details, Notes status editing, Audit Log, Admin Promotion, and Payout Ledger gating to viewer-effective admin checks; in `View As` non-admin mode admin tools are hidden and Staff Assignements route is blocked.",
       "Admin-only tab hardening (2026-04-17): Pricing Calculator and Admin tabs are now hidden unless viewer-effective role is admin/super-admin, and Pricing route itself now blocks non-admin viewers with a restricted-access message.",
-      "View-As retirement + temporary login remap (2026-04-17): removed `View As Profile (Testing)` controls from Admin UI, disabled legacy viewer-override behavior in auth (and clears old override storage), and temporarily remapped `anatomytattoo@gmail.com` to Megan (`artist`) with forced non-admin treatment."
+      "View-As retirement + temporary login remap (2026-04-17): removed `View As Profile (Testing)` controls from Admin UI, disabled legacy viewer-override behavior in auth (and clears old override storage), and temporarily remapped `anatomytattoo@gmail.com` to Megan (`artist`) with forced non-admin treatment.",
+      "Google sign-in hang guard (2026-04-17): added a 20-second timeout around `promptAsync()` so login spinner cannot run indefinitely; timed-out attempts now show a retry message."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
