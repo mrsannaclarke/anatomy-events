@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Easing, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 
 export function AppLoadingScreen() {
   const pulse = useRef(new Animated.Value(0)).current;
+  const logoSource = require('../../assets/images/anatomy-logo-circle.png');
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -41,8 +42,8 @@ export function AppLoadingScreen() {
     <View style={styles.page}>
       <View style={styles.centerWrap}>
         <Animated.View style={[styles.ring, { opacity: ringOpacity, transform: [{ scale }] }]} />
-        <View style={styles.dotWrap}>
-          <View style={styles.dotCore} />
+        <View style={styles.logoWrap}>
+          <Image source={logoSource} style={styles.logoImage} />
         </View>
         <ThemedText style={styles.title}>Anatomy Events</ThemedText>
         <ThemedText style={styles.subtitle}>Loading workspace...</ThemedText>
@@ -66,17 +67,17 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    top: -18,
-    width: 120,
-    height: 120,
+    top: -24,
+    width: 168,
+    height: 168,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: '#2b74d9',
     backgroundColor: 'rgba(43,116,217,0.08)',
   },
-  dotWrap: {
-    width: 70,
-    height: 70,
+  logoWrap: {
+    width: 122,
+    height: 122,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#314862',
@@ -84,12 +85,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 8,
     backgroundColor: '#101a25',
+    overflow: 'hidden',
   },
-  dotCore: {
-    width: 20,
-    height: 20,
+  logoImage: {
+    width: 116,
+    height: 116,
     borderRadius: 999,
-    backgroundColor: '#f2c066',
   },
   title: {
     fontSize: 28,
@@ -101,4 +102,3 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 });
-

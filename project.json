@@ -309,7 +309,8 @@
       "Android auth identifier alignment (2026-04-16): set Expo Android package id to `com.anatomytattoo.anatomyevents` in app config so Android OAuth client package and app runtime identifier stay consistent.",
       "GitHub Pages deployment wiring (2026-04-16): configured Expo web baseUrl to `/anatomy-events`, added `gh-pages` deploy tooling, and added npm scripts `predeploy` (`expo export -p web`) and `deploy` (`gh-pages --nojekyll -d dist`) for direct GitHub Pages publishing.",
       "Boot + sync visibility pass (2026-04-16): added a branded loading screen in root layout while core icon fonts initialize, and added an Events page `Sheet Sync` status panel with explicit counts for loaded vs visible vs hidden (completed/cancelled) rows and on-card refresh control.",
-      "Brand icon update (2026-04-16): imported `Anatomy_Logo_Circle.png` as the app icon + web favicon source, added `public/apple-touch-icon.png`, and injected iOS home-screen meta/touch-icon tags at web runtime from root layout for GitHub Pages path compatibility."
+      "Brand icon update (2026-04-16): imported `Anatomy_Logo_Circle.png` as the app icon + web favicon source, added `public/apple-touch-icon.png`, and injected iOS home-screen meta/touch-icon tags at web runtime from root layout for GitHub Pages path compatibility.",
+      "Boot-screen stability fix (2026-04-16): root boot gate now fails open after a hard timeout if web font preload stalls, and loading screen center graphic now uses the Anatomy circle logo."
     ],
     "production_policy": {
       "public_anyone_with_link": false,

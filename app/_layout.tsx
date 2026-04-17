@@ -17,8 +17,8 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [fontsLoaded] = useFonts(MaterialIcons.font);
-  const [bootDelayDone, setBootDelayDone] = useState(false);
+  const [fontsLoaded, fontLoadError] = useFonts(MaterialIcons.font);
+  const [bootReady, setBootReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -55,16 +55,17 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (!fontsLoaded) {
-      setBootDelayDone(false);
-      return;
-    }
+    const hardTimeout = setTimeout(() => setBootReady(true), 3200);
+    return () => clearTimeout(hardTimeout);
+  }, []);
 
-    const timeout = setTimeout(() => setBootDelayDone(true), 900);
+  useEffect(() => {
+    if (!fontsLoaded && !fontLoadError) return;
+    const timeout = setTimeout(() => setBootReady(true), 850);
     return () => clearTimeout(timeout);
-  }, [fontsLoaded]);
+  }, [fontLoadError, fontsLoaded]);
 
-  if (!fontsLoaded || !bootDelayDone) {
+  if (!bootReady) {
     return <AppLoadingScreen />;
   }
 
