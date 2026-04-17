@@ -122,7 +122,7 @@ export default function EventClientDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { events, setSelectedEventId, updateEvent, upsertEventFromRemote, removeEvent } = useEvents();
-  const { viewerName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { viewerName, viewerOverrideName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
 
   const [isEditable, setIsEditable] = useState(false);
   const [isSavingToSheet, setIsSavingToSheet] = useState(false);
@@ -134,7 +134,7 @@ export default function EventClientDetailsScreen() {
 
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canAccessClientDetails =
-    canAccessAdminTools ||
+    (canAccessAdminTools && !viewerOverrideName) ||
     Boolean(viewerPermission?.roles.includes('admin'));
   const canEditStaffAdjustment = canAccessClientDetails;
 
