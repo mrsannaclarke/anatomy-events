@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
-import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
+import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { STAFF_PERMISSIONS } from '@/constants/auth-permissions';
 import { isShopCapturedToShopByName, normalizeNameKey } from '@/constants/pay-framework';
 import { isHistoricalForceShopCustomFlashToFullFee } from '@/constants/historical-payout-truth';
@@ -234,7 +234,7 @@ export default function ShopProfitScreen() {
   const [selectedYear, setSelectedYear] = useState<string>('All');
   const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
 
-  const payoutDisabledForCurrentLogin = isPayoutDisabledForEmail(user?.email);
+  const payoutDisabledForCurrentLogin = isPayoutDisabledForUser(user);
   const canViewAdmin = useMemo(
     () => canAccessAdminToolsForViewer && !payoutDisabledForCurrentLogin,
     [canAccessAdminToolsForViewer, payoutDisabledForCurrentLogin],

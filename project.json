@@ -16,6 +16,19 @@
     "web_app_deployment_id": "AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA",
     "web_app_exec_url": "https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec"
   },
+  "staging_next_source_links": {
+    "status": "staging_not_connected_to_app",
+    "cutover_requires_explicit_approval": true,
+    "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1312428019#gid=1312428019",
+    "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
+    "script_url": "https://script.google.com/u/0/home/projects/1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK/edit",
+    "script_id": "1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK",
+    "generated_contracts_folder_url": "https://drive.google.com/drive/folders/1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy?usp=drive_link",
+    "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
+    "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
+    "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
+    "web_app_exec_url": "pending_new_deployment_url"
+  },
   "current_rules": {
     "home_page": {
       "show": "all projects except AO Cancelled/Event Complete",
@@ -344,7 +357,9 @@
       "Staff assignment + ledger communication UX pass (2026-04-17): Staff Assignements now seeds artist chips immediately from local artist permissions (then merges live sheet artist list when it returns) to remove delayed artist chip load; Event Ledger cards now show latest staff `Communication Entry` preview at card bottom in a soft-highlight note format (`Staff • Date/Time • Message`) with display-only 300-character truncation.",
       "Rainbow sparkle visibility fix (2026-04-17): set tab navigator scene background to transparent so root sparkle layer is visible on all tab screens, restored dark-blue base in sparkle background, and increased orb/sparkle opacity for clearer effect.",
       "Project quality checkpoint (2026-04-17): current build is treated as near-gold baseline. Core flows (event ledger, pricing, payouts, role-based visibility, notes/log communication, generators/files permissions, and payout-ledger allocation math behaviors) are stable; future edits should be incremental and regression-checked against this checkpoint.",
-      "Sparkle hard-visibility pass (2026-04-17): added a second sparkle-only overlay layer above app navigation (`pointerEvents=none`) so rainbow twinkles remain visible for all users even when navigator/card backgrounds render opaque on some platforms."
+      "Sparkle hard-visibility pass (2026-04-17): added a second sparkle-only overlay layer above app navigation (`pointerEvents=none`) so rainbow twinkles remain visible for all users even when navigator/card backgrounds render opaque on some platforms.",
+      "Permission hardening for restricted admin login (2026-04-17): payout/admin-ledger restrictions now read both denylisted emails and allowlist capability flags (`disablePayoutAccess` / `disableAdminPromotion`) attached to auth user records. `anatomytattoo@gmail.com` is explicitly marked as admin with payout + admin-promotion restrictions.",
+      "Next-source staging lock (2026-04-17): recorded duplicate sheet (`1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs`) and new Apps Script project (`1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK`) under `staging_next_source_links` with explicit `staging_not_connected_to_app` status. Do not point app sync config to staging IDs until explicit approval."
     ],
     "production_policy": {
       "public_anyone_with_link": false,

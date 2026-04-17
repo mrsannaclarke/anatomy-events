@@ -13,6 +13,8 @@ export type AllowedGoogleUser = {
   matchNames: string[];
   canViewInfo: boolean;
   authType: AuthType;
+  disablePayoutAccess?: boolean;
+  disableAdminPromotion?: boolean;
 };
 
 export const AUTH_TYPES: ReadonlyArray<{ key: AuthType; label: string }> = [
@@ -100,6 +102,8 @@ export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
     matchNames: ['Tomma'],
     canViewInfo: true,
     authType: 'admin',
+    disablePayoutAccess: true,
+    disableAdminPromotion: true,
   },
   { email: 'mrs.annaclarke@gmail.com', displayName: 'Anna', matchNames: ['Anna'], canViewInfo: true, authType: 'super_admin' },
   { email: 'admin@anatomytattoo.com', displayName: 'Anna', matchNames: ['Anna'], canViewInfo: true, authType: 'super_admin' },

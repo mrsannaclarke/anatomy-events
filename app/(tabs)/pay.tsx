@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
-import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
+import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { getHistoricalArtistBreakdownOverride } from '@/constants/historical-payout-truth';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { normalizeNameKey } from '@/constants/pay-framework';
@@ -106,7 +106,7 @@ export default function PayScreen() {
     return resolvePermissionsForName(defaultViewerName);
   }, [defaultViewerName, resolvePermissionsForName]);
 
-  const payoutDisabledForCurrentLogin = isPayoutDisabledForEmail(user?.email);
+  const payoutDisabledForCurrentLogin = isPayoutDisabledForUser(user);
   const canViewAnyPayTable = !payoutDisabledForCurrentLogin && canAccessAdminToolsForViewer;
 
   const canViewOwnPayTable = Boolean(

@@ -7,7 +7,7 @@ import { HapticTab } from '@/components/haptic-tab';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
+import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthFramework } from '@/lib/auth-framework';
@@ -64,7 +64,7 @@ export default function TabLayout() {
 
   const canViewAdminTab = canAccessAdminToolsForViewer;
   const canViewPricingTab = canAccessAdminToolsForViewer;
-  const payoutDisabledForCurrentLogin = isPayoutDisabledForEmail(user?.email);
+  const payoutDisabledForCurrentLogin = isPayoutDisabledForUser(user);
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canViewPayTab =
     !payoutDisabledForCurrentLogin &&

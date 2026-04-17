@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
-import { isAdminPromotionDisabledForEmail } from '@/constants/admin-capabilities';
+import { isAdminPromotionDisabledForUser } from '@/constants/admin-capabilities';
 import type { AuthType } from '@/constants/auth-permissions';
 import { useAuthFramework } from '@/lib/auth-framework';
 
@@ -39,7 +39,7 @@ export default function AdminPromotionScreen() {
   const [promotionStatus, setPromotionStatus] = useState('');
 
   const canViewAdmin = canAccessAdminToolsForViewer;
-  const promotionDisabledForCurrentLogin = isAdminPromotionDisabledForEmail(user?.email);
+  const promotionDisabledForCurrentLogin = isAdminPromotionDisabledForUser(user);
   const canPromoteAdmins =
     !promotionDisabledForCurrentLogin && (effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin');
   const canDemoteAdmins = !promotionDisabledForCurrentLogin && effectiveAuthType === 'super_admin';

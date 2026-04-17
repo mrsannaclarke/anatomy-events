@@ -24,6 +24,8 @@ export type FrameworkUser = {
   matchNames: string[];
   canViewInfo: boolean;
   authType: AuthType;
+  disablePayoutAccess?: boolean;
+  disableAdminPromotion?: boolean;
   mode: 'google' | 'guest';
 };
 
@@ -127,12 +129,18 @@ function inferMatchNames(email: string, googleName: string): string[] {
 function isFrameworkUser(value: unknown): value is FrameworkUser {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<FrameworkUser>;
+  const payoutAccessTypeValid =
+    candidate.disablePayoutAccess === undefined || typeof candidate.disablePayoutAccess === 'boolean';
+  const adminPromotionTypeValid =
+    candidate.disableAdminPromotion === undefined || typeof candidate.disableAdminPromotion === 'boolean';
   return (
     typeof candidate.email === 'string' &&
     typeof candidate.displayName === 'string' &&
     Array.isArray(candidate.matchNames) &&
     typeof candidate.canViewInfo === 'boolean' &&
     typeof candidate.authType === 'string' &&
+    payoutAccessTypeValid &&
+    adminPromotionTypeValid &&
     (candidate.mode === 'google' || candidate.mode === 'guest')
   );
 }
@@ -265,6 +273,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
               matchNames: allowlisted.matchNames,
               canViewInfo: allowlisted.canViewInfo,
               authType: allowlisted.authType,
+              disablePayoutAccess: allowlisted.disablePayoutAccess,
+              disableAdminPromotion: allowlisted.disableAdminPromotion,
               mode: 'google',
             });
             return;
@@ -340,6 +350,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
               matchNames: allowlisted.matchNames,
               canViewInfo: allowlisted.canViewInfo,
               authType: allowlisted.authType,
+              disablePayoutAccess: allowlisted.disablePayoutAccess,
+              disableAdminPromotion: allowlisted.disableAdminPromotion,
               mode: 'google',
             }
           : {
@@ -348,6 +360,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
               matchNames: inferMatchNames(info.email, info.name),
               canViewInfo: false,
               authType: 'artist',
+              disablePayoutAccess: false,
+              disableAdminPromotion: false,
               mode: 'google',
             };
 
@@ -482,6 +496,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
       matchNames: [matchedName],
       canViewInfo: false,
       authType: 'counter_guest',
+      disablePayoutAccess: false,
+      disableAdminPromotion: false,
       mode: 'guest',
     });
     setErrorMessage(null);
