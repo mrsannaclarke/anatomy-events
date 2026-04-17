@@ -48,7 +48,7 @@ export function RainbowSparkleBackground() {
 
   const shimmerOpacity = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.35, 0.92],
+    outputRange: [0.45, 1],
   });
 
   return (
@@ -78,12 +78,12 @@ const styles = StyleSheet.create({
   },
   base: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b1117',
   },
   orb: {
     position: 'absolute',
     borderRadius: 999,
-    opacity: 0.22,
+    opacity: 0.35,
   },
   orbA: {
     width: 340,
@@ -108,12 +108,12 @@ const styles = StyleSheet.create({
   },
   sparkle: {
     position: 'absolute',
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 999,
     shadowColor: '#fff',
-    shadowOpacity: 0.72,
-    shadowRadius: 5,
+    shadowOpacity: 0.9,
+    shadowRadius: 7,
     shadowOffset: { width: 0, height: 0 },
   },
   sparkleA: { top: '14%', left: '12%', backgroundColor: '#ffe86b' },
