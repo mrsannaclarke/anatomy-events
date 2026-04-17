@@ -78,7 +78,6 @@ export function AppLoadingScreen() {
           <Image source={logoSource} style={styles.logoImage} />
         </View>
         <ThemedText style={styles.title}>Anatomy Events</ThemedText>
-        <ThemedText style={styles.subtitle}>Loading Events</ThemedText>
         <ActivityIndicator color="#f2c066" />
       </View>
     </View>
@@ -184,9 +183,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     color: '#e7eff8',
-  },
-  subtitle: {
-    color: '#9eb2c8',
-    marginBottom: 6,
+    marginTop: 8,
+    marginBottom: 4,
   },
 });
