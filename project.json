@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "Anatomy Events",
-    "updated_at": "2026-04-16",
+    "updated_at": "2026-04-17",
     "owner": "Anna / Anatomy Tattoo"
   },
   "source_links": {
@@ -312,7 +312,8 @@
       "Brand icon update (2026-04-16): imported `Anatomy_Logo_Circle.png` as the app icon + web favicon source, added `public/apple-touch-icon.png`, and injected iOS home-screen meta/touch-icon tags at web runtime from root layout for GitHub Pages path compatibility.",
       "Boot-screen stability fix (2026-04-16): root boot gate now fails open after a hard timeout if web font preload stalls, and loading screen center graphic now uses the Anatomy circle logo.",
       "GitHub Pages asset-publish fix (2026-04-16): replaced `gh-pages` CLI deploy step with `scripts/deploy-gh-pages.sh` temp-clone publish flow so full `dist/` output (including `assets/node_modules/**` icon/font assets) is pushed to `gh-pages`.",
-      "GitHub Pages deep-link + auth hydration hardening (2026-04-17): deploy now always emits `404.html` from `index.html` for SPA fallback on direct route loads, and auth context now exposes `isHydrating` with startup gate + web `localStorage` mirror so signed-in sessions persist until manual sign-out."
+      "GitHub Pages deep-link + auth hydration hardening (2026-04-17): deploy now always emits `404.html` from `index.html` for SPA fallback on direct route loads, and auth context now exposes `isHydrating` with startup gate + web `localStorage` mirror so signed-in sessions persist until manual sign-out.",
+      "Allowlist mapping update (2026-04-17): tied counter staff name `Veda` to Google login `veda.mueller.27@gmail.com` with `counter_guest` auth so sign-in resolves to Veda-specific payout access."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
