@@ -1,5 +1,4 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -96,7 +95,6 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 }
 
 export default function PayScreen() {
-  const router = useRouter();
   const { events } = useEvents();
   const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
 
@@ -471,16 +469,9 @@ export default function PayScreen() {
                     <View style={[styles.rowEventTypeIconWrap, { borderColor: eventTypeVisual.color }]}>
                       <MaterialIcons name={eventTypeVisual.icon} size={13} color={eventTypeVisual.color} />
                     </View>
-                    <Pressable
-                      onPress={() =>
-                        router.push(
-                          `/event/${row.event.id}?clientName=${encodeURIComponent(row.event.clientName || '')}`,
-                        )
-                      }>
-                      <ThemedText style={[styles.rowTitle, { color: eventTypeVisual.color }]}>
-                        {row.event.clientName || 'Untitled Event'}
-                      </ThemedText>
-                    </Pressable>
+                    <ThemedText style={[styles.rowTitle, { color: eventTypeVisual.color }]}>
+                      {row.event.clientName || 'Untitled Event'}
+                    </ThemedText>
                   </View>
                   <ThemedText style={styles.rowTitlePrice}>{formatCurrency(row.totalPayout)}</ThemedText>
                 </View>
