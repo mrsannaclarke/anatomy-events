@@ -1,3 +1,5 @@
+import { STAFF_PERMISSIONS } from '@/constants/auth-permissions';
+
 const STAFF_COLOR_MAP: Record<string, string> = {
   anna: '#1aa7a1',
   anne: '#8b5cf6',
@@ -78,4 +80,20 @@ export function getContrastTextForHex(hex: string): string {
   const b = Number.parseInt(cleaned.slice(4, 6), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.62 ? '#0b1117' : '#f7fbff';
+}
+
+export function getArtistSparkleColors(): string[] {
+  const uniqueColors: string[] = [];
+  const seen = new Set<string>();
+
+  for (const staff of STAFF_PERMISSIONS) {
+    if (!staff.roles.includes('artist')) continue;
+    const color = getStaffColor(staff.name);
+    if (seen.has(color)) continue;
+    seen.add(color);
+    uniqueColors.push(color);
+  }
+
+  if (uniqueColors.length === 0) return [FALLBACK_STAFF_COLOR];
+  return uniqueColors;
 }
