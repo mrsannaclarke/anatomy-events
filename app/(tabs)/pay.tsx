@@ -291,11 +291,6 @@ export default function PayScreen() {
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Pay Schedule</ThemedText>
-        <ThemedText style={styles.helperText}>Money appears only when an event is marked Event Complete.</ThemedText>
-        <ThemedText style={styles.helperText}>Cancelled events are excluded.</ThemedText>
-        <ThemedText style={styles.helperText}>
-          Modifier earnings shown are artist-only shares (Custom Flash, Temporary Tattoos, Extra Hourly).
-        </ThemedText>
         {!canPickPerson ? (
           <ThemedText style={styles.helperTextInfo}>Access limited to your own payout schedule.</ThemedText>
         ) : null}

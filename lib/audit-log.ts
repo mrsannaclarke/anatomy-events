@@ -13,7 +13,7 @@ export type AuditLogEntry = {
 
 const AUDIT_LOG_STORAGE_KEY = 'anatomy_events_audit_log_v1';
 const AUDIT_LOG_MAX_ENTRIES = 150;
-const AUDIT_LOG_PAUSED = true;
+const AUDIT_LOG_PAUSED = false;
 
 function toEntryId(): string {
   return `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
