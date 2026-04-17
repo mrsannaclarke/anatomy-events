@@ -1,0 +1,94 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export type EventActivityType = 'status_update' | 'staff_note' | 'action';
+
+export type EventActivityEntry = {
+  id: string;
+  eventId: string;
+  timestamp: string;
+  actor: string;
+  type: EventActivityType;
+  message: string;
+  statusFrom?: string;
+  statusTo?: string;
+};
+
+const EVENT_ACTIVITY_STORAGE_KEY = 'anatomy_events_activity_log_v1';
+const EVENT_ACTIVITY_MAX_ENTRIES = 2000;
+
+function toEntryId(): string {
+  return `event-log-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+async function readAllEventActivityEntries(): Promise<EventActivityEntry[]> {
+  try {
+    const raw = await AsyncStorage.getItem(EVENT_ACTIVITY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((item): item is EventActivityEntry => {
+        if (!item || typeof item !== 'object') return false;
+        const candidate = item as Partial<EventActivityEntry>;
+        return (
+          typeof candidate.id === 'string' &&
+          typeof candidate.eventId === 'string' &&
+          typeof candidate.timestamp === 'string' &&
+          typeof candidate.actor === 'string' &&
+          typeof candidate.type === 'string' &&
+          typeof candidate.message === 'string'
+        );
+      })
+      .slice(0, EVENT_ACTIVITY_MAX_ENTRIES);
+  } catch {
+    return [];
+  }
+}
+
+export async function readEventActivityLog(eventId: string): Promise<EventActivityEntry[]> {
+  const key = String(eventId || '').trim();
+  if (!key) return [];
+  const all = await readAllEventActivityEntries();
+  return all.filter((entry) => entry.eventId === key);
+}
+
+export async function appendEventActivityLog(input: {
+  eventId: string;
+  actor: string;
+  type: EventActivityType;
+  message: string;
+  statusFrom?: string;
+  statusTo?: string;
+}): Promise<void> {
+  const eventId = String(input.eventId || '').trim();
+  if (!eventId) return;
+
+  const message = String(input.message || '').trim();
+  if (!message) return;
+
+  const actor = String(input.actor || '').trim() || 'Unknown Staff';
+  const all = await readAllEventActivityEntries();
+
+  const nextEntry: EventActivityEntry = {
+    id: toEntryId(),
+    eventId,
+    timestamp: new Date().toISOString(),
+    actor,
+    type: input.type,
+    message,
+    statusFrom: input.statusFrom,
+    statusTo: input.statusTo,
+  };
+
+  const next = [nextEntry, ...all].slice(0, EVENT_ACTIVITY_MAX_ENTRIES);
+  try {
+    await AsyncStorage.setItem(EVENT_ACTIVITY_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // event activity log should never block user flow.
+  }
+}
+
+export function fireAndForgetEventActivityLog(input: Parameters<typeof appendEventActivityLog>[0]) {
+  void appendEventActivityLog(input);
+}

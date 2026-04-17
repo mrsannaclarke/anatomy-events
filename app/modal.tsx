@@ -1,29 +1,45 @@
 import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 
 export default function ModalScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">This is a modal</ThemedText>
+    <View style={styles.container}>
+      <ThemedText type="title" style={styles.title}>
+        Anatomy Events v1
+      </ThemedText>
+      <ThemedText style={styles.body}>
+        This app mirrors the Event Details spreadsheet schema and computes totals using the same base
+        pricing + fee-addition flow.
+      </ThemedText>
+      <ThemedText style={styles.body}>
+        Current scope: event entry, totals preview, and contract/TFL placeholder preview. Google Docs
+        generation and license lookup are next-step integrations.
+      </ThemedText>
       <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
+        <ThemedText type="link">Back to Events</ThemedText>
       </Link>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    padding: 24,
     justifyContent: 'center',
-    padding: 20,
+    backgroundColor: '#0b1117',
+    gap: 12,
+  },
+  title: {
+    fontSize: 30,
+    lineHeight: 34,
+  },
+  body: {
+    color: '#9fb3c9',
   },
   link: {
-    marginTop: 15,
-    paddingVertical: 15,
+    marginTop: 8,
   },
 });

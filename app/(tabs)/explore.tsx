@@ -1,112 +1,191 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { useEvents } from '@/context/events-context';
+import { computeEventTotals, formatCurrency } from '@/lib/event-math';
+import { buildContractPlaceholders, buildTflPlaceholders } from '@/lib/placeholders';
 
-export default function TabTwoScreen() {
+function renderPlaceholderMap(map: Record<string, string>) {
+  return Object.entries(map)
+    .map(([key, value]) => `${key}: ${value || '<blank>'}`)
+    .join('\n');
+}
+
+export default function GeneratorScreen() {
+  const { events, selectedEventId } = useEvents();
+  const current = events.find((event) => event.id === selectedEventId) ?? events[0];
+
+  if (!current) {
+    return (
+      <View style={styles.emptyContainer}>
+        <ThemedText type="subtitle">No events yet</ThemedText>
+      </View>
+    );
+  }
+
+  const totals = computeEventTotals(current);
+  const contractPlaceholders = buildContractPlaceholders(current);
+  const tflPlaceholders = buildTflPlaceholders(current);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
+    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+      <View style={styles.hero}>
+        <ThemedText style={styles.heroKicker}>Generator Preview</ThemedText>
+        <ThemedText type="title" style={styles.heroTitle}>
+          {current.clientName || 'Untitled Event'}
         </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+        <ThemedText style={styles.heroBody}>
+          Active schema row: Year {current.year || '-'}, Entry {current.entryId || '-'}, Artists{' '}
+          {current.numberOfArtists || '0'}.
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
+      </View>
+
+      <View style={styles.summaryGrid}>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Base Source</ThemedText>
+          <ThemedText style={styles.summaryValue}>{totals.source.replaceAll('_', ' ')}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Base Total</ThemedText>
+          <ThemedText style={styles.summaryValue}>{formatCurrency(totals.baseTotal)}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Modifiers Total</ThemedText>
+          <ThemedText style={styles.summaryValue}>{formatCurrency(totals.extrasTotal)}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Staff Adjustment</ThemedText>
+          <ThemedText style={styles.summaryValue}>{formatCurrency(totals.staffAdjustment)}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Credit Applied</ThemedText>
+          <ThemedText style={styles.summaryValue}>{formatCurrency(totals.creditApplied)}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Computed Total</ThemedText>
+          <ThemedText style={styles.summaryValue}>{formatCurrency(totals.computedTotal)}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Balance</ThemedText>
+          <ThemedText style={styles.summaryValue}>{formatCurrency(totals.balanceAfterDeposit)}</ThemedText>
+        </View>
+        <View style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Auto Sources</ThemedText>
+          <ThemedText style={styles.summaryValue}>
+            Radius {totals.autoSources.radiusFee}, Flash {totals.autoSources.customFlash}, Temp{' '}
+            {totals.autoSources.temporaryTattoo}, TFL {totals.autoSources.tflFee}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <ThemedText style={styles.sectionTitle}>Contract Placeholders</ThemedText>
+        <ThemedText style={styles.sectionDescription}>
+          Includes required mappings for {'{{ED_M}}'}, {'{{ED_Y}}'}, {'{{ED_Z}}'}, and{' '}
+          {'{{Counter Staff Charge}}'}.
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
+        <View style={styles.codeBlock}>
+          <ThemedText style={styles.codeText}>{renderPlaceholderMap(contractPlaceholders)}</ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <ThemedText style={styles.sectionTitle}>TFL Placeholders</ThemedText>
+        <ThemedText style={styles.sectionDescription}>
+          Artist slot placeholders {'{{a1}}'}..{'{{a19}}'} are pre-built; license fields stay blank
+          until an Artist License source is connected.
         </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+        <View style={styles.codeBlock}>
+          <ThemedText style={styles.codeText}>{renderPlaceholderMap(tflPlaceholders)}</ThemedText>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  page: {
+    flex: 1,
+    backgroundColor: '#0b1117',
   },
-  titleContainer: {
-    flexDirection: 'row',
+  content: {
+    padding: 16,
+    gap: 14,
+    paddingBottom: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hero: {
+    backgroundColor: '#111a24',
+    borderWidth: 1,
+    borderColor: '#223244',
+    borderRadius: 16,
+    padding: 16,
+    gap: 6,
+  },
+  heroKicker: {
+    color: '#8cbfff',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  heroTitle: {
+    color: '#e7edf6',
+    fontSize: 28,
+    lineHeight: 32,
+  },
+  heroBody: {
+    color: '#9eb2c9',
+    lineHeight: 21,
+  },
+  summaryGrid: {
+    gap: 10,
+  },
+  summaryCard: {
+    backgroundColor: '#111a24',
+    borderWidth: 1,
+    borderColor: '#223244',
+    borderRadius: 12,
+    padding: 12,
+  },
+  summaryLabel: {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    color: '#7f95ad',
+    letterSpacing: 0.9,
+  },
+  summaryValue: {
+    marginTop: 3,
+    fontWeight: '700',
+    color: '#e3ecf8',
+  },
+  section: {
     gap: 8,
+  },
+  sectionTitle: {
+    fontWeight: '700',
+    color: '#e4edf8',
+    fontSize: 18,
+  },
+  sectionDescription: {
+    color: '#9ab0c7',
+    lineHeight: 20,
+  },
+  codeBlock: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2a3c50',
+    backgroundColor: '#0f1620',
+    padding: 12,
+  },
+  codeText: {
+    fontFamily: 'Courier',
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#d9e5f3',
   },
 });

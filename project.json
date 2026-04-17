@@ -1,0 +1,420 @@
+{
+  "project": {
+    "name": "Anatomy Events",
+    "updated_at": "2026-04-16",
+    "owner": "Anna / Anatomy Tattoo"
+  },
+  "source_links": {
+    "sheet_url": "https://docs.google.com/spreadsheets/d/1VMuggaK9t0dsDDMqW7Crl28_mXyA-b9vnIkB5ys2uUo/edit?gid=1325964236#gid=1325964236",
+    "script_url": "https://script.google.com/u/0/home/projects/1dqkPklrBJt9JZIDcUqVjrA1u2o-Xr9QE8jZxiCfsYqCTQTrtQhEDe94t/edit",
+    "generated_contracts_folder_url": "https://drive.google.com/drive/folders/1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy?usp=drive_link",
+    "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
+    "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
+    "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
+    "sheet_id": "1VMuggaK9t0dsDDMqW7Crl28_mXyA-b9vnIkB5ys2uUo",
+    "script_id": "1dqkPklrBJt9JZIDcUqVjrA1u2o-Xr9QE8jZxiCfsYqCTQTrtQhEDe94t",
+    "web_app_deployment_id": "AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec"
+  },
+  "current_rules": {
+    "home_page": {
+      "show": "all projects except AO Cancelled/Event Complete",
+      "sort": "two groups, both sorted by event date ascending",
+      "group_1_top": "AO is Deposit Paid (also accepts Deposit Complete alias)",
+      "group_2_below": "all remaining open AO statuses",
+      "ao_dropdown_values": [
+        "Reply Sent",
+        "Consult Booked",
+        "Awaiting Deposit",
+        "Deposit Paid",
+        "Awaiting Follow Up",
+        "Awaiting Balance",
+        "Needing Changes",
+        "Cancelled",
+        "Balance Late",
+        "Event Complete"
+      ],
+      "hidden_ao_values": [
+        "Cancelled",
+        "Event Complete"
+      ],
+      "priority_ao_values": [
+        "Deposit Paid"
+      ]
+    },
+    "client_details_page": {
+      "removed_sections": [
+        "Customer Intake (Gravity JSON import/save raw)",
+        "Auto Pricing toggle",
+        "Collect Full Payout toggle",
+        "Do Not Use Credit toggle",
+        "Credit Applied input"
+      ],
+      "core_fields": {
+        "editable_fields": [
+          "Price Plan (dropdown constrained to available pricing schedule years)",
+          "Client Name",
+          "Date of Event",
+          "Venue Name",
+          "Type of Event",
+          "Contact Phone",
+          "Email",
+          "Event Address",
+          "Est Guest Count"
+        ]
+      },
+      "layout": {
+        "show_bottom_tab_menu_on_detail_page": true,
+        "entry_id_visible_on_detail_page": false,
+        "client_details_position": "bottom"
+      },
+      "editing": {
+        "client_details_locked_by_default": true,
+        "unlock_control": "single pencil icon toggles entire section editable/read-only",
+        "travel_distance_visible_in_client_details": true,
+        "radius_fee_visible_in_client_details": false
+      },
+      "totals_card": {
+        "hide": [
+          "Base Source"
+        ],
+        "show": [
+          "Extras Total with line-item breakdown",
+          "Live Total",
+          "Deposit",
+          "Balance"
+        ]
+      },
+      "pricing_note": "Pricing schedule uses Plan Name from sheet column A (stored in year field).",
+      "counter_staff_charge": {
+        "mode": "hardwired",
+        "source": "constants/pricing-schedule.ts",
+        "formula_behavior": "Counter charge is derived from hardwired schedule row: counterPerArtist * Number of Artists, with Plan Year parsed from Price Plan text (e.g., 2026).",
+        "manual_edit_in_app": false
+      }
+    },
+    "roster_page": {
+      "icons": {
+        "Private Party": "celebration (purple)",
+        "Corporate": "business-center (blue)",
+        "Wedding": "favorite heart (pink)",
+        "Fundraiser": "volunteer-activism (green)",
+        "Other": "event-note (amber)"
+      },
+      "row_layout": {
+        "event_type_text_under_name": false,
+        "event_date_next_to_client_name": true,
+        "event_date_style_matches_client_name": true
+      },
+      "calendar_rows": {
+        "show_upcoming_if_found": true,
+        "show_last_appointment_in_footer_slot": true,
+        "show_yes_no_label": false,
+        "google_add_button": "small blue button with calendar icon at bottom of card; independent of pulled calendar feed"
+      },
+      "money_visibility": "Show Computed Total and Balance only when status/pay status is not just Open."
+    },
+    "artist_normalization": {
+      "source_tab": "Artist License Source",
+      "match_keys": [
+        "Aliases",
+        "Primary Name",
+        "ED entry"
+      ],
+      "normalized_output_target": "ED entry (column F)",
+      "used_by_templates": [
+        "Contract",
+        "TFL"
+      ],
+      "client_detail_artist_picker": {
+        "source": "active artists from Artist License Source",
+        "selection_limit": "capped to Number of Artists",
+        "fallback_behavior": "if artists endpoint is unauthorized/unavailable, app falls back to latest endpoint and then to a built-in artist list"
+      },
+      "client_detail_counter_staff_picker": {
+        "source": "fixed options in app",
+        "options": [
+          "Jacob",
+          "Jason",
+          "Kevin",
+          "Veda"
+        ],
+        "selection_limit": "capped to Number of Artists (same behavior as artist picker)"
+      }
+    },
+    "payout_policy": {
+      "historical_override_source": "live staff tabs via sheettabrows (Entry ID + person key)",
+      "fallback_source": "none",
+      "date_cutoff_policy": "none",
+      "decision_date": "2026-04-15",
+      "decision_reason": "A cutoff at/after Kynzi/Alejandro is not reliable; multiple post-2025-09-06 rows still materially differ from framework payouts, so live staff-tab totals remain source-of-truth whenever present."
+    }
+  },
+  "sync_architecture": {
+    "implemented": [
+      "Apps Script doGet/doPost sync endpoints in Code.js",
+      "Drive folder references are now recorded in project metadata: generated contracts folder + templates folder IDs/URLs.",
+      "Apps Script web app deployment `AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA` was redeployed to version 38, and `action=sheettabs` + `action=sheettabrows` are now live on /exec.",
+      "Step-2 payout verification pass (2026-04-15) succeeded for Entry IDs 1, 2, 820, 1671, and 1065 across Tomma/Shy/Sisi/Megan/Drew combinations; live staff-tab totals matched expected artist/counter splits with zero check failures.",
+      "Token-based auth via script property APP_SYNC_TOKEN",
+      "App pull list / pull by entry ID / upsert event actions",
+      "Web app deployment with valid /exec URL (requires signed-in Google account when not public)",
+      "No hardcoded seed events in app state; list is now sheet/local-data driven",
+      "Dev-mode anonymous read enabled in Apps Script for events/event/artists/counterstaffcharge/calendarfeed; writes still token-protected",
+      "Calendar feed proxy supports secret ICS URL and 6 months back + 9 months ahead lookup window",
+      "M/AC/AE are formula-driven in Apps Script upsert to prevent hardcoded counter/deposit/balance values",
+      "Auth permissions scaffold is in place (non-blocking): Google allowlist from Pickles minus Sienna, staff permission roster includes Veda, guest password parity with Pickles, and starter auth-type model (Super Admin/Admin/Artist/Counter-Guest)",
+      "Google allowlist is grouped by auth type for future role-based sign-in enablement (super_admin/admin/artist/counter_guest).",
+      "Local audit log now captures create/edit/pull/save actions and keeps only the most recent 150 entries (oldest entries are overwritten).",
+      "Audit logging writes are temporarily paused during active build iteration (existing logs remain readable).",
+      "Pricing tab now includes address-based travel distance lookup and automatic extras calculation for hypothetical pricing scenarios.",
+      "Hypothetical pricing now supports base-hour prorating (base covers 5 hours; less-hours mode calculates base as baseTotal/5*hours).",
+      "Pricing sheet link actions moved to top-right icon buttons on the Pricing Schedule header (share icon + magnifier view icon).",
+      "Hypothetical form assumes counter staff charge is always included and uses a fixed Anatomy Tattoo base address for radius lookup.",
+      "Hypothetical form now uses Booked Hours directly under Number of Artists and auto-computes Extra Hourly Charge in breakdown for hours above 5.",
+      "Pricing section title changed from Hypothetical Price to Theoretical Calculator.",
+      "Saving a new entry from Theoretical Calculator now includes prompts for client name, phone, email, and event date.",
+      "User-facing pricing language now refers to Extras as Modifiers on relevant pages.",
+      "Pricing hypothetical calculator now limits Custom Flash and Temporary Tattoos to YES/NO only (TBD removed as non-calculable).",
+      "Admin now has a dedicated Audit Log page; Admin Tools links to it with icon buttons, and super-admin visibility remains enforced (or auth-bypass developer mode).",
+      "Client Details now includes Cancelled status option and a destructive Delete Event flow with confirmation, removing the event from the sheet.",
+      "Theoretical Calculator 'Overwrite Existing' now only lists ledger-eligible events (excludes Cancelled/Event Complete/Event Complete Balance Late).",
+      "Client Details section now starts locked and is unlocked by a single pencil toggle for full-section editing (including Client Name); Price Plan is selected from available pricing schedule years only.",
+      "Theoretical Calculator save button label is now 'Save'.",
+      "Theoretical Calculator breakdown now includes Base Price and keeps it at $0.00 until both Number of Artists and Booked Hours are set.",
+      "Event detail page now includes an Undo Changes action next to Save Changes that reloads the current entry from sheet values.",
+      "Event detail client cost breakdown now includes Base Price above modifier line-items.",
+      "Ledger now treats pre-Deposit-Paid statuses as full balance (deposit not deducted), and for Deposit-Paid-or-later statuses it deducts deposit while highlighting post-deposit additions in yellow.",
+      "Admin Tools now uses three actions: Open Event Details gSheet, Open Audit Log, and Shop Profit (disabled/inactive placeholder).",
+      "Added Pay tab framework with per-person payout view: admin/super-admin can pick any person via dropdown; artists and counter staff are restricted to their own view.",
+      "Pay framework combines artist and counter assignments for the selected person (e.g., Megan can include both), and hides all money values until status is Event Complete/Event Complete Balance Late.",
+      "Counter-only names (Jacob/Jason/Kevin/Veda) can see only their assigned totals in Pay view; guest/counter users without a mapped staff identity are blocked.",
+      "Payout framework now tracks `eventCompletedAt` timestamp when status transitions to Event Complete and clears it if moved out of complete status.",
+      "Payout screen now excludes cancelled events and includes completed totals grouped by completion year.",
+      "Bottom navigation pay menu is now labeled Payout with a distinct payments icon.",
+      "Pay Schedule now has a year toggle at the top; completed totals and visible payout rows can be filtered by selected year.",
+      "Removed the sheet-tab source label from Pay Schedule and added artist modifier earnings breakdown under completed event totals (Custom Flash, Temporary Tattoos, Extra Hourly only).",
+      "Pay screen now attempts live staff payout tab pulls through Apps Script `sheettabs` + `sheettabrows`, caches parsed per-person overrides, and applies totals by Entry ID + person key before falling back to framework formulas.",
+      "Cutoff policy finalized: no date cutoff for staff-tab overrides; if a live staff-tab row exists for Entry ID + person, override totals are applied regardless of date.",
+      "Cutoff evidence snapshot (2026-04-15): comparing override-vs-framework totals showed mismatches in 11/11 checked rows before 2025-09-06 and 6/7 checked rows on/after 2025-09-06, so date cutoff would be unsafe.",
+      "Step-4 hardening completed: removed bundled snapshot fallback and now enforce live staff-tab payout pulls only; if sheettabs/sheettabrows fail, pay screen reports error and framework math is used without historical snapshot substitution.",
+      "Sheet-theory audit (2026-04-15): Google Drive connector health check succeeded (`Event Details!A1:B3`), `Pricing Schedule` vs `Event Complete` formulas were revalidated, and `Shop Profit = Total for Event - (Artist Pay * #Artists) - Counter Fee` matched all populated payout rows.",
+      "Sheet-theory audit (2026-04-15): Event Complete rows for Entry IDs 1, 2, and 1513 intentionally use manual historical Artist Pay values (also reflected in live artist staff tabs) rather than current schedule-derived formulas.",
+      "Pay tab now performs live linked-cell drift diagnostics while pulling staff-tab overrides: warns on staff-tab header layout changes, missing Event Complete row links (artist tab column Z), row-link/Entry-ID mismatches, and duplicate override keys.",
+      "Compatibility hardening (2026-04-15): if Apps Script deployment returns `Unknown action: sheettabs`, payout override pull now falls back to the known artist tab list instead of failing; Pay tab shows a non-fatal warning and continues with live `sheettabrows` pulls.",
+      "Compatibility hardening follow-up (2026-04-15): staff-tab diagnostics now suppress false header-shape warnings during static-tab fallback and instead report concrete tab pull failures (including missing `sheettabrows`) so warnings are actionable.",
+      "Pay card updates (2026-04-15): removed per-card source-tab/row text, and for staff-tab override rows changed artist line-item labeling to `Artist Payout` (no longer mislabels override totals as base pay).",
+      "Completed timestamp policy update (2026-04-15): for completed events prior to current date with missing `eventCompletedAt`, pay view now assumes completion timestamp = event date; same-day/future missing timestamps remain `timestamp pending`.",
+      "Universal staff payout audit (2026-04-15): checked all live artist-tab payout rows against Event Complete assignments/totals (19 rows across 12 tabs) with zero mismatches and zero missing artist-tab coverage.",
+      "Pricing-breakdown mode update (2026-04-15): Pay rows now compute per-person breakdown from live Pricing Schedule (BasePay T, CF bonus K, Radius share G, Extra-Hour share I) plus role-based counter split; when live staff-tab actual payout differs, card shows `Historical Adjustment` delta.",
+      "Pricing-vs-actual audit snapshot (2026-04-15): with app-equivalent role detection and cutoff at Amelia Bambam (Entry 1513 / 6/20/2025), only 2 staff rows differ from schedule-derived breakdown: Tomma +$300 and Shy +$300 on Entry 1513.",
+      "Known historical exception note (2026-04-15): Entry 1513 (Amelia Bambam) includes a one-off licensing optional-fee split between Tomma and Shy; this is explicitly labeled on payout cards and is not treated as a forward rule.",
+      "Hard-policy update (2026-04-15): payout cards now classify variance rows as historical read-only (past completed events / known exception) versus open-forward policy violations; forward variances require an explicit note tag `PAYOUT ADJUSTMENT REASON[Name]: ...`.",
+      "Pay UI simplification (2026-04-15): payout cards now show completed events only, remove status/pending tags, hide adjustment reason/explanation lines from staff view, and label role chips as `Role: Artist` / `Role: Counter`.",
+      "Pay card layout update (2026-04-15): completed date now renders under event date, payout total is left-aligned while base/modifier/counter breakdown is right-aligned, and artist modifier subtotal labeling is removed in favor of per-modifier amount lines.",
+      "Pay card header polish (2026-04-15): client name now uses event-type color coding and role label is positioned in the middle of the same top row between client name and date/completed timestamp.",
+      "Pay card amount placement update (2026-04-15): total payout now renders directly under client name in the header; lower section remains breakdown-only and is hidden for counter-only rows.",
+      "Payout person matching fix (2026-04-15): pay dropdown source and payout role matching now parse artist/counter name fields with multi-delimiter support (comma, newline, semicolon, slash, ampersand), preventing counter names like `Jason / Kevin` from being dropped.",
+      "Payout picker hygiene update (2026-04-15): placeholder tokens (`-`, `N/A`, `none`) are now ignored in name parsing so only valid staff names appear/match in payout dropdown and role assignment.",
+      "Completed-assignment fallback (2026-04-15): payout calculation now also reads `Event Complete` tab staff names by Entry ID and uses them when `Event Details` artist/counter name fields are blank/placeholders, so historical completed rows like Rebekah Leone (Entry 1229) still resolve Kevin correctly.",
+      "Payout UI messaging trim (2026-04-15): removed the always-visible `Live staff-tab payout overrides loaded (...)` status line from Pay Schedule; UI now shows a notice only on sync error, with drift diagnostics still visible for admin/super-admin views.",
+      "Admin completed payout ledger (2026-04-15): added `Open Completed Payouts` tool in Admin and new hidden admin route listing every completed event with per-person paid totals (role + amount), using the same payout engine and Event Complete fallback assignment logic as Pay tab.",
+      "Admin back-nav fix (2026-04-15): `Back to Admin Tools` actions on Audit Log and Completed Payouts now use explicit route replace to `/admin` instead of history back-navigation, preventing accidental return to Events.",
+      "Admin completed-payout data source hardening (2026-04-15): Completed Payouts page now pulls live events directly from sheet on load (with local fallback only if sheet pull fails), so deleted test entries like `999999` do not persist from stale local cache.",
+      "Admin payout-visual parity update (2026-04-15): Completed Payouts cards now follow Pay tab display rules: event-type color on client name, completed date shown under event date, per-person payout rows use the same total + ordered breakdown (`Artist Base`, `Counter`, `Custom Flash Bonus`, `Radius Share`, `Temporary Tattoos`, `Extra Hourly Share`), and counter-only rows hide breakdown.",
+      "Admin payout money-waterfall update (2026-04-15): Completed Payouts now surfaces full event allocation using `Event Complete` financial columns when available (`Total for Event`, `Shop Profit`) plus staff-paid totals, so admin can see where gross event money went (staff vs shop) without hiding shop totals.",
+      "Admin completed-payout year filter (2026-04-15): Completed Payouts now includes year chips (`All` + detected completed years) mirroring Pay tab behavior; event list and gross/staff/shop summary totals are filtered by selected completion year.",
+      "Admin payout display cleanup (2026-04-15): Completed Payouts money-waterfall now normalizes one-cent sheet artifacts (`...x.01` / `...x.99`) for event-level gross/shop/remainder display, preventing odd penny noise on rows like Justin and Amelia.",
+      "Admin shop-modifier breakdown update (2026-04-15): Completed Payouts now shows per-event shop-side modifier breakdown with percentages and totals (`Custom Flash`, `Radius`, `Temporary Tattoos`, `Extra Hourly`) plus `Shop Base/Other`, using Event Complete financial columns as source-of-truth where available.",
+      "Admin counter-assignment bridge (2026-04-15): positive event remainder is now treated as `Counter (Unassigned)` in Completed Payouts so staff/shop allocation reconciles; each affected event includes an `Assign Counter` action that opens Event Details for assignment.",
+      "Admin shop-breakdown formatting pass (2026-04-15): per-event `Shop Total` now renders as a parent line with a distinct `Shop Breakdown` subsection (indented modifier lines plus breakdown subtotal) to clearly distinguish summary vs component lines.",
+      "Admin payout card declutter pass (2026-04-15): removed top-level peach `Counter (Unassigned)` warning line, moved counter assignment control into the counter row with a small inline pencil icon before the heading, and removed redundant shop breakdown subtotal line while keeping `Shop Total` + breakdown lines.",
+      "Admin payout card polish (2026-04-15): removed per-card Entry ID line and switched event/line-item payout amounts from green to white text for cleaner visual hierarchy.",
+      "Admin shop wording cleanup (2026-04-15): removed explicit `Shop Breakdown` heading text and renamed `Base/Other` to `Shop Base` for cleaner, self-evident shop breakdown lines.",
+      "Admin shop-breakdown visibility rule (2026-04-15): if `Shop Total` equals `Shop Base` for an event (no modifier contribution), the shop breakdown lines are now hidden and only `Shop Total` is shown.",
+      "Color and completed-ledger ordering update (2026-04-15): event/client accent colors now derive from assigned staff colors (artist first, then counter fallback) across Ledger/Detail/Pay/Completed Payouts; Completed Payouts now sorts counter-role rows before other staff rows and shows shop modifier breakdown as totals only (percent labels removed).",
+      "Payout header/exception update (2026-04-15): reverted client headers to event-type icon+color styling and made client names clickable to open Client Details; artist color coding now applies only to artist-role names (not counters). Added explicit historical exception for Entry 1513 (Amelia Bambam): positive remainder is split evenly across artist payout rows as `Licensing Split (Historical)` instead of being classified as unassigned counter.",
+      "Historical payout corrections (2026-04-15): event-type icon/color matching now treats composed labels (for example `SciFi Wedding`) as wedding for UI styling; pre-schedule Entry IDs 1 (Jessie Smith) and 2 (Justin and Amelia) now render flat artist-base payouts from historical actuals (no artist modifier breakdown); Completed Payouts applies full Custom Flash amount to shop for Entry 2 per historical exception; staff name color is applied for counter rows as well (for example Megan on Jillian Nelson).",
+      "Amelia Bambam payout breakdown correction (2026-04-15): Entry 1513 now renders each artist at $1,350 using historical breakdown override (`Artist Base` $1,000 + `Custom Flash Bonus` $50 + `Licensing Split (Historical)` $300), fixing prior over-allocation where licensing was added on top of staff-tab totals.",
+      "Historical payout truth module (2026-04-15): canonical exception data is now centralized in `constants/historical-payout-truth.ts` (Entry 1/2/1513 facts, breakdown overrides, shop-side custom-flash override, and per-person historical reason keys). Pay framework and Completed Payouts now read this module directly, making it the baseline for future comparison against Client Details and staff pay schedule logic.",
+      "Sheet truth alignment fix (2026-04-15): Event Complete row for Entry 2 (`Justin and Amelia`) was updated so `Custom Flash Shop` now matches truth at `$300.00` (previously `$150.00`). Apps Script deployment `AKfycbzEN...` was redeployed to version 40 and includes admin action `seteventcompletecustomflashshop` for controlled single-cell correction.",
+      "Ledger navigation controls update (2026-04-15): open-event cards now keep the existing front-of-card information and use page actions for `Client Details`, `Staff Assignements`, `Notes`, and `Generators & Files`.",
+      "Event page split update (2026-04-15): separated event workflows into dedicated pages (`client-details`, `notes`, `generators-files`) and removed the in-page top section menu from the main staff-assignment editor route.",
+      "Event activity log scaffold (2026-04-15): added per-event activity log storage (`lib/event-activity-log.ts`) and wired status changes in Staff Assignements to timestamped actor-attributed log entries.",
+      "Client Details pricing alignment pass (2026-04-15): moved `Set-Up Time` into Client Details before pricing, moved Staff Price Adjustment to an admin/super-admin section after pricing, and added save-to-sheet controls on the page.",
+      "Notes workflow alignment pass (2026-04-15): notes page now treats client notes as read-only, removes pricing-specific fields, adds upcoming/last appointment display, and posts communication entries to the event activity log.",
+      "Generated files visibility hardening (2026-04-15): Generators & Files now back-fills existing contract/license URLs from live `Event Details` sheet rows by Entry ID so prior generated docs (for example Shandra Knapstad) surface without re-generation.",
+      "Apps Script payload extension (2026-04-15): `apiBuildEvent_` now includes `contractUrl` and `tflUrl` so app event payloads can carry generated-file links directly after redeploy.",
+      "Ledger card action layout update (2026-04-15): page-action controls on event cards now render as icon buttons on the bottom-left, with `Add to Google Calendar` on the same bottom row at right.",
+      "Admin-visibility enforcement (2026-04-15): Client Details page is now admin/super-admin only (button hidden for other roles), and ledger card `Computed Total`/`Balance` are hidden for non-admin roles.",
+      "Page ownership update (2026-04-15): Delete Event was moved to Client Details only; Staff Assignements no longer offers delete actions.",
+      "Client Details field move (2026-04-15): `Custom Flash`, `Temporary Tattoos`, `Event Start Time`, `Event End Time`, and `Extra Hours` were moved from Staff Assignements into Client Details.",
+      "Notes status-control update (2026-04-15): status controls now live on Notes, are editable by admin/super-admin only, and each status change is appended to the event activity log.",
+      "Client Details layout correction (2026-04-15): delete action moved back to the top-right action row, timing/hour fields are grouped together (`Set-Up`, start, end, extra hours), and client info fields are rendered in the bottom section per `client_details_position: bottom`.",
+      "Client pricing table parity update (2026-04-15): added `Deposit` and `Balance` rows to Client Facing Pricing; deposit now shows a paid checkmark when status is Deposit Paid or later.",
+      "Staff Assignements counter selector update (2026-04-15): added explicit `None` option, grey `Other` option, and write-in counter names that become clickable chips for the current event.",
+      "Client page header consistency update (2026-04-15): Notes and Generators & Files pages now use the same event-type icon + colored client-name hero header as Client Details and Staff Assignements.",
+      "Generators/files link reliability update (2026-04-15): generated contract/TFL refresh now prefers Apps Script `action=event` (rich-text link aware) and falls back to `sheettabrows` row reads, improving visibility of generated docs such as rich-text contract cells.",
+      "Generators/files workflow update (2026-04-15): added `Email License Application` (`mailto:hlo.applications@odhsoha.oregon.gov`) with prefilled subject/body, plus an `Uploaded Art` section that stores a public art image URL in `contractNotes` using `ART_IMAGE_URL=` token and renders preview image on the page.",
+      "Art upload hardening (2026-04-15): Apps Script now exposes token-protected `uploadartimage` (POST) that decodes base64 image payloads, writes files to Drive (`Generated Contracts` > `Uploaded Event Art`), persists art URL into Event Details notes token, and returns refreshed event payload including `artImageUrl`.",
+      "Generators/files upload UX hardening (2026-04-15): app now supports `Upload From Device` (Expo Image Picker) to push art directly through the new Apps Script upload endpoint, with manual URL save retained as fallback.",
+      "Generated-doc URL recovery hardening (2026-04-15): `action=event` now resolves missing contract/license URLs from filename-only cells by searching Drive (generated folder first, global fallback). This restored Entry 3545 (`Shandra Knapstad`) contract URL resolution.",
+      "Apps Script deployment update (2026-04-15): web app deployment `AKfycbzEN...` redeployed through version 44 with upload-art endpoint, robust POST body parsing (JSON + x-www-form-urlencoded), `artImageUrl` event payload field, and filename-to-Drive URL fallback logic.",
+      "Theoretical Calculator counter-hours update (2026-04-15): counter staff now scales with booked hours in the calculator summary (`counter x bookedHours/5`) for both prorated (<5h) and extended (>5h) scenarios, with updated helper text and line-item label.",
+      "Theoretical Calculator summary formatting update (2026-04-15): summary now shows `Base Price (5 hours)` + `Counter Staff (5 hours)`, divider, conditional prorated base/counter rows only when booked hours are below 5, divider, and `Total` label (replacing `Hypothetical Total`).",
+      "Theoretical Calculator admin-input tightening (2026-04-15): Deposit percent is now fixed at 30% (field removed from editor, still shown in summary table), Staff Adjustment now has a required reason field when amount is non-zero, and the summary line label uses that reason instead of generic `Staff Adjustment` when present.",
+      "Theoretical Calculator modifier typography update (2026-04-15): modifier rows in summary (`Temp Facility License`, `Custom Flash`, `Temporary Tattoos`, `Radius Fee`, `Extra Hourly Charge`, `Modifiers Total`) now render slightly smaller and non-bold.",
+      "Pricing hardwire safety pass (2026-04-15): replaced live counter-charge pulls in Theoretical Calculator and Staff Assignements with deterministic values from constants/pricing-schedule.ts. Event math and auto-pricing now resolve plan year via shared parser and schedule rows, preventing silent drift when sheet values change.",
+      "Pricing table client-communication update (2026-04-15): Theoretical Calculator now shows travel distance in modifier rows, labels no-charge radius as `Radius Fee (under 20 mi included)` when applicable, tags Custom Flash/Temporary Tattoos rows with YES/NO state, styles Staff Adjustment as a modifier line, and adds `Copy Pricing Table` to export a clean email-ready breakdown.",
+      "Pricing radius/copy correction (2026-04-15): removed `Pricing Plan` and duplicate YES/NO header lines from copied pricing text, added explicit included-distance travel label + radius step calculation line, and enabled radius fee computation whenever manual travel distance is entered (even without address parse).",
+      "Client Details open-forward pricing lock (2026-04-15): new client-detail pricing table behavior (flash/temp YES/NO labels, included-distance travel line, radius step calc, included-distance radius label, and extra-hourly row) now applies to open/forward events only; completed/cancelled historical events remain on legacy pricing interpretation to avoid retroactive changes.",
+      "Pricing calculator workflow/button update (2026-04-15): save-mode picker now supports `New Client Entry`, `Import`, and `Overwrite`; `Import` loads selected open-event values into calculator inputs, while save confirmation gating remains for create/overwrite actions. Pricing-table clipboard control is now a compact icon-only button and no longer renders post-copy status text.",
+      "Pricing helper-text cleanup (2026-04-15): removed `<5h` prorate helper formulas under Booked Hours so proration is reflected only in the pricing table; counter hour-adjust formula helper now appears only for >5h extended-hours mode.",
+      "Pricing default-hours update (2026-04-15): Theoretical Calculator now defaults Booked Hours to 5 and falls back to 5-hour math when the hours input is blank, unless a different number is entered.",
+      "Pricing precision fix (2026-04-15): 2025 plan, 3-artist base-per-artist now uses exact split (3500/3) to eliminate the visible $0.01 base-total artifact while keeping displayed per-artist value at $1,166.67.",
+      "Pricing plan-link routing update (2026-04-15): Pricing tab share/copy and magnifier/open actions now route by selected plan year (2026 keeps current link; 2025 uses the legacy pricing PDF link provided by staff).",
+      "Pricing input polish (2026-04-15): Booked Hours field now displays default `5` as placeholder-style text (blank input with 5-hour calculation fallback), all helper formula text under Booked Hours is removed, and pricing-link copy action is silent with no on-screen feedback text.",
+      "Pricing radius-display simplification (2026-04-15): removed visible `Radius Step Calc` line from theoretical calculator and copied pricing text; `Travel Distance` keeps `first 20 mi included` context while `Radius Fee` label is now plain sum-only display.",
+      "Client Details pricing parity pass (2026-04-15): renamed `Client Facing Pricing` to `Event Pricing`, removed visible radius step-calculator output, aligned pricing rows/order/dividers to gold-standard calculator format, added explicit `Staff Adjustment` line-item + `Modifiers Total`, and kept deposit paid checkmark behavior unchanged.",
+      "Client Details typography parity tweak (2026-04-15): `Event Pricing` base/counter rows now use lead label/value typography matching the gold-standard pricing calculator (heavier/larger than modifier rows).",
+      "Generators & Files client-delivery update (2026-04-15): added `Email Client Files` action that opens composer to client email with generated contract/license links (and art link when present).",
+      "Generators lock behavior update (2026-04-15): when both generated files already exist for an event, generation controls are disabled and page shifts to link-only workflow.",
+      "Uploaded art download update (2026-04-15): added `Download Art` action in Generators & Files; native flow downloads to cache and opens share sheet for save-to-device, web flow triggers direct browser download with open-link fallback.",
+      "Apps Script art-permissions hardening (2026-04-15): uploadartimage now sets uploaded Drive file sharing to `anyone with link` + `view` before writing URL back to Event Details notes.",
+      "Admin-access expansion (2026-04-15): Admin tab, Audit Log, and Completed Payouts visibility now allow both `admin` and `super_admin` roles (non-admin roles remain blocked).",
+      "Admin promotion controls (2026-04-15): Admin page now includes an allowlisted-user roster with role chips and promote/remove actions; promotions persist locally via AsyncStorage override and elevate effective auth type to `admin` for app gating.",
+      "Ledger action-row resilience (2026-04-15): event-card bottom action row now wraps safely on narrow layouts and keeps `Generators & Files` icon accessible instead of being squeezed out by calendar CTA.",
+      "Generators/files wording/order cleanup (2026-04-15): Generated Forms now orders actions as Open Contract -> Email Contract to Client -> Open License Application -> Email License Application; contract email uses subject `{{client}} {{event type}} {{event date}} Contract` with polished default body, generator section is hidden when both files already exist, and uploaded-art permissions explainer copy is removed from UI.",
+      "Generators/files color pass (2026-04-15): contract actions are now blue and license actions are now green across both generator controls and generated-form action buttons.",
+      "Generators/files clipboard fallback (2026-04-15): added `Copy Email to Clipboard` as the third action for both contract and license groups (blue for client contract, green for Oregon licensing) to support workflows where `mailto:` launch is blocked.",
+      "TFL artist-slot hardening (2026-04-15): Apps Script generation now uses explicit selected artist count + normalized artist-name filtering for contract/TFL generation and literal-safe placeholder replacement, preventing empty/unassigned artist rows from filling all license artist slots.",
+      "Clipboard behavior refinement (2026-04-15): `Copy Email to Clipboard` buttons now copy address-only values (client email for blue contract copy, `hlo.applications@odhsoha.oregon.gov` for green licensing copy).",
+      "Generators/files art-action expansion (2026-04-15): renamed `Open Contract` to `Open Event Contract`; uploaded art action set now includes `Open Art`, `Email Art`, and `Share Art` (shown only when art exists); added confirmed `Delete Saved Art` flow that removes saved art from sheet notes for staff-access workflows.",
+      "Bottom-tab cleanup (2026-04-16): hidden the standalone `Generator` bottom-tab item (`explore`) per workflow direction; generator actions remain available from event card `Generators & Files` entry points.",
+      "Pay-schedule visibility tightening (2026-04-16): non-admin accounts are now restricted to their own payout schedule in the Pay tab; only signed-in `admin`/`super_admin` can switch the person picker to view other staff payouts.",
+      "Pay access correction (2026-04-16): restored full staff payout visibility for admin contexts by keying person-picker access to shared `canAccessAdminTools` (including current super-admin/bypass session), while keeping non-admin own-schedule restrictions intact.",
+      "Admin tools navigation split (2026-04-16): moved inline admin-promotion roster/actions off Admin Tools into dedicated `Admin Promotion` page (`/admin-promotion`), leaving Admin as a compressed action hub with a new `Open Admin Promotion` entry.",
+      "Completed payout allocation exception (2026-04-16): Tomma remains visible as a staff payout line for tracking, but her payout is reallocated into `Shop Total` with an explicit `Tomma (to Shop)` shop-breakdown line so event-level money flow reconciles to gross.",
+      "Admin Shop Profit page activation (2026-04-16): enabled `Shop Profit` action in Admin Tools and added hidden route `/shop-profit` with year-filtered completed-event shop analytics (gross/staff/shop summaries, shop modifier totals, and event-level shop breakdown cards) aligned to Completed Payouts financial logic.",
+      "Shop Profit Tomma modifier visibility (2026-04-16): shop-captured staff lines now include modifier breakdown under each captured name (`Custom Flash Bonus`, `Radius Share`, `Temporary Tattoos`, `Extra Hourly Share`) on both event cards and the Shop Breakdown Totals section.",
+      "Shop Profit captured-line composition detail (2026-04-16): captured payout breakdown under each `Name (to Shop)` line now includes `Artist Base` (and `Counter` when present) before modifier bullets so each captured total is fully itemized.",
+      "Shop Profit naming tweak (2026-04-16): on Shop Profit page, Tomma's captured label now reads `Tomma's Income` instead of `Tomma (to Shop)` in both totals and per-event sections.",
+      "Shop Profit staff-type visibility (2026-04-16): each event card now shows role mix counts as `Staff Involved: Artists X • Counter Y`, derived from payout-role rows for that completed event.",
+      "Shop Profit event click expansion (2026-04-16): clicking an event on Shop Profit now expands an in-card `Full Allocation` audit view with gross/staff/shop totals, per-person staff payouts and component lines, shop component lines, and percentage shares (gross + shop share where relevant).",
+      "Payout/admin page consolidation (2026-04-16): merged `Completed Payouts` and `Shop Profit` into a single maintained ledger experience; Admin now shows one `Open Payout Ledger` action (route `/shop-profit`), and `/completed-payouts` is a compatibility alias to the same screen.",
+      "Payout percentages clarification (2026-04-16): expanded event audit now includes explicit `Pay Schedule Percent Source` lines from live `Pricing Schedule` row (Plan + artist count), and shows schedule-based shares for Radius and Extra Hourly (artist and shop sides) so displayed percentages align with Event Details pay schedule logic.",
+      "Payout allocation formatting + counter assignment (2026-04-16): in expanded event audit, Staff/Shop Allocation sections now show amount-only lines (no percentages), `Pay Schedule Percent Source` includes Radius/Extra Hourly fee totals when present, and unassigned counter payout now surfaces `Assign Counter` actions on-card and in expanded view routing to Staff Assignements for direct assignment.",
+      "Custom Flash split visibility (2026-04-16): expanded `Pay Schedule Percent Source` now shows Custom Flash Artist-vs-Shop split as percentages and amounts when a custom flash fee exists, using event-level custom flash totals (`Custom Flash Fee` and `Custom Flash Shop`).",
+      "Google auth enforcement activation (2026-04-16): wired Expo Google OAuth sign-in flow (`expo-auth-session`) into `AuthFrameworkProvider`, enabled `requireAuth` + Google sign-in in auth config, and added a signed-out gate screen in tabs with allowlist enforcement by login email."
+    ],
+    "production_policy": {
+      "public_anyone_with_link": false,
+      "require_shared_only": true,
+      "note": "Do not rely on open public web app access in production."
+    }
+  },
+  "auth_framework": {
+    "status": "enabled_google_allowlist",
+    "enforcement": "on",
+    "auth_types": [
+      {
+        "key": "super_admin",
+        "label": "Super Admin",
+        "starter_assignment": "Myself"
+      },
+      {
+        "key": "admin",
+        "label": "Admin"
+      },
+      {
+        "key": "artist",
+        "label": "Artist"
+      },
+      {
+        "key": "counter_guest",
+        "label": "Counter/Guest"
+      }
+    ],
+    "developer_only": {
+      "auth_debug_screen": {
+        "status": "planned",
+        "visibility": "developer_only",
+        "intent": "Inspect allowlist, auth-type resolution, and framework state while auth is active."
+      }
+    }
+  },
+  "planned_features": [
+    {
+      "name": "Google Sign-In hardening",
+      "priority": "high",
+      "reason": "Follow-up pass for production redirect URI coverage and Android client wiring."
+    },
+    {
+      "name": "Restricted Apps Script deployment strategy",
+      "priority": "high",
+      "reason": "Use shared-user access model once auth is in app."
+    },
+    {
+      "name": "Multi-tab spreadsheet pages in app",
+      "priority": "medium",
+      "reason": "Spreadsheet has multiple tabs that should become separate app pages later."
+    },
+    {
+      "name": "Cross-session onboarding note",
+      "priority": "medium",
+      "reason": "Keep this file updated after each major change for fast refresh after long gaps."
+    },
+    {
+      "name": "Auth Debug Screen (Developer Only)",
+      "priority": "medium",
+      "reason": "Add an internal-only screen to inspect auth framework config, allowlist mapping, and user-type resolution before enabling OAuth."
+    },
+    {
+      "name": "Shop Financials (Admin page)",
+      "priority": "high",
+      "reason": "Add financial summaries/metrics to the Admin tab for super-admin workflows."
+    },
+    {
+      "name": "Payout Override Monitoring",
+      "priority": "medium",
+      "reason": "Keep spot-checking occasional events to confirm live staff-tab pulls remain the correct source-of-truth and to catch data-entry anomalies early."
+    }
+  ],
+  "next_session_checklist": [
+    "Open project.json first and confirm no policy changes were made outside code.",
+    "Verify home page shows AO deposit-completed first, then other open records, both by event date.",
+    "Confirm Apps Script deployment URL and APP_SYNC_TOKEN before testing sync.",
+    "If artist chips show an auth error, restart Expo to reload app.json extra URL; app now has artist list fallback behavior.",
+    "Audit log is now in the Admin bottom-tab page and stores only the latest 150 entries.",
+    "Audit log writes are currently paused while building; re-enable in lib/audit-log.ts when ready.",
+    "Pricing hypothetical now supports base+event address lookup to auto-fill travel distance and auto-compute radius/extras.",
+    "Counter staff toggle and base address input were removed from Pricing hypothetical (both are now implicit defaults).",
+    "Hypothetical pricing includes 5-hour base prorate support; set Booked Hours below 5 to prorate base total.",
+    "Booked Hours > 5 now auto-populates Extra Hourly Charge in breakdown; manual extra-hourly input was removed.",
+    "Audit Log is now its own page (opened from Admin Tools); Admin tab shows icon actions for gSheet, Audit Log, and disabled Shop Profit placeholder.",
+    "Payout tab is role-gated and only shows payouts for Event Complete statuses; verify person mapping/permissions against current signed-in role.",
+    "Spot-check payout rows for Jessie Smith and Justin/Amelia against live staff tabs and confirm override rows show `Artist Payout` labeling (not `Artist Base`) in-app.",
+    "Confirm payout cards now show pricing-derived modifier components (Custom Flash Bonus, Radius Share, Extra Hourly Share) and surface `Historical Adjustment` only when actual staff-tab totals diverge from schedule math.",
+    "Treat Entry 1513 (Amelia Bambam) adjustment as a documented historical exception only; do not generalize optional-fee splitting as default payout logic.",
+    "For any open-forward payout variance, record explicit reason in notes using `PAYOUT ADJUSTMENT REASON[Name]: ...` (or generic `PAYOUT ADJUSTMENT REASON: ...`) so policy checks pass.",
+    "Watch for sheet row-order drift: Event Complete and artist tabs are row-index linked via Helper Completed Events; if completed-event ordering changes, verify manual historical payout rows still map to the correct Entry IDs.",
+    "If Pay tab shows staff-tab drift warning text, inspect artist tab formulas/linked cells first (especially Z row-link and A:K payout columns) before trusting newly imported overrides.",
+    "If Pay tab reports `legacy tab discovery fallback`, redeploy Apps Script version that includes `action=sheettabs` when possible; payout rows still load via direct artist-tab pulls in the meantime.",
+    "Keep no-cutoff payout policy: apply live staff-tab override whenever Entry ID + person row exists; only use framework math when no override row is present.",
+    "Validate pay screen can recover gracefully if sheettabs/sheettabrows are temporarily unavailable (error note visible; framework totals continue without snapshot substitution).",
+    "Event completion timestamp is tracked in local app state (`eventCompletedAt`) when status first moves to completed; use this for yearly payout totals.",
+    "Delete Event now sends a sheet delete action with confirmation; validate Apps Script supports action=deleteEvent before production use.",
+    "Auth framework is now enforced via Google sign-in + allowlist; keep ALLOWED_GOOGLE_USERS current before onboarding new staff.",
+    "Verify OAuth redirect URIs stay aligned with active web host/build URL before release updates.",
+    "Document any new spreadsheet tab integrations in this file as they are added.",
+    "If Generate Contract/License returns unknown action, redeploy Apps Script web app version that includes `action=generatecontract` and `action=generatetfl`.",
+    "Notes page now owns uploaded flash/status + staff notes + statuses log, and event activity entries capture actor + timestamp when status changes or staff notes are added."
+  ],
+  "notes": [
+    "Staff uses the app; customers do not.",
+    "Staff can override customer inputs and pricing outputs before saving.",
+    "When status becomes Event Complete/Cancelled, it should disappear from first page.",
+    "Persistent local storage key moved to anatomy_events_v2 to clear old seeded records.",
+    "Authentication is Google sign-in enforced; access is restricted to allowlisted emails with role mapping in constants/auth-permissions.ts."
+  ]
+}

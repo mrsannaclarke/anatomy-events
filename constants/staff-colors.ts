@@ -1,0 +1,81 @@
+const STAFF_COLOR_MAP: Record<string, string> = {
+  anna: '#1aa7a1',
+  anne: '#8b5cf6',
+  agnes: '#fa8072',
+  drew: '#ff4fa8',
+  jacob: '#8f5ab8',
+  jake: '#ff8c00',
+  jason: '#1f4ea8',
+  jayden: '#e14b2d',
+  jazz: '#b0e0e6',
+  kevin: '#8e1d4a',
+  veda: '#8e1d4a',
+  lindsay: '#ffd54f',
+  lucky: '#9acd32',
+  megan: '#b57edc',
+  shy: '#1e6bff',
+  sienna: '#228b22',
+  sisi: '#a66a3a',
+  summer: '#3eb489',
+  tomma: '#c72c67',
+};
+
+const FALLBACK_STAFF_COLOR = '#8AA4BF';
+
+function normalizeName(name: string): string {
+  return name
+    .replace(/\s*\([^)]*\)\s*$/, '')
+    .replace(/[’']s$/i, '')
+    .trim()
+    .toLowerCase();
+}
+
+function isValidAssignedName(value: string): boolean {
+  const normalized = normalizeName(value);
+  if (!normalized) return false;
+  if (normalized === '-' || normalized === '—') return false;
+  if (normalized === 'n/a' || normalized === 'na' || normalized === 'none') return false;
+  return true;
+}
+
+function parseAssignedNames(value: string): string[] {
+  return value
+    .split(/[,\n;/&]+/)
+    .map((entry) => entry.trim())
+    .filter((entry) => isValidAssignedName(entry));
+}
+
+export function getStaffColor(name: string): string {
+  return STAFF_COLOR_MAP[normalizeName(name)] || FALLBACK_STAFF_COLOR;
+}
+
+export function getAssignedEventColor(artistNames: string, counterNames: string): string {
+  const artists = parseAssignedNames(artistNames);
+  if (artists.length > 0) return getStaffColor(artists[0]);
+
+  const counters = parseAssignedNames(counterNames);
+  if (counters.length > 0) return getStaffColor(counters[0]);
+
+  return FALLBACK_STAFF_COLOR;
+}
+
+export function hexToRgba(hex: string, alpha: number): string {
+  const cleaned = hex.replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(cleaned)) return `rgba(138, 164, 191, ${alpha})`;
+
+  const r = Number.parseInt(cleaned.slice(0, 2), 16);
+  const g = Number.parseInt(cleaned.slice(2, 4), 16);
+  const b = Number.parseInt(cleaned.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function getContrastTextForHex(hex: string): string {
+  const cleaned = hex.replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(cleaned)) return '#f7fbff';
+
+  const r = Number.parseInt(cleaned.slice(0, 2), 16);
+  const g = Number.parseInt(cleaned.slice(2, 4), 16);
+  const b = Number.parseInt(cleaned.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? '#0b1117' : '#f7fbff';
+}
