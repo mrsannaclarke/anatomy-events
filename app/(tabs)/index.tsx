@@ -335,6 +335,7 @@ export default function EventsScreen() {
   const canViewAdminMoney =
     (canAccessAdminTools && !viewerOverrideName) ||
     Boolean(viewerPermission?.roles.includes('admin'));
+  const canUseAdminCardActions = canViewAdminMoney;
   const sortByEventDate = (a: EventRecord, b: EventRecord) => {
       const aDate = parseEventDateTimestamp(a.eventDate);
       const bDate = parseEventDateTimestamp(b.eventDate);
@@ -618,7 +619,7 @@ export default function EventsScreen() {
             ) : null}
             <View style={styles.cardBottomActionRow}>
               <View style={styles.actionIconRow}>
-                {canViewAdminMoney ? (
+                {canUseAdminCardActions ? (
                   <Pressable
                     style={[
                       styles.actionIconButton,
@@ -632,18 +633,20 @@ export default function EventsScreen() {
                     <MaterialIcons name="badge" size={16} color="#dceafe" />
                   </Pressable>
                 ) : null}
-                <Pressable
-                  style={[
-                    styles.actionIconButton,
-                    actionFeedbackKey === `${event.id}:staff` ? styles.actionIconButtonActive : null,
-                  ]}
-                  onPress={() => {
-                    showActionFeedback(event.id, 'staff');
-                    openEvent(event.id);
-                  }}
-                  accessibilityLabel="Staff Assignements">
-                  <MaterialIcons name="groups" size={16} color="#dceafe" />
-                </Pressable>
+                {canUseAdminCardActions ? (
+                  <Pressable
+                    style={[
+                      styles.actionIconButton,
+                      actionFeedbackKey === `${event.id}:staff` ? styles.actionIconButtonActive : null,
+                    ]}
+                    onPress={() => {
+                      showActionFeedback(event.id, 'staff');
+                      openEvent(event.id);
+                    }}
+                    accessibilityLabel="Staff Assignements">
+                    <MaterialIcons name="groups" size={16} color="#dceafe" />
+                  </Pressable>
+                ) : null}
                 <Pressable
                   style={[
                     styles.actionIconButton,
