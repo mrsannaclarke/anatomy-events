@@ -98,7 +98,7 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 export default function PayScreen() {
   const router = useRouter();
   const { events } = useEvents();
-  const { viewerName, viewerOverrideName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
 
   const defaultViewerName = viewerName;
   const viewerPermission = useMemo(() => {
@@ -106,9 +106,7 @@ export default function PayScreen() {
     return resolvePermissionsForName(defaultViewerName);
   }, [defaultViewerName, resolvePermissionsForName]);
 
-  // In admin "View As" mode, pay visibility should emulate the selected staff profile,
-  // not retain full admin all-people access.
-  const canViewAnyPayTable = canAccessAdminTools && !viewerOverrideName;
+  const canViewAnyPayTable = canAccessAdminToolsForViewer;
 
   const canViewOwnPayTable = Boolean(
     viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter'),

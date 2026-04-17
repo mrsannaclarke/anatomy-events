@@ -323,7 +323,7 @@ function buildLedgerDateLine(event: EventRecord): string {
 export default function EventsScreen() {
   const router = useRouter();
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
-  const { viewerName, viewerOverrideName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sheetSyncStatus, setSheetSyncStatus] = useState('Loading events from sheet...');
   const [sheetSyncError, setSheetSyncError] = useState('');
@@ -332,9 +332,7 @@ export default function EventsScreen() {
   const hasAttemptedAutoPull = useRef(false);
   const actionFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
-  const canViewAdminMoney =
-    (canAccessAdminTools && !viewerOverrideName) ||
-    Boolean(viewerPermission?.roles.includes('admin'));
+  const canViewAdminMoney = canAccessAdminToolsForViewer || Boolean(viewerPermission?.roles.includes('admin'));
   const canUseAdminCardActions = canViewAdminMoney;
   const sortByEventDate = (a: EventRecord, b: EventRecord) => {
       const aDate = parseEventDateTimestamp(a.eventDate);

@@ -89,7 +89,7 @@ export default function EventNotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { events, setSelectedEventId, updateEvent } = useEvents();
-  const { status: authStatus, user, viewerName, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
+  const { status: authStatus, user, viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
 
   const [activityEntries, setActivityEntries] = useState<EventActivityEntry[]>([]);
   const [isLoadingActivity, setIsLoadingActivity] = useState(true);
@@ -105,9 +105,7 @@ export default function EventNotesScreen() {
   const eventId = event?.id || '';
   const actorName = useMemo(() => resolveActorName({ status: authStatus, user }), [authStatus, user]);
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
-  const canEditStatus =
-    canAccessAdminTools ||
-    Boolean(viewerPermission?.roles.includes('admin'));
+  const canEditStatus = canAccessAdminToolsForViewer || Boolean(viewerPermission?.roles.includes('admin'));
 
   useEffect(() => {
     if (!eventId) return;

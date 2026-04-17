@@ -11,10 +11,12 @@ const EVENT_DETAILS_SHEET_URL =
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { canAccessAdminTools, viewerName, viewerOverrideName, setViewerOverrideName, staffPermissions } = useAuthFramework();
+  const { canAccessAdminTools, canAccessAdminToolsForViewer, viewerName, viewerOverrideName, setViewerOverrideName, staffPermissions } =
+    useAuthFramework();
   const [adminStatus, setAdminStatus] = useState('');
 
   const canViewAdmin = canAccessAdminTools;
+  const canUseAdminTools = canAccessAdminToolsForViewer;
   const viewAsNames = useMemo(
     () =>
       Array.from(
@@ -92,35 +94,39 @@ export default function AdminScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonColumn}>
-          <Pressable style={styles.primaryButton} onPress={openEventDetailsSheet}>
-            <View style={styles.buttonContent}>
-              <MaterialIcons name="table-view" size={16} color="#fff" />
-              <ThemedText style={styles.primaryButtonText}>Open Event Details gSheet</ThemedText>
-            </View>
-          </Pressable>
+        {canUseAdminTools ? (
+          <View style={styles.buttonColumn}>
+            <Pressable style={styles.primaryButton} onPress={openEventDetailsSheet}>
+              <View style={styles.buttonContent}>
+                <MaterialIcons name="table-view" size={16} color="#fff" />
+                <ThemedText style={styles.primaryButtonText}>Open Event Details gSheet</ThemedText>
+              </View>
+            </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={openAuditLogPage}>
-            <View style={styles.buttonContent}>
-              <MaterialIcons name="history" size={16} color="#c7d8eb" />
-              <ThemedText style={styles.secondaryButtonText}>Open Audit Log</ThemedText>
-            </View>
-          </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={openAuditLogPage}>
+              <View style={styles.buttonContent}>
+                <MaterialIcons name="history" size={16} color="#c7d8eb" />
+                <ThemedText style={styles.secondaryButtonText}>Open Audit Log</ThemedText>
+              </View>
+            </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={openAdminPromotionPage}>
-            <View style={styles.buttonContent}>
-              <MaterialIcons name="manage-accounts" size={16} color="#c7d8eb" />
-              <ThemedText style={styles.secondaryButtonText}>Open Admin Promotion</ThemedText>
-            </View>
-          </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={openAdminPromotionPage}>
+              <View style={styles.buttonContent}>
+                <MaterialIcons name="manage-accounts" size={16} color="#c7d8eb" />
+                <ThemedText style={styles.secondaryButtonText}>Open Admin Promotion</ThemedText>
+              </View>
+            </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={openPayoutLedgerPage}>
-            <View style={styles.buttonContent}>
-              <MaterialIcons name="payments" size={16} color="#c7d8eb" />
-              <ThemedText style={styles.secondaryButtonText}>Open Payout Ledger</ThemedText>
-            </View>
-          </Pressable>
-        </View>
+            <Pressable style={styles.secondaryButton} onPress={openPayoutLedgerPage}>
+              <View style={styles.buttonContent}>
+                <MaterialIcons name="payments" size={16} color="#c7d8eb" />
+                <ThemedText style={styles.secondaryButtonText}>Open Payout Ledger</ThemedText>
+              </View>
+            </Pressable>
+          </View>
+        ) : (
+          <ThemedText style={styles.helperText}>Admin tools are hidden while View As is set to a non-admin profile.</ThemedText>
+        )}
 
         {adminStatus ? <ThemedText style={styles.helperText}>{adminStatus}</ThemedText> : null}
       </View>

@@ -8,11 +8,17 @@ import { useAuthFramework } from '@/lib/auth-framework';
 
 export default function AdminPromotionScreen() {
   const router = useRouter();
-  const { canAccessAdminTools, allowedGoogleUsers, getEffectiveAuthTypeForEmail, promotedAdminEmails, setAdminPromotion } =
+  const {
+    canAccessAdminToolsForViewer,
+    allowedGoogleUsers,
+    getEffectiveAuthTypeForEmail,
+    promotedAdminEmails,
+    setAdminPromotion,
+  } =
     useAuthFramework();
   const [promotionStatus, setPromotionStatus] = useState('');
 
-  const canViewAdmin = canAccessAdminTools;
+  const canViewAdmin = canAccessAdminToolsForViewer;
 
   const allowlistRows = useMemo(() => {
     return allowedGoogleUsers
@@ -221,4 +227,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

@@ -223,7 +223,7 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 export default function ShopProfitScreen() {
   const router = useRouter();
   const { events, upsertEventFromRemote } = useEvents();
-  const { canAccessAdminTools } = useAuthFramework();
+  const { canAccessAdminToolsForViewer } = useAuthFramework();
   const [sheetEvents, setSheetEvents] = useState<EventRecord[] | null>(null);
   const [staffTabOverrides, setStaffTabOverrides] = useState<StaffTabPayoutOverrideMap>({});
   const [pricingSchedulePayoutMap, setPricingSchedulePayoutMap] = useState<PricingSchedulePayoutMap>({});
@@ -232,7 +232,7 @@ export default function ShopProfitScreen() {
   const [selectedYear, setSelectedYear] = useState<string>('All');
   const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
 
-  const canViewAdmin = useMemo(() => canAccessAdminTools, [canAccessAdminTools]);
+  const canViewAdmin = useMemo(() => canAccessAdminToolsForViewer, [canAccessAdminToolsForViewer]);
 
   function goToAdminTools() {
     router.replace('/admin');

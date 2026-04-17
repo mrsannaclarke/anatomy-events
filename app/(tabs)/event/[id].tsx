@@ -23,6 +23,7 @@ import {
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { useEvents } from '@/context/events-context';
 import { fireAndForgetAuditLog } from '@/lib/audit-log';
+import { useAuthFramework } from '@/lib/auth-framework';
 import { parseMoney } from '@/lib/event-math';
 import {
   pullActiveArtistsFromSheet,
@@ -214,9 +215,12 @@ export default function EventDetailScreen() {
   const { id, returnTo } = useLocalSearchParams<{ id: string; returnTo?: string | string[] }>();
   const router = useRouter();
   const { events, updateEvent, setSelectedEventId, upsertEventFromRemote } = useEvents();
+  const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
   const scrollRef = useRef<ScrollView>(null);
 
   const event = events.find((item) => item.id === id);
+  const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
+  const canAccessStaffAssignments = canAccessAdminToolsForViewer || Boolean(viewerPermission?.roles.includes('admin'));
   const [sheetSyncStatus, setSheetSyncStatus] = useState('');
   const [sheetSyncError, setSheetSyncError] = useState('');
   const [availableArtistNames, setAvailableArtistNames] = useState<string[]>([]);
@@ -578,6 +582,18 @@ export default function EventDetailScreen() {
     return (
       <View style={styles.emptyContainer}>
         <ThemedText type="subtitle">Event not found</ThemedText>
+      </View>
+    );
+  }
+
+  if (!canAccessStaffAssignments) {
+    return (
+      <View style={styles.emptyContainer}>
+        <ThemedText type="subtitle">Staff Assignements is admin only.</ThemedText>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={14} color="#cde0f5" />
+          <ThemedText style={styles.backButtonText}>Back</ThemedText>
+        </Pressable>
       </View>
     );
   }

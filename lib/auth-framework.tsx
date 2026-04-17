@@ -35,6 +35,7 @@ type AuthFrameworkContextValue = {
   viewerOverrideName: string | null;
   effectiveAuthType: AuthType | null;
   canAccessAdminTools: boolean;
+  canAccessAdminToolsForViewer: boolean;
   errorMessage: string | null;
   config: typeof AUTH_FRAMEWORK_CONFIG;
   authTypes: typeof AUTH_TYPES;
@@ -421,6 +422,20 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     return effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
   }, [effectiveAuthType, status]);
 
+  const canAccessAdminToolsForViewer = useMemo(() => {
+    if (status === 'bypass') return true;
+    if (viewerOverrideName) {
+      const overridePermission = resolvePermissionsForNameInternal(viewerOverrideName);
+      if (!overridePermission) return false;
+      return (
+        overridePermission.authType === 'super_admin' ||
+        overridePermission.authType === 'admin' ||
+        overridePermission.roles.includes('admin')
+      );
+    }
+    return canAccessAdminTools;
+  }, [canAccessAdminTools, status, viewerOverrideName]);
+
   useEffect(() => {
     const hasAdminAccess =
       status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
@@ -544,6 +559,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     viewerOverrideName,
     effectiveAuthType,
     canAccessAdminTools,
+    canAccessAdminToolsForViewer,
     errorMessage,
     config: AUTH_FRAMEWORK_CONFIG,
     authTypes: AUTH_TYPES,

@@ -22,7 +22,7 @@ function statusColor(status: string): string {
 
 export default function AuditLogScreen() {
   const router = useRouter();
-  const { canAccessAdminTools } = useAuthFramework();
+  const { canAccessAdminToolsForViewer } = useAuthFramework();
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -31,7 +31,7 @@ export default function AuditLogScreen() {
     router.replace('/admin');
   }
 
-  const canViewAdmin = useMemo(() => canAccessAdminTools, [canAccessAdminTools]);
+  const canViewAdmin = useMemo(() => canAccessAdminToolsForViewer, [canAccessAdminToolsForViewer]);
 
   const loadLogs = useCallback(
     async (refresh: boolean) => {
