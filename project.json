@@ -337,7 +337,8 @@
       "Payout display consistency pass (2026-04-17): Pay Schedule completed summary and by-year totals now show only Total/Artist/Counter (modifier rollup removed). Added client-name fallback when opening Staff Assignements from payout pages by passing `clientName` query, and standardized payout-page event-type icon circles on Pay + Payout Ledger card headers.",
       "Pay card interaction trim (2026-04-17): removed client-name click-through from Pay Schedule `Assigned Events` cards so names are display-only and no longer open Staff Assignements.",
       "Startup loading-gate update (2026-04-17): removed root pre-auth loading-screen boot gate and changed tabs auth gating so signed-out users see login immediately; loading screen now appears only during signed-in hydration.",
-      "Tomma admin mapping update (2026-04-17): `anatomytattoo@gmail.com` now maps to Tomma (`admin`) and Tomma is configured as admin in both staff permissions and allowlist (`tattoosbytomma@gmail.com` + `anatomytattoo@gmail.com`); temporary forced non-admin override for `anatomytattoo@gmail.com` was removed."
+      "Tomma admin mapping update (2026-04-17): `anatomytattoo@gmail.com` now maps to Tomma (`admin`) and Tomma is configured as admin in both staff permissions and allowlist (`tattoosbytomma@gmail.com` + `anatomytattoo@gmail.com`); temporary forced non-admin override for `anatomytattoo@gmail.com` was removed.",
+      "Admin promotion roster grouping (2026-04-17): Admin Promotion page now groups allowlisted rows by person display name, shows all login emails on the same row, and applies promote/remove actions across that person’s grouped login emails."
     ],
     "production_policy": {
       "public_anyone_with_link": false,

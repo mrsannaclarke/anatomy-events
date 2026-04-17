@@ -4,7 +4,23 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import type { AuthType } from '@/constants/auth-permissions';
 import { useAuthFramework } from '@/lib/auth-framework';
+
+type GroupedAllowlistRow = {
+  displayName: string;
+  emails: string[];
+  effectiveAuthType: AuthType;
+  promotableEmails: string[];
+  promotedEmails: string[];
+};
+
+function authTypeRank(authType: AuthType): number {
+  if (authType === 'super_admin') return 3;
+  if (authType === 'admin') return 2;
+  if (authType === 'artist') return 1;
+  return 0;
+}
 
 export default function AdminPromotionScreen() {
   const router = useRouter();
@@ -21,33 +37,64 @@ export default function AdminPromotionScreen() {
   const canViewAdmin = canAccessAdminToolsForViewer;
 
   const allowlistRows = useMemo(() => {
-    return allowedGoogleUsers
-      .map((entry) => ({
-        email: entry.email,
-        displayName: entry.displayName,
-        effectiveAuthType: getEffectiveAuthTypeForEmail(entry.email) || entry.authType,
-        isPromoted: promotedAdminEmails.includes(entry.email.trim().toLowerCase()),
+    const grouped = new Map<string, GroupedAllowlistRow>();
+
+    allowedGoogleUsers.forEach((entry) => {
+      const email = entry.email.trim().toLowerCase();
+      const displayName = entry.displayName.trim() || entry.email;
+      const key = displayName.toLowerCase();
+      const effectiveAuthType = (getEffectiveAuthTypeForEmail(entry.email) || entry.authType) as AuthType;
+      const isPromoted = promotedAdminEmails.includes(email);
+      const canBePromoted = entry.authType !== 'super_admin' && entry.authType !== 'admin';
+
+      const existing = grouped.get(key);
+      if (!existing) {
+        grouped.set(key, {
+          displayName,
+          emails: [entry.email],
+          effectiveAuthType,
+          promotableEmails: canBePromoted ? [entry.email] : [],
+          promotedEmails: isPromoted ? [entry.email] : [],
+        });
+        return;
+      }
+
+      if (!existing.emails.includes(entry.email)) existing.emails.push(entry.email);
+      if (canBePromoted && !existing.promotableEmails.includes(entry.email)) existing.promotableEmails.push(entry.email);
+      if (isPromoted && !existing.promotedEmails.includes(entry.email)) existing.promotedEmails.push(entry.email);
+      if (authTypeRank(effectiveAuthType) > authTypeRank(existing.effectiveAuthType)) {
+        existing.effectiveAuthType = effectiveAuthType;
+      }
+    });
+
+    return Array.from(grouped.values())
+      .map((row) => ({
+        ...row,
+        emails: [...row.emails].sort((a, b) => a.localeCompare(b)),
+        promotableEmails: [...row.promotableEmails].sort((a, b) => a.localeCompare(b)),
+        promotedEmails: [...row.promotedEmails].sort((a, b) => a.localeCompare(b)),
       }))
-      .sort((a, b) => {
-        if (a.displayName === b.displayName) return a.email.localeCompare(b.email);
-        return a.displayName.localeCompare(b.displayName);
-      });
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [allowedGoogleUsers, getEffectiveAuthTypeForEmail, promotedAdminEmails]);
 
   function goToAdminTools() {
     router.replace('/admin');
   }
 
-  async function handlePromoteToAdmin(email: string) {
+  async function handlePromoteToAdmin(displayName: string, emails: string[]) {
+    if (emails.length === 0) return;
     setPromotionStatus('');
-    await setAdminPromotion(email, true);
-    setPromotionStatus(`Promoted ${email} to admin.`);
+    await Promise.all(emails.map((email) => setAdminPromotion(email, true)));
+    setPromotionStatus(`Promoted ${displayName} to admin (${emails.length} login${emails.length === 1 ? '' : 's'}).`);
   }
 
-  async function handleRemoveAdminPromotion(email: string) {
+  async function handleRemoveAdminPromotion(displayName: string, emails: string[]) {
+    if (emails.length === 0) return;
     setPromotionStatus('');
-    await setAdminPromotion(email, false);
-    setPromotionStatus(`Removed admin promotion override for ${email}.`);
+    await Promise.all(emails.map((email) => setAdminPromotion(email, false)));
+    setPromotionStatus(
+      `Removed admin promotion override for ${displayName} (${emails.length} login${emails.length === 1 ? '' : 's'}).`,
+    );
   }
 
   if (!canViewAdmin) {
@@ -81,7 +128,7 @@ export default function AdminPromotionScreen() {
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Admin Promotion</ThemedText>
         <ThemedText style={styles.helperText}>
-          Promote allowlisted users to admin from this list. Super admins keep fixed access.
+          Promote allowlisted people to admin from this list. Super admins keep fixed access.
         </ThemedText>
         <View style={styles.rowList}>
           {allowlistRows.map((row) => {
@@ -89,22 +136,26 @@ export default function AdminPromotionScreen() {
             const isAdmin = row.effectiveAuthType === 'admin';
             const roleLabel = isSuperAdmin ? 'Super Admin' : isAdmin ? 'Admin' : 'Staff';
             return (
-              <View key={row.email} style={styles.userRow}>
+              <View key={row.displayName} style={styles.userRow}>
                 <View style={styles.userMeta}>
                   <ThemedText style={styles.userName}>{row.displayName}</ThemedText>
-                  <ThemedText style={styles.userEmail}>{row.email}</ThemedText>
+                  <ThemedText style={styles.userEmail}>{row.emails.join(' • ')}</ThemedText>
                 </View>
                 <View style={styles.userActionRow}>
                   <View style={[styles.roleChip, isSuperAdmin ? styles.roleChipSuper : isAdmin ? styles.roleChipAdmin : null]}>
                     <ThemedText style={styles.roleChipText}>{roleLabel}</ThemedText>
                   </View>
-                  {!isSuperAdmin && !isAdmin ? (
-                    <Pressable style={styles.smallButton} onPress={() => void handlePromoteToAdmin(row.email)}>
+                  {!isSuperAdmin && !isAdmin && row.promotableEmails.length > 0 ? (
+                    <Pressable
+                      style={styles.smallButton}
+                      onPress={() => void handlePromoteToAdmin(row.displayName, row.promotableEmails)}>
                       <ThemedText style={styles.smallButtonText}>Promote</ThemedText>
                     </Pressable>
                   ) : null}
-                  {!isSuperAdmin && isAdmin && row.isPromoted ? (
-                    <Pressable style={styles.smallButton} onPress={() => void handleRemoveAdminPromotion(row.email)}>
+                  {!isSuperAdmin && isAdmin && row.promotedEmails.length > 0 ? (
+                    <Pressable
+                      style={styles.smallButton}
+                      onPress={() => void handleRemoveAdminPromotion(row.displayName, row.promotedEmails)}>
                       <ThemedText style={styles.smallButtonText}>Remove</ThemedText>
                     </Pressable>
                   ) : null}
