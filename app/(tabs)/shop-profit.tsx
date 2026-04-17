@@ -101,6 +101,17 @@ function parseNames(value: string): string[] {
     .filter((entry) => isValidPersonToken(entry));
 }
 
+function isExplicitCounterNoneSelection(value: string): boolean {
+  const tokens = value
+    .split(/[,\n;/&]+/)
+    .map((entry) => normalizeNameKey(entry))
+    .filter(Boolean);
+  if (tokens.length === 0) return false;
+  const hasNoneToken = tokens.includes('none');
+  const hasAssignedPersonToken = tokens.some((token) => isValidPersonToken(token));
+  return hasNoneToken && !hasAssignedPersonToken;
+}
+
 function hasValidNameList(value: string): boolean {
   return parseNames(value).length > 0;
 }
@@ -385,17 +396,30 @@ export default function ShopProfitScreen() {
       const extraHourlyShop = normalizeOneCentNoise(financials ? financials.extraHourlyShopTotal : 0);
 
       const displayGrossTotal = normalizeOneCentNoise(grossTotal);
-      const displayShopTotal = normalizeOneCentNoise(shopTotal);
+      let displayShopTotal = normalizeOneCentNoise(shopTotal);
+
+      const initialRemainder = displayGrossTotal - (staffPaidAssignedTotal + displayShopTotal);
+      const counterFeeConfigured = normalizeOneCentNoise(
+        financials ? financials.counterFeeTotal : Math.max(0, parseMoney(event.counterStaffCharge)),
+      );
+      const counterNoneToShopTotal =
+        isExplicitCounterNoneSelection(event.counterNames) && initialRemainder > 0.01
+          ? normalizeOneCentNoise(Math.min(counterFeeConfigured, initialRemainder))
+          : 0;
+
+      if (counterNoneToShopTotal > 0.01) {
+        displayShopTotal = normalizeOneCentNoise(displayShopTotal + counterNoneToShopTotal);
+      }
+
+      const counterUnassignedTotal =
+        counterNoneToShopTotal > 0.01 ? 0 : initialRemainder > 0.01 ? normalizeOneCentNoise(initialRemainder) : 0;
+      const displayStaffPaidTotal = normalizeOneCentNoise(staffPaidAssignedTotal + counterUnassignedTotal);
+      const remainder = displayGrossTotal - (displayStaffPaidTotal + displayShopTotal);
+      const displayRemainder = Math.abs(remainder) <= 0.01 ? 0 : normalizeOneCentNoise(remainder);
 
       const modifierShopTotal =
         customFlashShop + radiusShop + temporaryTattooShop + extraHourlyShop + shopCapturedStaffTotal;
       const shopBaseOther = normalizeOneCentNoise(displayShopTotal - modifierShopTotal);
-
-      const initialRemainder = displayGrossTotal - (staffPaidAssignedTotal + displayShopTotal);
-      const counterUnassignedTotal = initialRemainder > 0.01 ? normalizeOneCentNoise(initialRemainder) : 0;
-      const displayStaffPaidTotal = normalizeOneCentNoise(staffPaidAssignedTotal + counterUnassignedTotal);
-      const remainder = displayGrossTotal - (displayStaffPaidTotal + displayShopTotal);
-      const displayRemainder = Math.abs(remainder) <= 0.01 ? 0 : normalizeOneCentNoise(remainder);
       const artistNamesInvolved = new Set<string>();
       const counterNamesInvolved = new Set<string>();
 
@@ -657,6 +681,7 @@ export default function ShopProfitScreen() {
         const customFlashTotal = Math.max(0, card.shopModifierBreakdown.customFlashFee);
         const customFlashShopTotal = Math.max(0, card.shopModifierBreakdown.customFlashShop);
         const customFlashArtistTotal = Math.max(0, customFlashTotal - customFlashShopTotal);
+        const staffAllocationLines = card.lines.filter((line) => !line.isShopCapturedToShop);
         return (
           <View key={card.event.id} style={styles.card}>
             <View style={styles.eventHeader}>
@@ -831,10 +856,10 @@ export default function ShopProfitScreen() {
                     </Pressable>
                   ) : null}
                 </View>
-                {card.lines.length === 0 ? (
+                {staffAllocationLines.length === 0 ? (
                   <ThemedText style={styles.fullBreakdownSubLine}>No staff payout rows found.</ThemedText>
                 ) : (
-                  card.lines.map((line) => {
+                  staffAllocationLines.map((line) => {
                     const staffBreakdownItems = [
                       { label: 'Artist Base', amount: line.row.artistBasePayout },
                       { label: 'Counter', amount: line.row.counterPayout },

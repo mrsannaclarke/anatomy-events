@@ -315,7 +315,8 @@
       "GitHub Pages deep-link + auth hydration hardening (2026-04-17): deploy now always emits `404.html` from `index.html` for SPA fallback on direct route loads, and auth context now exposes `isHydrating` with startup gate + web `localStorage` mirror so signed-in sessions persist until manual sign-out.",
       "Allowlist mapping update (2026-04-17): tied counter staff name `Veda` to Google login `veda.mueller.27@gmail.com` with `counter_guest` auth so sign-in resolves to Veda-specific payout access.",
       "Pricing interaction feedback update (2026-04-17): Pricing page `share link`, `view pricing sheet`, and `copy pricing table` icon buttons now briefly light up on tap with no confirmation text.",
-      "Pay visibility delegation update (2026-04-17): non-admin users remain limited to own payout by default, with explicit exceptions Megan -> Jacob, Tomma -> Kevin/Jayden/Veda, and Shy -> Jason; admin/super-admin retain full staff visibility."
+      "Pay visibility delegation update (2026-04-17): non-admin users remain limited to own payout by default, with explicit exceptions Megan -> Jacob, Tomma -> Kevin/Jayden/Veda, and Shy -> Jason; admin/super-admin retain full staff visibility.",
+      "Shop Profit allocation correction (2026-04-17): when counter selection is explicitly `None`, counter fee is now routed into Shop Total/Shop Base instead of `Counter (Unassigned)`, and Full Allocation `Staff Allocation` excludes shop-captured payout lines to keep section totals consistent."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
