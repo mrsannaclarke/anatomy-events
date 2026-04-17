@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { STAFF_PERMISSIONS } from '@/constants/auth-permissions';
 import { isShopCapturedToShopByName, normalizeNameKey } from '@/constants/pay-framework';
 import { isHistoricalForceShopCustomFlashToFullFee } from '@/constants/historical-payout-truth';
@@ -223,7 +224,7 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 export default function ShopProfitScreen() {
   const router = useRouter();
   const { events, upsertEventFromRemote } = useEvents();
-  const { canAccessAdminToolsForViewer } = useAuthFramework();
+  const { user, canAccessAdminToolsForViewer } = useAuthFramework();
   const [sheetEvents, setSheetEvents] = useState<EventRecord[] | null>(null);
   const [staffTabOverrides, setStaffTabOverrides] = useState<StaffTabPayoutOverrideMap>({});
   const [pricingSchedulePayoutMap, setPricingSchedulePayoutMap] = useState<PricingSchedulePayoutMap>({});
@@ -232,7 +233,11 @@ export default function ShopProfitScreen() {
   const [selectedYear, setSelectedYear] = useState<string>('All');
   const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
 
-  const canViewAdmin = useMemo(() => canAccessAdminToolsForViewer, [canAccessAdminToolsForViewer]);
+  const payoutDisabledForCurrentLogin = isPayoutDisabledForEmail(user?.email);
+  const canViewAdmin = useMemo(
+    () => canAccessAdminToolsForViewer && !payoutDisabledForCurrentLogin,
+    [canAccessAdminToolsForViewer, payoutDisabledForCurrentLogin],
+  );
 
   function goToAdminTools() {
     router.replace('/admin');
@@ -560,7 +565,11 @@ export default function ShopProfitScreen() {
       <View style={styles.page}>
         <View style={styles.card}>
           <ThemedText style={styles.sectionTitle}>Shop Profit</ThemedText>
-          <ThemedText style={styles.helperText}>This page is only visible to admins and super admins.</ThemedText>
+          <ThemedText style={styles.helperText}>
+            {payoutDisabledForCurrentLogin
+              ? 'Payout Ledger is disabled for this login.'
+              : 'This page is only visible to admins and super admins.'}
+          </ThemedText>
           <Pressable style={styles.secondaryButton} onPress={goToAdminTools}>
             <View style={styles.buttonContent}>
               <MaterialIcons name="arrow-back" size={16} color="#c7d8eb" />

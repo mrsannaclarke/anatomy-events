@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { isAdminPromotionDisabledForEmail } from '@/constants/admin-capabilities';
 import type { AuthType } from '@/constants/auth-permissions';
 import { useAuthFramework } from '@/lib/auth-framework';
 
@@ -25,6 +26,8 @@ function authTypeRank(authType: AuthType): number {
 export default function AdminPromotionScreen() {
   const router = useRouter();
   const {
+    effectiveAuthType,
+    user,
     canAccessAdminToolsForViewer,
     allowedGoogleUsers,
     getEffectiveAuthTypeForEmail,
@@ -35,6 +38,10 @@ export default function AdminPromotionScreen() {
   const [promotionStatus, setPromotionStatus] = useState('');
 
   const canViewAdmin = canAccessAdminToolsForViewer;
+  const promotionDisabledForCurrentLogin = isAdminPromotionDisabledForEmail(user?.email);
+  const canPromoteAdmins =
+    !promotionDisabledForCurrentLogin && (effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin');
+  const canDemoteAdmins = !promotionDisabledForCurrentLogin && effectiveAuthType === 'super_admin';
 
   const allowlistRows = useMemo(() => {
     const grouped = new Map<string, GroupedAllowlistRow>();
@@ -128,8 +135,11 @@ export default function AdminPromotionScreen() {
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Admin Promotion</ThemedText>
         <ThemedText style={styles.helperText}>
-          Promote allowlisted people to admin from this list. Super admins keep fixed access.
+          Admins can promote staff to admin. Only super admins can remove admin promotions.
         </ThemedText>
+        {promotionDisabledForCurrentLogin ? (
+          <ThemedText style={styles.helperText}>Admin promotion actions are disabled for this login.</ThemedText>
+        ) : null}
         <View style={styles.rowList}>
           {allowlistRows.map((row) => {
             const isSuperAdmin = row.effectiveAuthType === 'super_admin';
@@ -145,14 +155,14 @@ export default function AdminPromotionScreen() {
                   <View style={[styles.roleChip, isSuperAdmin ? styles.roleChipSuper : isAdmin ? styles.roleChipAdmin : null]}>
                     <ThemedText style={styles.roleChipText}>{roleLabel}</ThemedText>
                   </View>
-                  {!isSuperAdmin && !isAdmin && row.promotableEmails.length > 0 ? (
+                  {!isSuperAdmin && !isAdmin && row.promotableEmails.length > 0 && canPromoteAdmins ? (
                     <Pressable
                       style={styles.smallButton}
                       onPress={() => void handlePromoteToAdmin(row.displayName, row.promotableEmails)}>
                       <ThemedText style={styles.smallButtonText}>Promote</ThemedText>
                     </Pressable>
                   ) : null}
-                  {!isSuperAdmin && isAdmin && row.promotedEmails.length > 0 ? (
+                  {!isSuperAdmin && isAdmin && row.promotedEmails.length > 0 && canDemoteAdmins ? (
                     <Pressable
                       style={styles.smallButton}
                       onPress={() => void handleRemoveAdminPromotion(row.displayName, row.promotedEmails)}>

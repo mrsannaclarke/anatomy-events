@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { HapticTab } from '@/components/haptic-tab';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthFramework } from '@/lib/auth-framework';
@@ -16,6 +17,7 @@ export default function TabLayout() {
   const {
     status,
     isHydrating,
+    user,
     viewerName,
     effectiveAuthType,
     canAccessAdminToolsForViewer,
@@ -61,12 +63,14 @@ export default function TabLayout() {
 
   const canViewAdminTab = canAccessAdminToolsForViewer;
   const canViewPricingTab = canAccessAdminToolsForViewer;
+  const payoutDisabledForCurrentLogin = isPayoutDisabledForEmail(user?.email);
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canViewPayTab =
-    status === 'bypass' ||
-    effectiveAuthType === 'super_admin' ||
-    effectiveAuthType === 'admin' ||
-    Boolean(viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter'));
+    !payoutDisabledForCurrentLogin &&
+    (status === 'bypass' ||
+      effectiveAuthType === 'super_admin' ||
+      effectiveAuthType === 'admin' ||
+      Boolean(viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter')));
 
   return (
     <Tabs

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { useAuthFramework } from '@/lib/auth-framework';
 
 const EVENT_DETAILS_SHEET_URL =
@@ -11,10 +12,11 @@ const EVENT_DETAILS_SHEET_URL =
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { canAccessAdminTools } = useAuthFramework();
+  const { user, canAccessAdminTools } = useAuthFramework();
   const [adminStatus, setAdminStatus] = useState('');
 
   const canViewAdmin = canAccessAdminTools;
+  const canOpenPayoutLedger = !isPayoutDisabledForEmail(user?.email);
 
   function openEventDetailsSheet() {
     setAdminStatus('');
@@ -74,12 +76,14 @@ export default function AdminScreen() {
             </View>
           </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={openPayoutLedgerPage}>
-            <View style={styles.buttonContent}>
-              <MaterialIcons name="payments" size={16} color="#c7d8eb" />
-              <ThemedText style={styles.secondaryButtonText}>Open Payout Ledger</ThemedText>
-            </View>
-          </Pressable>
+          {canOpenPayoutLedger ? (
+            <Pressable style={styles.secondaryButton} onPress={openPayoutLedgerPage}>
+              <View style={styles.buttonContent}>
+                <MaterialIcons name="payments" size={16} color="#c7d8eb" />
+                <ThemedText style={styles.secondaryButtonText}>Open Payout Ledger</ThemedText>
+              </View>
+            </Pressable>
+          ) : null}
         </View>
 
         {adminStatus ? <ThemedText style={styles.helperText}>{adminStatus}</ThemedText> : null}

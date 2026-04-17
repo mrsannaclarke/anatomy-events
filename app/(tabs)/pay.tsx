@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { isPayoutDisabledForEmail } from '@/constants/admin-capabilities';
 import { getHistoricalArtistBreakdownOverride } from '@/constants/historical-payout-truth';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { normalizeNameKey } from '@/constants/pay-framework';
@@ -96,7 +97,7 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 
 export default function PayScreen() {
   const { events } = useEvents();
-  const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
+  const { user, viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
 
   const defaultViewerName = viewerName;
   const viewerPermission = useMemo(() => {
@@ -104,10 +105,12 @@ export default function PayScreen() {
     return resolvePermissionsForName(defaultViewerName);
   }, [defaultViewerName, resolvePermissionsForName]);
 
-  const canViewAnyPayTable = canAccessAdminToolsForViewer;
+  const payoutDisabledForCurrentLogin = isPayoutDisabledForEmail(user?.email);
+  const canViewAnyPayTable = !payoutDisabledForCurrentLogin && canAccessAdminToolsForViewer;
 
   const canViewOwnPayTable = Boolean(
-    viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter'),
+    !payoutDisabledForCurrentLogin &&
+      (viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter')),
   );
 
   const canViewPayFramework = canViewAnyPayTable || canViewOwnPayTable;
@@ -301,7 +304,9 @@ export default function PayScreen() {
         <View style={styles.card}>
           <ThemedText style={styles.sectionTitle}>Pay Schedule</ThemedText>
           <ThemedText style={styles.helperText}>
-            Pay table is visible to artists, counter staff, admins, and super admins only.
+            {payoutDisabledForCurrentLogin
+              ? 'Pay table is disabled for this login.'
+              : 'Pay table is visible to artists, counter staff, admins, and super admins only.'}
           </ThemedText>
         </View>
       </View>
