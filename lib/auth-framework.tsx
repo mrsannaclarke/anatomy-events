@@ -58,6 +58,7 @@ const AuthFrameworkContext = createContext<AuthFrameworkContextValue | null>(nul
 const ADMIN_PROMOTION_STORAGE_KEY = 'anatomy-events.admin-promotion-overrides.v1';
 const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
 const VIEWER_OVERRIDE_STORAGE_KEY = 'anatomy-events.viewer-override-name.v1';
+const TEMP_FORCE_NON_ADMIN_EMAILS = new Set(['anatomytattoo@gmail.com']);
 
 function readWebStorage(key: string): string | null {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
@@ -183,7 +184,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   const [isHydrating, setIsHydrating] = useState<boolean>(AUTH_FRAMEWORK_CONFIG.requireAuth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [promotedAdminEmails, setPromotedAdminEmails] = useState<string[]>([]);
-  const [viewerOverrideName, setViewerOverrideNameState] = useState<string | null>(null);
+  const viewerOverrideName: string | null = null;
 
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
@@ -230,28 +231,9 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function hydrateViewerOverride() {
-      try {
-        let raw = await AsyncStorage.getItem(VIEWER_OVERRIDE_STORAGE_KEY);
-        if (!raw) raw = readWebStorage(VIEWER_OVERRIDE_STORAGE_KEY);
-        if (!isMounted || !raw) return;
-        const parsed = JSON.parse(raw) as unknown;
-        if (typeof parsed !== 'string') return;
-        const resolved = resolvePermissionsForNameInternal(parsed);
-        if (!resolved) return;
-        setViewerOverrideNameState(resolved.name);
-      } catch {
-        if (!isMounted) return;
-        setViewerOverrideNameState(null);
-      }
-    }
-
-    void hydrateViewerOverride();
-    return () => {
-      isMounted = false;
-    };
+    // View-As testing mode is retired; clear any previously persisted override.
+    void AsyncStorage.removeItem(VIEWER_OVERRIDE_STORAGE_KEY);
+    removeWebStorage(VIEWER_OVERRIDE_STORAGE_KEY);
   }, []);
 
   useEffect(() => {
@@ -386,6 +368,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   function getEffectiveAuthTypeForEmail(email: string): AuthType | null {
     const allowlistUser = resolveGoogleAllowlistUserInternal(email);
     if (!allowlistUser) return null;
+    if (TEMP_FORCE_NON_ADMIN_EMAILS.has(normalizeKey(email))) return allowlistUser.authType;
     if (allowlistUser.authType === 'super_admin') return 'super_admin';
     if (allowlistUser.authType === 'admin') return 'admin';
     return promotedAdminEmails.includes(normalizeKey(email)) ? 'admin' : allowlistUser.authType;
@@ -412,6 +395,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
 
   const effectiveAuthType = useMemo<AuthType | null>(() => {
     if (!user) return null;
+    if (TEMP_FORCE_NON_ADMIN_EMAILS.has(normalizeKey(user.email))) return user.authType;
     if (user.authType === 'super_admin') return 'super_admin';
     if (user.authType === 'admin') return 'admin';
     return promotedAdminEmails.includes(normalizeKey(user.email)) ? 'admin' : user.authType;
@@ -422,73 +406,20 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     return effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
   }, [effectiveAuthType, status]);
 
-  const canAccessAdminToolsForViewer = useMemo(() => {
-    if (status === 'bypass') return true;
-    if (viewerOverrideName) {
-      const overridePermission = resolvePermissionsForNameInternal(viewerOverrideName);
-      if (!overridePermission) return false;
-      return (
-        overridePermission.authType === 'super_admin' ||
-        overridePermission.authType === 'admin' ||
-        overridePermission.roles.includes('admin')
-      );
-    }
-    return canAccessAdminTools;
-  }, [canAccessAdminTools, status, viewerOverrideName]);
+  const canAccessAdminToolsForViewer = useMemo(() => canAccessAdminTools, [canAccessAdminTools]);
 
-  useEffect(() => {
-    const hasAdminAccess =
-      status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
-    if (!hasAdminAccess && viewerOverrideName) {
-      setViewerOverrideNameState(null);
-    }
-  }, [effectiveAuthType, status, viewerOverrideName]);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        if (viewerOverrideName) {
-          const serialized = JSON.stringify(viewerOverrideName);
-          await AsyncStorage.setItem(VIEWER_OVERRIDE_STORAGE_KEY, serialized);
-          writeWebStorage(VIEWER_OVERRIDE_STORAGE_KEY, serialized);
-        } else {
-          await AsyncStorage.removeItem(VIEWER_OVERRIDE_STORAGE_KEY);
-          removeWebStorage(VIEWER_OVERRIDE_STORAGE_KEY);
-        }
-      } catch {
-        // Ignore persistence failures.
-      }
-    })();
-  }, [viewerOverrideName]);
-
-  function setViewerOverrideName(name: string | null) {
-    const hasAdminAccess =
-      status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
-    if (!hasAdminAccess) return;
-
-    const requested = String(name || '').trim();
-    if (!requested) {
-      setViewerOverrideNameState(null);
-      return;
-    }
-
-    const permission = resolvePermissionsForNameInternal(requested);
-    if (!permission) return;
-    if (!permission.roles.includes('artist') && !permission.roles.includes('counter')) return;
-    setViewerOverrideNameState(permission.name);
+  function setViewerOverrideName(_: string | null) {
+    // View-As testing mode is retired; keep legacy storage cleared.
+    void AsyncStorage.removeItem(VIEWER_OVERRIDE_STORAGE_KEY);
+    removeWebStorage(VIEWER_OVERRIDE_STORAGE_KEY);
   }
 
   const viewerName = useMemo(() => {
-    const hasAdminAccess =
-      status === 'bypass' || effectiveAuthType === 'super_admin' || effectiveAuthType === 'admin';
-    if (hasAdminAccess && viewerOverrideName) {
-      return viewerOverrideName;
-    }
     if (status === 'bypass') return 'Anna';
     if (user?.matchNames?.length) return user.matchNames[0];
     if (user?.displayName) return user.displayName.split(' ')[0] || '';
     return '';
-  }, [effectiveAuthType, status, user?.displayName, user?.matchNames, viewerOverrideName]);
+  }, [status, user?.displayName, user?.matchNames]);
 
   async function signInWithGoogle() {
     if (!AUTH_FRAMEWORK_CONFIG.enableGoogleSignIn) {
