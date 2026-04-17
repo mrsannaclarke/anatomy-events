@@ -21,6 +21,40 @@ export default function RootLayout() {
   const [bootDelayDone, setBootDelayDone] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const host = String(window.location.hostname || '').toLowerCase();
+    const parts = String(window.location.pathname || '/')
+      .split('/')
+      .filter(Boolean);
+    const basePath = host.endsWith('github.io') && parts[0] ? `/${parts[0]}` : '';
+    const iconHref = `${basePath || ''}/apple-touch-icon.png`;
+
+    const ensureMeta = (name: string, content: string) => {
+      let tag = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('name', name);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    ensureMeta('apple-mobile-web-app-capable', 'yes');
+    ensureMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+    ensureMeta('apple-mobile-web-app-title', 'Anatomy Events');
+
+    let touchIcon = document.head.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+    if (!touchIcon) {
+      touchIcon = document.createElement('link');
+      touchIcon.setAttribute('rel', 'apple-touch-icon');
+      touchIcon.setAttribute('sizes', '180x180');
+      document.head.appendChild(touchIcon);
+    }
+    touchIcon.setAttribute('href', iconHref);
+  }, []);
+
+  useEffect(() => {
     if (!fontsLoaded) {
       setBootDelayDone(false);
       return;
