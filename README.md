@@ -1,50 +1,99 @@
-# Welcome to your Expo app 👋
+# Anatomy Events
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Anatomy Events is an Expo app for managing tattoo event operations:
+- event ledger and status tracking
+- client details and pricing breakdowns
+- staff assignments and payouts
+- admin payout ledger/audit tools
+- generated files workflow (contracts, licensing, uploaded art)
 
-## Get started
+The app syncs with a Google Sheet via an Apps Script web app.
 
-1. Install dependencies
+## Tech
 
-   ```bash
-   npm install
-   ```
+- Expo + React Native + Expo Router
+- TypeScript
+- Google OAuth (via `expo-auth-session`)
+- Google Sheets/Apps Script backend
 
-2. Start the app
+## Local setup
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Create `.env.local`:
 
-## Learn more
+```bash
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=YOUR_IOS_CLIENT_ID
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=YOUR_WEB_CLIENT_ID
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=YOUR_ANDROID_CLIENT_ID
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+3. Start the app:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run web
+# or
+npm run ios
+# or
+npm run android
+```
 
-## Join the community
+## Auth and app identifiers
 
-Join our community of developers creating universal apps.
+Current identifiers in this repo:
+- iOS bundle id: `com.anatomytattoo.anatomyevents`
+- Android package: `com.anatomytattoo.anatomyevents`
+- App scheme: `anatomyevents`
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Google sign-in is enforced through allowlisted emails in:
+- `constants/auth-permissions.ts`
+
+## Backend integration
+
+Apps Script web app URL is configured in `app.json` under:
+- `expo.extra.sheetSyncWebAppUrl`
+
+Operational project context and continuity notes are tracked in:
+- `project.json`
+
+## Web deployment (GitHub Pages)
+
+This repo is configured for GitHub Pages deploys.
+
+- Base path: `/anatomy-events` (configured in `app.json`)
+- Deploy scripts:
+  - `npm run predeploy` -> `expo export -p web`
+  - `npm run deploy` -> publish `dist` to `gh-pages`
+
+Deploy steps:
+
+```bash
+npm run deploy
+```
+
+Then in GitHub repo settings:
+- `Settings -> Pages`
+- Source: `Deploy from a branch`
+- Branch: `gh-pages` / root
+
+Expected URL:
+- `https://mrsannaclarke.github.io/anatomy-events/`
+
+## OAuth settings for web login
+
+For Google OAuth web client, include:
+- Authorized JavaScript origin: `https://mrsannaclarke.github.io`
+- Authorized redirect URI: `https://mrsannaclarke.github.io/anatomy-events/`
+
+## Validation
+
+Before pushing changes:
+
+```bash
+npm run lint
+npx tsc --noEmit
+```
