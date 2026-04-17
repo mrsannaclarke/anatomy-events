@@ -148,7 +148,8 @@ export default function PayScreen() {
     return uniqueByNormalizedName([ownName, ...delegatedPeople].filter(Boolean));
   }, [allPeople, canViewAnyPayTable, canViewPayFramework, defaultViewerName, delegatedPeople]);
 
-  const canPickPerson = canViewAnyPayTable || selectablePeople.length > 1;
+  // Staff/non-admin users should never get the person dropdown.
+  const canPickPerson = canViewAnyPayTable;
 
   const [selectedPersonName, setSelectedPersonName] = useState<string>('');
   const [isPersonPickerOpen, setIsPersonPickerOpen] = useState(false);

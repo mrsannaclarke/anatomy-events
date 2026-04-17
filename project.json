@@ -325,7 +325,8 @@
       "Event ledger action feedback polish (2026-04-17): the four client-card action icons (Client Details, Staff Assignements, Notes, Generators & Files) now briefly glow on press, matching Pricing clipboard-button interaction style.",
       "Loading-screen title positioning tweak (2026-04-17): moved `Anatomy Events` title 10px lower to improve spacing under the rainbow swirl.",
       "Pay visibility + View-As safeguard (2026-04-17): Pay Schedule now disables admin all-staff visibility while `View As Profile` override is active, so testing as Megan/Shy/etc follows staff-level payout access rules (including explicit delegation exceptions) instead of admin-wide picker access.",
-      "Client Details admin-only safeguard (2026-04-17): Event ledger `Client Details` button and `/event/[id]/client-details` access now require admin/super-admin effective context; when `View As Profile` is set to non-admin staff, client-details entry points are hidden/blocked."
+      "Client Details admin-only safeguard (2026-04-17): Event ledger `Client Details` button and `/event/[id]/client-details` access now require admin/super-admin effective context; when `View As Profile` is set to non-admin staff, client-details entry points are hidden/blocked.",
+      "Pay dropdown restriction update (2026-04-17): person-picker dropdown on Pay Schedule is now admin/super-admin only; staff/non-admin users always see their own payout schedule with no person dropdown."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
