@@ -79,7 +79,7 @@ export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkle
   });
   const overlaySparkleOpacity = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.38, 0.82],
+    outputRange: [0.72, 1],
   });
 
   return (
@@ -106,6 +106,10 @@ export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkle
       <Animated.View style={[styles.sparkle, styles.sparkleJ, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
       <Animated.View style={[styles.sparkle, styles.sparkleK, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
       <Animated.View style={[styles.sparkle, styles.sparkleL, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleM, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleN, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleO, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleP, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
     </View>
   );
 }
@@ -150,12 +154,14 @@ const styles = StyleSheet.create({
   },
   sparkle: {
     position: 'absolute',
-    width: 10,
-    height: 10,
+    width: 14,
+    height: 14,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.96)',
     shadowColor: '#fff',
     shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
   sparkleA: { top: '14%', left: '12%', backgroundColor: '#ffe86b' },
@@ -170,4 +176,8 @@ const styles = StyleSheet.create({
   sparkleJ: { top: '41%', right: '8%', backgroundColor: '#d4ff8f' },
   sparkleK: { top: '66%', left: '8%', backgroundColor: '#7ec8ff' },
   sparkleL: { top: '88%', right: '28%', backgroundColor: '#ffe0a1' },
+  sparkleM: { top: '12%', left: '44%', backgroundColor: '#ffc8f0' },
+  sparkleN: { top: '53%', left: '47%', backgroundColor: '#b7ffea' },
+  sparkleO: { top: '75%', right: '42%', backgroundColor: '#ffd6ff' },
+  sparkleP: { top: '32%', right: '31%', backgroundColor: '#fff1ad' },
 });

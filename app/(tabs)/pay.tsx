@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { getHistoricalArtistBreakdownOverride } from '@/constants/historical-payout-truth';
@@ -312,6 +313,10 @@ export default function PayScreen() {
         </View>
       </View>
     );
+  }
+
+  if (payoutOverrideStatus === 'loading') {
+    return <AppLoadingScreen />;
   }
 
   return (
