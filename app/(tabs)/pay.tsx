@@ -486,17 +486,17 @@ export default function PayScreen() {
                   </View>
                   <ThemedText style={styles.rowTitlePrice}>{formatCurrency(row.totalPayout)}</ThemedText>
                 </View>
-                <View style={styles.rowRoleCenter}>
-                  <ThemedText style={styles.roleChip}>{roleLabel(row.role)}</ThemedText>
-                </View>
                 <View style={styles.rowDateBlock}>
                   <ThemedText style={styles.rowDate}>{row.event.eventDate || 'No date'}</ThemedText>
                   <ThemedText style={styles.completedAtText}>Completed: {completedAtLabel || 'timestamp pending'}</ThemedText>
                 </View>
               </View>
 
-              {!isCounterOnly ? (
-                <View style={styles.rowMoneyBlock}>
+              <View style={styles.rowMoneyBlock}>
+                <View style={styles.rowRoleLeft}>
+                  <ThemedText style={styles.roleChip}>{roleLabel(row.role)}</ThemedText>
+                </View>
+                {!isCounterOnly ? (
                   <View style={styles.rowMoneyRight}>
                     {row.role === 'artist' || row.role === 'artist+counter' ? (
                       <ThemedText style={styles.rowMoneyBreakdown}>Artist Base {formatCurrency(row.artistBasePayout)}</ThemedText>
@@ -517,8 +517,8 @@ export default function PayScreen() {
                         ))
                       : null}
                   </View>
-                </View>
-              ) : null}
+                ) : null}
+              </View>
             </View>
           );
         })}
@@ -722,12 +722,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 21,
   },
-  rowRoleCenter: {
-    minWidth: 118,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 1,
-  },
   rowDate: {
     color: '#a5bbd2',
     fontSize: 12,
@@ -742,10 +736,17 @@ const styles = StyleSheet.create({
     color: '#8dc2ff',
     fontSize: 12,
     fontWeight: '700',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   rowMoneyBlock: {
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  rowRoleLeft: {
+    minWidth: 118,
+    paddingTop: 1,
   },
   rowMoneyRight: {
     flex: 1,

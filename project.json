@@ -327,7 +327,8 @@
       "Pay visibility + View-As safeguard (2026-04-17): Pay Schedule now disables admin all-staff visibility while `View As Profile` override is active, so testing as Megan/Shy/etc follows staff-level payout access rules (including explicit delegation exceptions) instead of admin-wide picker access.",
       "Client Details admin-only safeguard (2026-04-17): Event ledger `Client Details` button and `/event/[id]/client-details` access now require admin/super-admin effective context; when `View As Profile` is set to non-admin staff, client-details entry points are hidden/blocked.",
       "Pay dropdown restriction update (2026-04-17): person-picker dropdown on Pay Schedule is now admin/super-admin only; staff/non-admin users always see their own payout schedule with no person dropdown.",
-      "Event-card action restriction update (2026-04-17): non-admin users now see only `Notes` and `Generators & Files` actions on roster cards; `Client Details` and `Staff Assignements` actions are admin/super-admin only."
+      "Event-card action restriction update (2026-04-17): non-admin users now see only `Notes` and `Generators & Files` actions on roster cards; `Client Details` and `Staff Assignements` actions are admin/super-admin only.",
+      "Pay card role-position tweak (2026-04-17): moved `Role: ...` under the client header on the left side of payout cards, sharing the same row as the right-aligned payout breakdown."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
