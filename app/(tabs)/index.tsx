@@ -328,7 +328,9 @@ export default function EventsScreen() {
   const [sheetSyncStatus, setSheetSyncStatus] = useState('Loading events from sheet...');
   const [sheetSyncError, setSheetSyncError] = useState('');
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
+  const [actionFeedbackKey, setActionFeedbackKey] = useState<string | null>(null);
   const hasAttemptedAutoPull = useRef(false);
+  const actionFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewerPermission = viewerName ? resolvePermissionsForName(viewerName) : null;
   const canViewAdminMoney =
     canAccessAdminTools ||
@@ -358,6 +360,18 @@ export default function EventsScreen() {
     if (page === 'notes') return router.push(`/event/${id}/notes`);
     if (page === 'generators_files') return router.push(`/event/${id}/generators-files`);
     router.push(`/event/${id}`);
+  }
+
+  function showActionFeedback(eventId: string, action: 'client' | 'staff' | 'notes' | 'files') {
+    const nextKey = `${eventId}:${action}`;
+    setActionFeedbackKey(nextKey);
+    if (actionFeedbackTimeoutRef.current) {
+      clearTimeout(actionFeedbackTimeoutRef.current);
+    }
+    actionFeedbackTimeoutRef.current = setTimeout(() => {
+      setActionFeedbackKey((current) => (current === nextKey ? null : current));
+      actionFeedbackTimeoutRef.current = null;
+    }, 260);
   }
 
   function handleCreateEvent() {
@@ -435,6 +449,15 @@ export default function EventsScreen() {
       isMounted = false;
     };
   }, [events]);
+
+  useEffect(
+    () => () => {
+      if (actionFeedbackTimeoutRef.current) {
+        clearTimeout(actionFeedbackTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   return (
     <ScrollView
@@ -597,27 +620,51 @@ export default function EventsScreen() {
               <View style={styles.actionIconRow}>
                 {canViewAdminMoney ? (
                   <Pressable
-                    style={styles.actionIconButton}
-                    onPress={() => openEvent(event.id, 'client')}
+                    style={[
+                      styles.actionIconButton,
+                      actionFeedbackKey === `${event.id}:client` ? styles.actionIconButtonActive : null,
+                    ]}
+                    onPress={() => {
+                      showActionFeedback(event.id, 'client');
+                      openEvent(event.id, 'client');
+                    }}
                     accessibilityLabel="Client Details">
                     <MaterialIcons name="badge" size={16} color="#dceafe" />
                   </Pressable>
                 ) : null}
                 <Pressable
-                  style={styles.actionIconButton}
-                  onPress={() => openEvent(event.id)}
+                  style={[
+                    styles.actionIconButton,
+                    actionFeedbackKey === `${event.id}:staff` ? styles.actionIconButtonActive : null,
+                  ]}
+                  onPress={() => {
+                    showActionFeedback(event.id, 'staff');
+                    openEvent(event.id);
+                  }}
                   accessibilityLabel="Staff Assignements">
                   <MaterialIcons name="groups" size={16} color="#dceafe" />
                 </Pressable>
                 <Pressable
-                  style={styles.actionIconButton}
-                  onPress={() => openEvent(event.id, 'notes')}
+                  style={[
+                    styles.actionIconButton,
+                    actionFeedbackKey === `${event.id}:notes` ? styles.actionIconButtonActive : null,
+                  ]}
+                  onPress={() => {
+                    showActionFeedback(event.id, 'notes');
+                    openEvent(event.id, 'notes');
+                  }}
                   accessibilityLabel="Notes">
                   <MaterialIcons name="notes" size={16} color="#dceafe" />
                 </Pressable>
                 <Pressable
-                  style={styles.actionIconButton}
-                  onPress={() => openEvent(event.id, 'generators_files')}
+                  style={[
+                    styles.actionIconButton,
+                    actionFeedbackKey === `${event.id}:files` ? styles.actionIconButtonActive : null,
+                  ]}
+                  onPress={() => {
+                    showActionFeedback(event.id, 'files');
+                    openEvent(event.id, 'generators_files');
+                  }}
                   accessibilityLabel="Generators & Files">
                   <MaterialIcons name="description" size={16} color="#dceafe" />
                 </Pressable>
@@ -867,6 +914,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#172230',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actionIconButtonActive: {
+    borderColor: '#6db6ff',
+    backgroundColor: '#24588c',
+    shadowColor: '#78bbff',
+    shadowOpacity: 0.55,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 0 },
   },
   calendarLine: {
     color: '#b9d5f6',

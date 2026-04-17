@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     color: '#e7eff8',
-    marginTop: 8,
+    marginTop: 18,
     marginBottom: 4,
   },
 });

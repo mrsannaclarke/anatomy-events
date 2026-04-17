@@ -320,7 +320,10 @@
       "Payout-ledger counter assignment UX fix (2026-04-17): opening Staff Assignements from Admin > Payout Ledger now carries `returnTo=/shop-profit` so the Back button returns to Payout Ledger context; `Assign Counter` prompts are also hidden when counter field is explicitly set to `None`.",
       "Bottom tab safe-area spacing tweak (2026-04-17): increased bottom tab bar height by ~10px and shifted tab item content upward so icons keep current size while leaving extra room for iOS home-indicator slider.",
       "Admin profile-view testing mode (2026-04-17): Admin Tools now includes `View As Profile` chips that let admin/super-admin sessions (including `anatomytattoo@gmail.com`) switch active viewer name to staff profiles such as Megan without signing out; viewer override persists locally until reset to `Default`.",
-      "Lucky legal-name alias hardening (2026-04-17): added `Jessie/Jesse Smith` aliases to Lucky normalization in both sheet-sync import and Staff Assignements parser so staff-facing identity remains `Lucky` while state-license generation pathways continue resolving through Artist License Source legal records."
+      "Lucky legal-name alias hardening (2026-04-17): added `Jessie/Jesse Smith` aliases to Lucky normalization in both sheet-sync import and Staff Assignements parser so staff-facing identity remains `Lucky` while state-license generation pathways continue resolving through Artist License Source legal records.",
+      "Shy legal-name validation (2026-04-17): confirmed `Artist License Source` maps legal name `Tylr Cheyenne Barnes` to ED entry `Shy`; existing alias normalization already includes this legal-name route.",
+      "Event ledger action feedback polish (2026-04-17): the four client-card action icons (Client Details, Staff Assignements, Notes, Generators & Files) now briefly glow on press, matching Pricing clipboard-button interaction style.",
+      "Loading-screen title positioning tweak (2026-04-17): moved `Anatomy Events` title 10px lower to improve spacing under the rainbow swirl."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
