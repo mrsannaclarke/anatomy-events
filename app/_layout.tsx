@@ -16,6 +16,14 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const baseTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const appTheme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      background: 'transparent',
+    },
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -54,7 +62,7 @@ export default function RootLayout() {
   return (
     <AuthFrameworkProvider>
       <EventsProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={appTheme}>
           <View style={styles.appShell}>
             <RainbowSparkleBackground />
             <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>

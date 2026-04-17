@@ -4,6 +4,7 @@ import { Animated, Easing, StyleSheet, View } from 'react-native';
 export function RainbowSparkleBackground() {
   const orbit = useRef(new Animated.Value(0)).current;
   const shimmer = useRef(new Animated.Value(0)).current;
+  const drift = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const orbitAnimation = Animated.loop(
@@ -31,15 +32,33 @@ export function RainbowSparkleBackground() {
         }),
       ]),
     );
+    const driftAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(drift, {
+          toValue: 1,
+          duration: 9000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(drift, {
+          toValue: 0,
+          duration: 9000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
 
     orbitAnimation.start();
     shimmerAnimation.start();
+    driftAnimation.start();
 
     return () => {
       orbitAnimation.stop();
       shimmerAnimation.stop();
+      driftAnimation.stop();
     };
-  }, [orbit, shimmer]);
+  }, [drift, orbit, shimmer]);
 
   const orbitSpin = orbit.interpolate({
     inputRange: [0, 1],
@@ -48,16 +67,20 @@ export function RainbowSparkleBackground() {
 
   const shimmerOpacity = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.45, 1],
+    outputRange: [0.5, 1],
+  });
+  const driftY = drift.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-8, 8],
   });
 
   return (
     <View pointerEvents="none" style={styles.root}>
       <View style={styles.base} />
 
-      <Animated.View style={[styles.orb, styles.orbA, { transform: [{ rotate: orbitSpin }] }]} />
-      <Animated.View style={[styles.orb, styles.orbB, { transform: [{ rotate: orbitSpin }] }]} />
-      <Animated.View style={[styles.orb, styles.orbC, { transform: [{ rotate: orbitSpin }] }]} />
+      <Animated.View style={[styles.orb, styles.orbA, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
+      <Animated.View style={[styles.orb, styles.orbB, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
+      <Animated.View style={[styles.orb, styles.orbC, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
 
       <Animated.View style={[styles.sparkle, styles.sparkleA, { opacity: shimmerOpacity }]} />
       <Animated.View style={[styles.sparkle, styles.sparkleB, { opacity: shimmerOpacity }]} />
@@ -67,6 +90,10 @@ export function RainbowSparkleBackground() {
       <Animated.View style={[styles.sparkle, styles.sparkleF, { opacity: shimmerOpacity }]} />
       <Animated.View style={[styles.sparkle, styles.sparkleG, { opacity: shimmerOpacity }]} />
       <Animated.View style={[styles.sparkle, styles.sparkleH, { opacity: shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleI, { opacity: shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleJ, { opacity: shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleK, { opacity: shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleL, { opacity: shimmerOpacity }]} />
     </View>
   );
 }
@@ -83,7 +110,7 @@ const styles = StyleSheet.create({
   orb: {
     position: 'absolute',
     borderRadius: 999,
-    opacity: 0.35,
+    opacity: 0.44,
   },
   orbA: {
     width: 340,
@@ -108,12 +135,12 @@ const styles = StyleSheet.create({
   },
   sparkle: {
     position: 'absolute',
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10,
     borderRadius: 999,
     shadowColor: '#fff',
-    shadowOpacity: 0.9,
-    shadowRadius: 7,
+    shadowOpacity: 1,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
   },
   sparkleA: { top: '14%', left: '12%', backgroundColor: '#ffe86b' },
@@ -124,4 +151,8 @@ const styles = StyleSheet.create({
   sparkleF: { top: '72%', right: '14%', backgroundColor: '#ffd96f' },
   sparkleG: { top: '83%', left: '36%', backgroundColor: '#8fb8ff' },
   sparkleH: { top: '8%', right: '40%', backgroundColor: '#8effea' },
+  sparkleI: { top: '28%', left: '8%', backgroundColor: '#ffd1f7' },
+  sparkleJ: { top: '41%', right: '8%', backgroundColor: '#d4ff8f' },
+  sparkleK: { top: '66%', left: '8%', backgroundColor: '#7ec8ff' },
+  sparkleL: { top: '88%', right: '28%', backgroundColor: '#ffe0a1' },
 });
