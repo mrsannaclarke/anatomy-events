@@ -29,6 +29,7 @@ export type FrameworkUser = {
 
 type AuthFrameworkContextValue = {
   status: 'bypass' | 'signed_out' | 'signed_in';
+  isHydrating: boolean;
   user: FrameworkUser | null;
   effectiveAuthType: AuthType | null;
   canAccessAdminTools: boolean;
@@ -52,6 +53,33 @@ type AuthFrameworkContextValue = {
 const AuthFrameworkContext = createContext<AuthFrameworkContextValue | null>(null);
 const ADMIN_PROMOTION_STORAGE_KEY = 'anatomy-events.admin-promotion-overrides.v1';
 const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
+
+function readWebStorage(key: string): string | null {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeWebStorage(key: string, value: string): void {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore web storage failures.
+  }
+}
+
+function removeWebStorage(key: string): void {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore web storage failures.
+  }
+}
 
 function normalizeKey(value: string): string {
   return value.trim().toLowerCase();
@@ -147,6 +175,7 @@ async function fetchGoogleUserInfo(accessToken: string): Promise<{ email: string
 
 export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<FrameworkUser | null>(null);
+  const [isHydrating, setIsHydrating] = useState<boolean>(AUTH_FRAMEWORK_CONFIG.requireAuth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [promotedAdminEmails, setPromotedAdminEmails] = useState<string[]>([]);
 
@@ -174,7 +203,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
 
     async function hydratePromotions() {
       try {
-        const raw = await AsyncStorage.getItem(ADMIN_PROMOTION_STORAGE_KEY);
+        let raw = await AsyncStorage.getItem(ADMIN_PROMOTION_STORAGE_KEY);
+        if (!raw) raw = readWebStorage(ADMIN_PROMOTION_STORAGE_KEY);
         if (!isMounted || !raw) return;
         const parsed = JSON.parse(raw) as unknown;
         const fromStorage = Array.isArray(parsed)
@@ -198,7 +228,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
 
     async function hydrateUser() {
       try {
-        const raw = await AsyncStorage.getItem(AUTH_USER_STORAGE_KEY);
+        let raw = await AsyncStorage.getItem(AUTH_USER_STORAGE_KEY);
+        if (!raw) raw = readWebStorage(AUTH_USER_STORAGE_KEY);
         if (!isMounted || !raw) return;
         const parsed = JSON.parse(raw) as unknown;
         if (!isFrameworkUser(parsed)) return;
@@ -230,6 +261,8 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
         setUser(parsed);
       } catch {
         if (!isMounted) return;
+      } finally {
+        if (isMounted) setIsHydrating(false);
       }
     }
 
@@ -240,18 +273,22 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    if (isHydrating) return;
     void (async () => {
       try {
         if (user) {
-          await AsyncStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
+          const serialized = JSON.stringify(user);
+          await AsyncStorage.setItem(AUTH_USER_STORAGE_KEY, serialized);
+          writeWebStorage(AUTH_USER_STORAGE_KEY, serialized);
         } else {
           await AsyncStorage.removeItem(AUTH_USER_STORAGE_KEY);
+          removeWebStorage(AUTH_USER_STORAGE_KEY);
         }
       } catch {
         // Ignore persistence failures.
       }
     })();
-  }, [user]);
+  }, [isHydrating, user]);
 
   useEffect(() => {
     if (!response) return;
@@ -335,7 +372,9 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
       const next = enabled
         ? normalizePromotionList([...current, normalizedEmail])
         : current.filter((entry) => entry !== normalizedEmail);
-      void AsyncStorage.setItem(ADMIN_PROMOTION_STORAGE_KEY, JSON.stringify(next));
+      const serialized = JSON.stringify(next);
+      void AsyncStorage.setItem(ADMIN_PROMOTION_STORAGE_KEY, serialized);
+      writeWebStorage(ADMIN_PROMOTION_STORAGE_KEY, serialized);
       return next;
     });
   }
@@ -415,6 +454,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
 
   const value: AuthFrameworkContextValue = {
     status,
+    isHydrating,
     user,
     effectiveAuthType,
     canAccessAdminTools,

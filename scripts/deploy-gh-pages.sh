@@ -18,6 +18,13 @@ if [[ ! -d "$DIST_DIR" ]]; then
   exit 1
 fi
 
+if [[ -f "$DIST_DIR/index.html" ]]; then
+  cp "$DIST_DIR/index.html" "$DIST_DIR/404.html"
+else
+  echo "dist/index.html is missing."
+  exit 1
+fi
+
 while IFS= read -r -d '' file; do
   perl -0pi -e 's#/assets/node_modules/@#/assets/node_modules/%40#g; s#assets/node_modules/@#assets/node_modules/%40#g' "$file"
 done < <(find "$DIST_DIR" -type f \( -name '*.js' -o -name '*.html' -o -name '*.json' \) -print0)

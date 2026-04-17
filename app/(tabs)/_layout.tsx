@@ -4,6 +4,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
+import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -14,6 +15,7 @@ export default function TabLayout() {
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const {
     status,
+    isHydrating,
     user,
     effectiveAuthType,
     canAccessAdminTools,
@@ -23,6 +25,10 @@ export default function TabLayout() {
     errorMessage,
     config,
   } = useAuthFramework();
+
+  if (isHydrating) {
+    return <AppLoadingScreen />;
+  }
 
   if (status === 'signed_out') {
     return (
