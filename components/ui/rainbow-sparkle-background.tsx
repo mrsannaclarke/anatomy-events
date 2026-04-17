@@ -5,10 +5,60 @@ type RainbowSparkleBackgroundProps = {
   overlayOnly?: boolean;
 };
 
+type TwinkleChannel = 'a' | 'b' | 'c';
+type PercentValue = `${number}%`;
+
+type StarPoint = {
+  id: string;
+  glyph: string;
+  top: PercentValue;
+  left?: PercentValue;
+  right?: PercentValue;
+  color: string;
+  size: number;
+  channel: TwinkleChannel;
+};
+
+const STAR_POINTS: readonly StarPoint[] = [
+  { id: 's1', glyph: '✦', top: '8%', left: '8%', color: '#fff4a3', size: 24, channel: 'a' },
+  { id: 's2', glyph: '✧', top: '16%', right: '10%', color: '#ffd0f4', size: 22, channel: 'b' },
+  { id: 's3', glyph: '✦', top: '23%', left: '28%', color: '#a9fcff', size: 23, channel: 'c' },
+  { id: 's4', glyph: '✧', top: '31%', right: '26%', color: '#beffa6', size: 21, channel: 'a' },
+  { id: 's5', glyph: '✦', top: '43%', left: '11%', color: '#f5c7ff', size: 22, channel: 'b' },
+  { id: 's6', glyph: '✧', top: '52%', right: '14%', color: '#a8c9ff', size: 24, channel: 'c' },
+  { id: 's7', glyph: '✦', top: '61%', left: '36%', color: '#ffe3ae', size: 23, channel: 'a' },
+  { id: 's8', glyph: '✧', top: '71%', right: '33%', color: '#c8fcd8', size: 21, channel: 'b' },
+  { id: 's9', glyph: '✦', top: '79%', left: '16%', color: '#ffd2ef', size: 24, channel: 'c' },
+  { id: 's10', glyph: '✧', top: '88%', right: '11%', color: '#b7e1ff', size: 22, channel: 'a' },
+  { id: 's11', glyph: '✦', top: '37%', left: '52%', color: '#fff8bb', size: 20, channel: 'b' },
+  { id: 's12', glyph: '✧', top: '67%', right: '46%', color: '#e5c8ff', size: 20, channel: 'c' },
+];
+
+function createTwinkleLoop(value: Animated.Value, durationMs: number) {
+  return Animated.loop(
+    Animated.sequence([
+      Animated.timing(value, {
+        toValue: 1,
+        duration: durationMs,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(value, {
+        toValue: 0,
+        duration: durationMs,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]),
+  );
+}
+
 export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkleBackgroundProps) {
   const orbit = useRef(new Animated.Value(0)).current;
-  const shimmer = useRef(new Animated.Value(0)).current;
   const drift = useRef(new Animated.Value(0)).current;
+  const twinkleA = useRef(new Animated.Value(0.2)).current;
+  const twinkleB = useRef(new Animated.Value(0.6)).current;
+  const twinkleC = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     const orbitAnimation = Animated.loop(
@@ -20,22 +70,6 @@ export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkle
       }),
     );
 
-    const shimmerAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 2200,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(shimmer, {
-          toValue: 0,
-          duration: 2200,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
     const driftAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(drift, {
@@ -53,34 +87,52 @@ export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkle
       ]),
     );
 
+    const twinkleLoopA = createTwinkleLoop(twinkleA, 1500);
+    const twinkleLoopB = createTwinkleLoop(twinkleB, 2100);
+    const twinkleLoopC = createTwinkleLoop(twinkleC, 2600);
+
     orbitAnimation.start();
-    shimmerAnimation.start();
     driftAnimation.start();
+    twinkleLoopA.start();
+    twinkleLoopB.start();
+    twinkleLoopC.start();
 
     return () => {
       orbitAnimation.stop();
-      shimmerAnimation.stop();
       driftAnimation.stop();
+      twinkleLoopA.stop();
+      twinkleLoopB.stop();
+      twinkleLoopC.stop();
     };
-  }, [drift, orbit, shimmer]);
+  }, [drift, orbit, twinkleA, twinkleB, twinkleC]);
 
   const orbitSpin = orbit.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
-
-  const shimmerOpacity = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.5, 1],
-  });
   const driftY = drift.interpolate({
     inputRange: [0, 1],
     outputRange: [-8, 8],
   });
-  const overlaySparkleOpacity = shimmer.interpolate({
+
+  const twinkleOpacityA = twinkleA.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.72, 1],
+    outputRange: [0.34, 1],
   });
+  const twinkleOpacityB = twinkleB.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.24, 0.95],
+  });
+  const twinkleOpacityC = twinkleC.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.28, 0.98],
+  });
+
+  const getOpacityForChannel = (channel: TwinkleChannel) => {
+    if (channel === 'a') return twinkleOpacityA;
+    if (channel === 'b') return twinkleOpacityB;
+    return twinkleOpacityC;
+  };
 
   return (
     <View pointerEvents="none" style={[styles.root, overlayOnly ? styles.rootOverlay : null]}>
@@ -94,22 +146,24 @@ export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkle
         </>
       ) : null}
 
-      <Animated.View style={[styles.sparkle, styles.sparkleA, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleB, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleC, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleD, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleE, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleF, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleG, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleH, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleI, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleJ, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleK, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleL, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleM, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleN, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleO, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleP, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      {STAR_POINTS.map((star) => (
+        <Animated.Text
+          key={star.id}
+          style={[
+            styles.starText,
+            {
+              top: star.top,
+              left: star.left,
+              right: star.right,
+              color: star.color,
+              fontSize: star.size,
+              opacity: getOpacityForChannel(star.channel),
+              transform: [{ translateY: driftY }],
+            },
+          ]}>
+          {star.glyph}
+        </Animated.Text>
+      ))}
     </View>
   );
 }
@@ -129,7 +183,7 @@ const styles = StyleSheet.create({
   orb: {
     position: 'absolute',
     borderRadius: 999,
-    opacity: 0.44,
+    opacity: 0.3,
   },
   orbA: {
     width: 340,
@@ -152,32 +206,12 @@ const styles = StyleSheet.create({
     right: '28%',
     backgroundColor: '#9a66ff',
   },
-  sparkle: {
+  starText: {
     position: 'absolute',
-    width: 14,
-    height: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.96)',
-    shadowColor: '#fff',
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
+    fontWeight: '800',
+    textShadowColor: '#ffffff',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+    includeFontPadding: false,
   },
-  sparkleA: { top: '14%', left: '12%', backgroundColor: '#ffe86b' },
-  sparkleB: { top: '22%', right: '16%', backgroundColor: '#ff7ad0' },
-  sparkleC: { top: '36%', left: '22%', backgroundColor: '#6ee6ff' },
-  sparkleD: { top: '49%', right: '24%', backgroundColor: '#92ffb4' },
-  sparkleE: { top: '60%', left: '18%', backgroundColor: '#d48bff' },
-  sparkleF: { top: '72%', right: '14%', backgroundColor: '#ffd96f' },
-  sparkleG: { top: '83%', left: '36%', backgroundColor: '#8fb8ff' },
-  sparkleH: { top: '8%', right: '40%', backgroundColor: '#8effea' },
-  sparkleI: { top: '28%', left: '8%', backgroundColor: '#ffd1f7' },
-  sparkleJ: { top: '41%', right: '8%', backgroundColor: '#d4ff8f' },
-  sparkleK: { top: '66%', left: '8%', backgroundColor: '#7ec8ff' },
-  sparkleL: { top: '88%', right: '28%', backgroundColor: '#ffe0a1' },
-  sparkleM: { top: '12%', left: '44%', backgroundColor: '#ffc8f0' },
-  sparkleN: { top: '53%', left: '47%', backgroundColor: '#b7ffea' },
-  sparkleO: { top: '75%', right: '42%', backgroundColor: '#ffd6ff' },
-  sparkleP: { top: '32%', right: '31%', backgroundColor: '#fff1ad' },
 });
