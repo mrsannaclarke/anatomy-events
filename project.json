@@ -323,7 +323,8 @@
       "Lucky legal-name alias hardening (2026-04-17): added `Jessie/Jesse Smith` aliases to Lucky normalization in both sheet-sync import and Staff Assignements parser so staff-facing identity remains `Lucky` while state-license generation pathways continue resolving through Artist License Source legal records.",
       "Shy legal-name validation (2026-04-17): confirmed `Artist License Source` maps legal name `Tylr Cheyenne Barnes` to ED entry `Shy`; existing alias normalization already includes this legal-name route.",
       "Event ledger action feedback polish (2026-04-17): the four client-card action icons (Client Details, Staff Assignements, Notes, Generators & Files) now briefly glow on press, matching Pricing clipboard-button interaction style.",
-      "Loading-screen title positioning tweak (2026-04-17): moved `Anatomy Events` title 10px lower to improve spacing under the rainbow swirl."
+      "Loading-screen title positioning tweak (2026-04-17): moved `Anatomy Events` title 10px lower to improve spacing under the rainbow swirl.",
+      "Pay visibility + View-As safeguard (2026-04-17): Pay Schedule now disables admin all-staff visibility while `View As Profile` override is active, so testing as Megan/Shy/etc follows staff-level payout access rules (including explicit delegation exceptions) instead of admin-wide picker access."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
