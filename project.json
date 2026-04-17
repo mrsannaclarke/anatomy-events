@@ -306,7 +306,8 @@
       "Payout allocation formatting + counter assignment (2026-04-16): in expanded event audit, Staff/Shop Allocation sections now show amount-only lines (no percentages), `Pay Schedule Percent Source` includes Radius/Extra Hourly fee totals when present, and unassigned counter payout now surfaces `Assign Counter` actions on-card and in expanded view routing to Staff Assignements for direct assignment.",
       "Custom Flash split visibility (2026-04-16): expanded `Pay Schedule Percent Source` now shows Custom Flash Artist-vs-Shop split as percentages and amounts when a custom flash fee exists, using event-level custom flash totals (`Custom Flash Fee` and `Custom Flash Shop`).",
       "Google auth enforcement activation (2026-04-16): wired Expo Google OAuth sign-in flow (`expo-auth-session`) into `AuthFrameworkProvider`, enabled `requireAuth` + Google sign-in in auth config, and added a signed-out gate screen in tabs with allowlist enforcement by login email.",
-      "Android auth identifier alignment (2026-04-16): set Expo Android package id to `com.anatomytattoo.anatomyevents` in app config so Android OAuth client package and app runtime identifier stay consistent."
+      "Android auth identifier alignment (2026-04-16): set Expo Android package id to `com.anatomytattoo.anatomyevents` in app config so Android OAuth client package and app runtime identifier stay consistent.",
+      "GitHub Pages deployment wiring (2026-04-16): configured Expo web baseUrl to `/anatomy-events`, added `gh-pages` deploy tooling, and added npm scripts `predeploy` (`expo export -p web`) and `deploy` (`gh-pages --nojekyll -d dist`) for direct GitHub Pages publishing."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
