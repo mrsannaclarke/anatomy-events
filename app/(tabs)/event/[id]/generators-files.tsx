@@ -4,12 +4,13 @@ import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { useEvents } from '@/context/events-context';
+import { useAuthFramework } from '@/lib/auth-framework';
 import {
   pullEventByEntryId,
   pullGeneratedDocUrlsByEntryId,
@@ -184,6 +185,7 @@ export default function EventGeneratorsFilesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { events, setSelectedEventId, updateEvent, upsertEventFromRemote } = useEvents();
+  const { canAccessAdminToolsForViewer } = useAuthFramework();
 
   const [isGenerating, setIsGenerating] = useState<DocumentKind | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -195,6 +197,8 @@ export default function EventGeneratorsFilesScreen() {
   const [artError, setArtError] = useState('');
   const [isSavingArt, setIsSavingArt] = useState(false);
   const [isUploadingArt, setIsUploadingArt] = useState(false);
+  const [actionFeedbackKey, setActionFeedbackKey] = useState<string | null>(null);
+  const actionFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const event = events.find((item) => item.id === id);
 
@@ -285,6 +289,28 @@ export default function EventGeneratorsFilesScreen() {
   const contractGenerated = Boolean(latestContractUrl);
   const tflGenerated = Boolean(latestTflUrl);
   const generatorsLocked = contractGenerated && tflGenerated;
+  const canViewGeneratedFiles = canAccessAdminToolsForViewer;
+  const canUseAdvancedArtActions = canAccessAdminToolsForViewer;
+
+  function showActionFeedback(actionKey: string) {
+    setActionFeedbackKey(actionKey);
+    if (actionFeedbackTimeoutRef.current) {
+      clearTimeout(actionFeedbackTimeoutRef.current);
+    }
+    actionFeedbackTimeoutRef.current = setTimeout(() => {
+      setActionFeedbackKey((current) => (current === actionKey ? null : current));
+      actionFeedbackTimeoutRef.current = null;
+    }, 260);
+  }
+
+  useEffect(
+    () => () => {
+      if (actionFeedbackTimeoutRef.current) {
+        clearTimeout(actionFeedbackTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   if (!event) {
     return (
@@ -643,7 +669,12 @@ export default function EventGeneratorsFilesScreen() {
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.topRow}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable
+          style={[styles.backButton, actionFeedbackKey === 'back' ? styles.pressableGlow : null]}
+          onPress={() => {
+            showActionFeedback('back');
+            router.back();
+          }}>
           <MaterialIcons name="arrow-back" size={14} color="#cde0f5" />
           <ThemedText style={styles.backButtonText}>Back</ThemedText>
         </Pressable>
@@ -660,7 +691,7 @@ export default function EventGeneratorsFilesScreen() {
         </View>
       </View>
 
-      {!generatorsLocked ? (
+      {canViewGeneratedFiles && !generatorsLocked ? (
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Generators</ThemedText>
           <View style={styles.buttonRow}>
@@ -669,9 +700,11 @@ export default function EventGeneratorsFilesScreen() {
                 style={[
                   styles.actionButton,
                   styles.contractActionButton,
+                  actionFeedbackKey === 'generate_contract' ? styles.pressableGlow : null,
                   isGenerating != null ? styles.actionButtonDisabled : null,
                 ]}
                 onPress={() => {
+                  showActionFeedback('generate_contract');
                   void handleGenerate('contract');
                 }}
                 disabled={isGenerating != null}>
@@ -686,9 +719,11 @@ export default function EventGeneratorsFilesScreen() {
                 style={[
                   styles.actionButton,
                   styles.licenseActionButton,
+                  actionFeedbackKey === 'generate_license' ? styles.pressableGlow : null,
                   isGenerating != null ? styles.actionButtonDisabled : null,
                 ]}
                 onPress={() => {
+                  showActionFeedback('generate_license');
                   void handleGenerate('tfl');
                 }}
                 disabled={isGenerating != null}>
@@ -704,55 +739,121 @@ export default function EventGeneratorsFilesScreen() {
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Generated Forms</ThemedText>
-        {latestContractUrl ? (
-          <Pressable style={[styles.linkButton, styles.contractLinkButton]} onPress={() => void Linking.openURL(latestContractUrl)}>
-            <MaterialIcons name="open-in-new" size={13} color="#bfe1ff" />
-            <ThemedText style={[styles.linkText, styles.contractLinkText]}>Open Event Contract</ThemedText>
-          </Pressable>
+        {canViewGeneratedFiles ? (
+          <>
+            {latestContractUrl ? (
+              <Pressable
+                style={[
+                  styles.linkButton,
+                  styles.contractLinkButton,
+                  actionFeedbackKey === 'open_contract' ? styles.pressableGlow : null,
+                ]}
+                onPress={() => {
+                  showActionFeedback('open_contract');
+                  void Linking.openURL(latestContractUrl);
+                }}>
+                <MaterialIcons name="open-in-new" size={13} color="#bfe1ff" />
+                <ThemedText style={[styles.linkText, styles.contractLinkText]}>Open Event Contract</ThemedText>
+              </Pressable>
+            ) : null}
+            {latestContractUrl ? (
+              <Pressable
+                style={[
+                  styles.linkButton,
+                  styles.contractLinkButton,
+                  actionFeedbackKey === 'email_contract' ? styles.pressableGlow : null,
+                ]}
+                onPress={() => {
+                  showActionFeedback('email_contract');
+                  void handleEmailContractToClient();
+                }}>
+                <MaterialIcons name="mail-outline" size={13} color="#bfe1ff" />
+                <ThemedText style={[styles.linkText, styles.contractLinkText]}>Email Contract to Client</ThemedText>
+              </Pressable>
+            ) : null}
+          </>
         ) : null}
-        {latestContractUrl ? (
-          <Pressable style={[styles.linkButton, styles.contractLinkButton]} onPress={() => void handleEmailContractToClient()}>
-            <MaterialIcons name="mail-outline" size={13} color="#bfe1ff" />
-            <ThemedText style={[styles.linkText, styles.contractLinkText]}>Email Contract to Client</ThemedText>
-          </Pressable>
+        <Pressable
+          style={[
+            styles.linkButton,
+            styles.contractLinkButton,
+            actionFeedbackKey === 'copy_contract_email' ? styles.pressableGlow : null,
+          ]}
+          onPress={() => {
+            showActionFeedback('copy_contract_email');
+            void handleCopyContractEmailToClipboard();
+          }}>
+          <MaterialIcons name="content-copy" size={13} color="#bfe1ff" />
+          <ThemedText style={[styles.linkText, styles.contractLinkText]}>Copy Email to Clipboard</ThemedText>
+        </Pressable>
+        {canViewGeneratedFiles ? (
+          <>
+            {latestTflUrl ? (
+              <Pressable
+                style={[
+                  styles.linkButton,
+                  styles.licenseLinkButton,
+                  actionFeedbackKey === 'open_license' ? styles.pressableGlow : null,
+                ]}
+                onPress={() => {
+                  showActionFeedback('open_license');
+                  void Linking.openURL(latestTflUrl);
+                }}>
+                <MaterialIcons name="open-in-new" size={13} color="#d7f7e5" />
+                <ThemedText style={[styles.linkText, styles.licenseLinkText]}>Open License Application</ThemedText>
+              </Pressable>
+            ) : null}
+            {latestTflUrl ? (
+              <Pressable
+                style={[
+                  styles.linkButton,
+                  styles.licenseLinkButton,
+                  actionFeedbackKey === 'email_license' ? styles.pressableGlow : null,
+                ]}
+                onPress={() => {
+                  showActionFeedback('email_license');
+                  void handleEmailLicenseApplication();
+                }}>
+                <MaterialIcons name="mail-outline" size={13} color="#d7f7e5" />
+                <ThemedText style={[styles.linkText, styles.licenseLinkText]}>Email License Application</ThemedText>
+              </Pressable>
+            ) : null}
+            {latestTflUrl ? (
+              <Pressable
+                style={[
+                  styles.linkButton,
+                  styles.licenseLinkButton,
+                  actionFeedbackKey === 'copy_license_email' ? styles.pressableGlow : null,
+                ]}
+                onPress={() => {
+                  showActionFeedback('copy_license_email');
+                  void handleCopyLicenseEmailToClipboard();
+                }}>
+                <MaterialIcons name="content-copy" size={13} color="#d7f7e5" />
+                <ThemedText style={[styles.linkText, styles.licenseLinkText]}>Copy Email to Clipboard</ThemedText>
+              </Pressable>
+            ) : null}
+            {!latestContractUrl && !latestTflUrl ? (
+              <ThemedText style={styles.infoText}>No generated files are linked to this event yet.</ThemedText>
+            ) : null}
+            {loadStatus ? <ThemedText style={styles.infoText}>{loadStatus}</ThemedText> : null}
+            {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
+          </>
         ) : null}
-        {latestContractUrl ? (
-          <Pressable style={[styles.linkButton, styles.contractLinkButton]} onPress={() => void handleCopyContractEmailToClipboard()}>
-            <MaterialIcons name="content-copy" size={13} color="#bfe1ff" />
-            <ThemedText style={[styles.linkText, styles.contractLinkText]}>Copy Email to Clipboard</ThemedText>
-          </Pressable>
-        ) : null}
-        {latestTflUrl ? (
-          <Pressable style={[styles.linkButton, styles.licenseLinkButton]} onPress={() => void Linking.openURL(latestTflUrl)}>
-            <MaterialIcons name="open-in-new" size={13} color="#d7f7e5" />
-            <ThemedText style={[styles.linkText, styles.licenseLinkText]}>Open License Application</ThemedText>
-          </Pressable>
-        ) : null}
-        {latestTflUrl ? (
-          <Pressable style={[styles.linkButton, styles.licenseLinkButton]} onPress={() => void handleEmailLicenseApplication()}>
-            <MaterialIcons name="mail-outline" size={13} color="#d7f7e5" />
-            <ThemedText style={[styles.linkText, styles.licenseLinkText]}>Email License Application</ThemedText>
-          </Pressable>
-        ) : null}
-        {latestTflUrl ? (
-          <Pressable style={[styles.linkButton, styles.licenseLinkButton]} onPress={() => void handleCopyLicenseEmailToClipboard()}>
-            <MaterialIcons name="content-copy" size={13} color="#d7f7e5" />
-            <ThemedText style={[styles.linkText, styles.licenseLinkText]}>Copy Email to Clipboard</ThemedText>
-          </Pressable>
-        ) : null}
-        {!latestContractUrl && !latestTflUrl ? (
-          <ThemedText style={styles.infoText}>No generated files are linked to this event yet.</ThemedText>
-        ) : null}
-        {loadStatus ? <ThemedText style={styles.infoText}>{loadStatus}</ThemedText> : null}
-        {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
+        {!canViewGeneratedFiles && errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
       </View>
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Uploaded Art</ThemedText>
         <View style={styles.buttonRow}>
           <Pressable
-            style={[styles.actionButton, isUploadingArt ? styles.actionButtonDisabled : null]}
+            style={[
+              styles.actionButton,
+              actionFeedbackKey === 'upload_art' ? styles.pressableGlow : null,
+              isUploadingArt ? styles.actionButtonDisabled : null,
+            ]}
             onPress={() => {
+              showActionFeedback('upload_art');
               void handleUploadArtFromDevice();
             }}
             disabled={isUploadingArt}>
@@ -777,43 +878,75 @@ export default function EventGeneratorsFilesScreen() {
         />
         <View style={styles.buttonRow}>
           <Pressable
-            style={[styles.actionButton, isSavingArt || isUploadingArt ? styles.actionButtonDisabled : null]}
+            style={[
+              styles.actionButton,
+              actionFeedbackKey === 'save_art' ? styles.pressableGlow : null,
+              isSavingArt || isUploadingArt ? styles.actionButtonDisabled : null,
+            ]}
             onPress={() => {
+              showActionFeedback('save_art');
               void handleSaveArtImage();
             }}
             disabled={isSavingArt || isUploadingArt}>
             <MaterialIcons name="save" size={14} color="#dceafe" />
             <ThemedText style={styles.actionButtonText}>{isSavingArt ? 'Saving Art...' : 'Save Art'}</ThemedText>
           </Pressable>
-          {artImageUrl ? (
+          {canUseAdvancedArtActions && artImageUrl ? (
             <Pressable
-              style={[styles.actionButton, isSavingArt || isUploadingArt ? styles.actionButtonDisabled : null]}
-              onPress={confirmDeleteSavedArt}
+              style={[
+                styles.actionButton,
+                actionFeedbackKey === 'delete_art' ? styles.pressableGlow : null,
+                isSavingArt || isUploadingArt ? styles.actionButtonDisabled : null,
+              ]}
+              onPress={() => {
+                showActionFeedback('delete_art');
+                confirmDeleteSavedArt();
+              }}
               disabled={isSavingArt || isUploadingArt}>
               <MaterialIcons name="delete-outline" size={14} color="#dceafe" />
               <ThemedText style={styles.actionButtonText}>Delete Saved Art</ThemedText>
             </Pressable>
           ) : null}
-          {artImageUrl ? (
-            <Pressable style={styles.actionButton} onPress={() => void Linking.openURL(artImageUrl)}>
+          {canUseAdvancedArtActions && artImageUrl ? (
+            <Pressable
+              style={[styles.actionButton, actionFeedbackKey === 'open_art' ? styles.pressableGlow : null]}
+              onPress={() => {
+                showActionFeedback('open_art');
+                void Linking.openURL(artImageUrl);
+              }}>
               <MaterialIcons name="open-in-new" size={14} color="#dceafe" />
               <ThemedText style={styles.actionButtonText}>Open Art</ThemedText>
             </Pressable>
           ) : null}
-          {artImageUrl ? (
-            <Pressable style={styles.actionButton} onPress={() => void handleEmailArtToClient()}>
+          {canUseAdvancedArtActions && artImageUrl ? (
+            <Pressable
+              style={[styles.actionButton, actionFeedbackKey === 'email_art' ? styles.pressableGlow : null]}
+              onPress={() => {
+                showActionFeedback('email_art');
+                void handleEmailArtToClient();
+              }}>
               <MaterialIcons name="mail-outline" size={14} color="#dceafe" />
               <ThemedText style={styles.actionButtonText}>Email Art</ThemedText>
             </Pressable>
           ) : null}
-          {artImageUrl ? (
-            <Pressable style={styles.actionButton} onPress={() => void handleShareArtLink()}>
+          {canUseAdvancedArtActions && artImageUrl ? (
+            <Pressable
+              style={[styles.actionButton, actionFeedbackKey === 'share_art' ? styles.pressableGlow : null]}
+              onPress={() => {
+                showActionFeedback('share_art');
+                void handleShareArtLink();
+              }}>
               <MaterialIcons name="share" size={14} color="#dceafe" />
               <ThemedText style={styles.actionButtonText}>Share Art</ThemedText>
             </Pressable>
           ) : null}
-          {artImageUrl ? (
-            <Pressable style={styles.actionButton} onPress={() => void handleDownloadArtToDevice()}>
+          {canUseAdvancedArtActions && artImageUrl ? (
+            <Pressable
+              style={[styles.actionButton, actionFeedbackKey === 'download_art' ? styles.pressableGlow : null]}
+              onPress={() => {
+                showActionFeedback('download_art');
+                void handleDownloadArtToDevice();
+              }}>
               <MaterialIcons name="download" size={14} color="#dceafe" />
               <ThemedText style={styles.actionButtonText}>Download Art</ThemedText>
             </Pressable>
@@ -930,6 +1063,14 @@ const styles = StyleSheet.create({
   },
   actionButtonDisabled: {
     opacity: 0.5,
+  },
+  pressableGlow: {
+    borderColor: '#67a9ff',
+    shadowColor: '#67a9ff',
+    shadowOpacity: 0.32,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 3,
   },
   actionButtonText: {
     color: '#dceafe',
