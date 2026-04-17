@@ -21,11 +21,11 @@ export default function RootLayout() {
     ...baseTheme,
     colors: {
       ...baseTheme.colors,
-      background: 'transparent',
+      background: '#0b1117',
     },
   };
 
-  const sparkleStyle: SparkleStyle = 'dots';
+  const sparkleStyle: SparkleStyle = 'stars';
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -67,7 +67,7 @@ export default function RootLayout() {
         <ThemeProvider value={appTheme}>
           <View style={styles.appShell}>
             <RainbowSparkleBackground sparkleStyle={sparkleStyle} />
-            <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
+            <Stack screenOptions={{ contentStyle: { backgroundColor: '#0b1117' } }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'How It Works' }} />
             </Stack>

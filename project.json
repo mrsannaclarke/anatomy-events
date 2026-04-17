@@ -362,7 +362,8 @@
       "Next-source staging lock (2026-04-17): recorded duplicate sheet (`1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs`) and new Apps Script project (`1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK`) under `staging_next_source_links` with explicit `staging_not_connected_to_app` status. Do not point app sync config to staging IDs until explicit approval.",
       "Payout loading UX + sparkle intensity update (2026-04-17): Pay tab now shows the branded loading screen while live payout override/staff-assignment sync is in-flight (prevents partial row pop-in during slow pulls), and rainbow sparkle overlay intensity/size/count were increased for stronger cross-device visibility.",
       "Sparkle rendering strategy swap (2026-04-17): replaced prior dot/shadow sparkle effect with animated star-glyph twinkles (`✦`/`✧`) on both base and overlay layers for more reliable cross-platform visibility; keeps pointer-events disabled and preserves dark-blue atmosphere.",
-      "Sparkle preview toggle (2026-04-17): reintroduced prior dot/glow twinkle renderer as 'dots' variant and set root layout to dot mode for side-by-side comparison readiness; star-glyph mode remains available as 'stars'."
+      "Sparkle preview toggle (2026-04-17): reintroduced prior dot/glow twinkle renderer as 'dots' variant and set root layout to dot mode for side-by-side comparison readiness; star-glyph mode remains available as 'stars'.",
+      "Navigation transparency fix + twinkle retune (2026-04-17): set root stack/tab scene backgrounds to solid dark-blue (`#0b1117`) to stop previous-screen bleed-through during menu navigation, switched sparkle style back to stars, and retuned stars to be smaller, denser, and subtler with reduced drift/opacity."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
