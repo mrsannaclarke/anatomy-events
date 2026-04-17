@@ -291,10 +291,9 @@ export default function PayScreen() {
         acc.total += row.totalPayout;
         acc.artist += row.artistPayout;
         acc.counter += row.counterPayout;
-        acc.modifiers += row.artistModifierPayout;
         return acc;
       },
-      { total: 0, artist: 0, counter: 0, modifiers: 0 },
+      { total: 0, artist: 0, counter: 0 },
     );
   }, [visibleCompletedRows]);
 
@@ -404,24 +403,19 @@ export default function PayScreen() {
             <ThemedText style={styles.summaryLabel}>Counter</ThemedText>
             <ThemedText style={styles.summaryValue}>{formatCurrency(totals.counter)}</ThemedText>
           </View>
-          <View>
-            <ThemedText style={styles.summaryLabel}>Modifiers</ThemedText>
-            <ThemedText style={styles.summaryValue}>{formatCurrency(totals.modifiers)}</ThemedText>
-          </View>
         </View>
       </View>
 
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Completed Totals by Year</ThemedText>
         {(() => {
-          const byYear = visibleCompletedRows.reduce<Record<string, { total: number; artist: number; counter: number; modifiers: number }>>(
+          const byYear = visibleCompletedRows.reduce<Record<string, { total: number; artist: number; counter: number }>>(
             (acc, row) => {
               const key = getCompletedYearKey(row.event) || 'Untracked';
-              if (!acc[key]) acc[key] = { total: 0, artist: 0, counter: 0, modifiers: 0 };
+              if (!acc[key]) acc[key] = { total: 0, artist: 0, counter: 0 };
               acc[key].total += row.totalPayout;
               acc[key].artist += row.artistPayout;
               acc[key].counter += row.counterPayout;
-              acc[key].modifiers += row.artistModifierPayout;
               return acc;
             },
             {},
@@ -444,7 +438,6 @@ export default function PayScreen() {
                 <ThemedText style={styles.yearValue}>Total {formatCurrency(byYear[key].total)}</ThemedText>
                 <ThemedText style={styles.yearValue}>Artist {formatCurrency(byYear[key].artist)}</ThemedText>
                 <ThemedText style={styles.yearValue}>Counter {formatCurrency(byYear[key].counter)}</ThemedText>
-                <ThemedText style={styles.yearValue}>Modifiers {formatCurrency(byYear[key].modifiers)}</ThemedText>
               </View>
             </View>
           ));
@@ -475,8 +468,15 @@ export default function PayScreen() {
               <View style={styles.rowTop}>
                 <View style={styles.rowTitleBlock}>
                   <View style={styles.rowTitleRow}>
-                    <MaterialIcons name={eventTypeVisual.icon} size={14} color={eventTypeVisual.color} />
-                    <Pressable onPress={() => router.push(`/event/${row.event.id}`)}>
+                    <View style={[styles.rowEventTypeIconWrap, { borderColor: eventTypeVisual.color }]}>
+                      <MaterialIcons name={eventTypeVisual.icon} size={13} color={eventTypeVisual.color} />
+                    </View>
+                    <Pressable
+                      onPress={() =>
+                        router.push(
+                          `/event/${row.event.id}?clientName=${encodeURIComponent(row.event.clientName || '')}`,
+                        )
+                      }>
                       <ThemedText style={[styles.rowTitle, { color: eventTypeVisual.color }]}>
                         {row.event.clientName || 'Untitled Event'}
                       </ThemedText>
@@ -709,6 +709,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  rowEventTypeIconWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    backgroundColor: '#0f1620',
   },
   rowTitle: {
     fontWeight: '700',

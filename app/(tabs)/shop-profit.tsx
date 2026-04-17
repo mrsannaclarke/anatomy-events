@@ -240,7 +240,9 @@ export default function ShopProfitScreen() {
 
   function openEventDetails(event: EventRecord) {
     upsertEventFromRemote(event);
-    router.push(`/event/${event.id}?returnTo=${encodeURIComponent('/shop-profit')}`);
+    router.push(
+      `/event/${event.id}?returnTo=${encodeURIComponent('/shop-profit')}&clientName=${encodeURIComponent(event.clientName || '')}`,
+    );
   }
 
   function toggleEventBreakdown(eventId: string) {
@@ -689,7 +691,9 @@ export default function ShopProfitScreen() {
             <View style={styles.eventHeader}>
               <View style={styles.eventHeaderLeft}>
                 <View style={styles.eventClientRow}>
-                  <MaterialIcons name={eventTypeVisual.icon} size={14} color={eventTypeVisual.color} />
+                  <View style={[styles.eventTypeIconWrap, { borderColor: eventTypeVisual.color }]}>
+                    <MaterialIcons name={eventTypeVisual.icon} size={13} color={eventTypeVisual.color} />
+                  </View>
                   <Pressable style={styles.eventClientButton} onPress={() => toggleEventBreakdown(card.event.id)}>
                     <ThemedText style={[styles.eventClient, { color: eventTypeVisual.color }]}>
                       {card.event.clientName || 'Untitled Event'}
@@ -1068,6 +1072,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  eventTypeIconWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    backgroundColor: '#0f1620',
   },
   eventClientButton: {
     flexDirection: 'row',

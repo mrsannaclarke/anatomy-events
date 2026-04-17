@@ -212,7 +212,11 @@ function mergeUniqueNames(existing: string[], incoming: string[]): string[] {
 }
 
 export default function EventDetailScreen() {
-  const { id, returnTo } = useLocalSearchParams<{ id: string; returnTo?: string | string[] }>();
+  const { id, returnTo, clientName } = useLocalSearchParams<{
+    id: string;
+    returnTo?: string | string[];
+    clientName?: string | string[];
+  }>();
   const router = useRouter();
   const { events, updateEvent, setSelectedEventId, upsertEventFromRemote } = useEvents();
   const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
@@ -601,6 +605,8 @@ export default function EventDetailScreen() {
   const currentEvent = event;
   const typeVisual = getEventTypeVisual(currentEvent.eventType);
   const requestedReturnTo = Array.isArray(returnTo) ? returnTo[0] : returnTo;
+  const requestedClientName = Array.isArray(clientName) ? clientName[0] : clientName;
+  const displayClientName = currentEvent.clientName || requestedClientName || 'Untitled Event';
 
   function handleBackPress() {
     if (requestedReturnTo === '/shop-profit') {
@@ -626,7 +632,7 @@ export default function EventDetailScreen() {
             <MaterialIcons name={typeVisual.icon} size={15} color={typeVisual.color} />
           </View>
           <ThemedText type="title" style={[styles.heroTitle, { color: typeVisual.color }]}>
-            {currentEvent.clientName || 'Untitled Event'}
+            {displayClientName}
           </ThemedText>
         </View>
       </View>
