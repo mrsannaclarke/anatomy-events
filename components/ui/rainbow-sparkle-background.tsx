@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
-export function RainbowSparkleBackground() {
+type RainbowSparkleBackgroundProps = {
+  overlayOnly?: boolean;
+};
+
+export function RainbowSparkleBackground({ overlayOnly = false }: RainbowSparkleBackgroundProps) {
   const orbit = useRef(new Animated.Value(0)).current;
   const shimmer = useRef(new Animated.Value(0)).current;
   const drift = useRef(new Animated.Value(0)).current;
@@ -73,27 +77,35 @@ export function RainbowSparkleBackground() {
     inputRange: [0, 1],
     outputRange: [-8, 8],
   });
+  const overlaySparkleOpacity = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.38, 0.82],
+  });
 
   return (
-    <View pointerEvents="none" style={styles.root}>
-      <View style={styles.base} />
+    <View pointerEvents="none" style={[styles.root, overlayOnly ? styles.rootOverlay : null]}>
+      {!overlayOnly ? <View style={styles.base} /> : null}
 
-      <Animated.View style={[styles.orb, styles.orbA, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
-      <Animated.View style={[styles.orb, styles.orbB, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
-      <Animated.View style={[styles.orb, styles.orbC, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
+      {!overlayOnly ? (
+        <>
+          <Animated.View style={[styles.orb, styles.orbA, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
+          <Animated.View style={[styles.orb, styles.orbB, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
+          <Animated.View style={[styles.orb, styles.orbC, { transform: [{ rotate: orbitSpin }, { translateY: driftY }] }]} />
+        </>
+      ) : null}
 
-      <Animated.View style={[styles.sparkle, styles.sparkleA, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleB, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleC, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleD, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleE, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleF, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleG, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleH, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleI, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleJ, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleK, { opacity: shimmerOpacity }]} />
-      <Animated.View style={[styles.sparkle, styles.sparkleL, { opacity: shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleA, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleB, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleC, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleD, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleE, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleF, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleG, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleH, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleI, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleJ, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleK, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
+      <Animated.View style={[styles.sparkle, styles.sparkleL, { opacity: overlayOnly ? overlaySparkleOpacity : shimmerOpacity }]} />
     </View>
   );
 }
@@ -102,6 +114,9 @@ const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 0,
+  },
+  rootOverlay: {
+    zIndex: 999,
   },
   base: {
     ...StyleSheet.absoluteFillObject,

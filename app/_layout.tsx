@@ -69,6 +69,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'How It Works' }} />
             </Stack>
+            <RainbowSparkleBackground overlayOnly />
           </View>
           <StatusBar style="auto" />
         </ThemeProvider>
