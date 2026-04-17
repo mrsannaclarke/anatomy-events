@@ -62,7 +62,6 @@ export default function AdminScreen() {
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Admin Tools</ThemedText>
-        <ThemedText style={styles.helperText}>Admin/super-admin controls and references.</ThemedText>
 
         <View style={styles.viewAsBlock}>
           <ThemedText style={styles.viewAsLabel}>View As Profile (Testing)</ThemedText>
