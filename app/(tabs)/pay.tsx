@@ -80,6 +80,12 @@ type EventTypeVisual = {
   color: string;
 };
 
+const PAY_VIEW_DELEGATION_MAP: Readonly<Record<string, readonly string[]>> = {
+  megan: ['jacob'],
+  tomma: ['kevin', 'jayden', 'veda'],
+  shy: ['jason'],
+};
+
 function getEventTypeVisual(eventType: string): EventTypeVisual {
   const normalized = eventType.trim().toLowerCase();
   if (normalized.includes('private')) return { icon: 'celebration', color: '#b58bff' };
@@ -94,17 +100,34 @@ export default function PayScreen() {
   const { events } = useEvents();
   const { status, user, canAccessAdminTools, resolvePermissionsForName } = useAuthFramework();
 
-  const defaultViewerName = useMemo(() => {
-    if (status === 'bypass') return 'Anna';
-    if (user?.matchNames?.length) return user.matchNames[0];
-    if (user?.displayName) return user.displayName.split(' ')[0] || '';
-    return '';
-  }, [status, user?.displayName, user?.matchNames]);
+  const { defaultViewerName, viewerPermission } = useMemo(() => {
+    if (status === 'bypass') {
+      return {
+        defaultViewerName: 'Anna',
+        viewerPermission: resolvePermissionsForName('Anna'),
+      };
+    }
 
-  const viewerPermission = useMemo(() => {
-    if (!defaultViewerName) return null;
-    return resolvePermissionsForName(defaultViewerName);
-  }, [defaultViewerName, resolvePermissionsForName]);
+    const candidateNames = uniqueByNormalizedName([
+      ...(user?.matchNames ?? []),
+      user?.displayName ? user.displayName.split(' ')[0] || '' : '',
+    ]);
+
+    for (const candidate of candidateNames) {
+      const permission = resolvePermissionsForName(candidate);
+      if (permission) {
+        return {
+          defaultViewerName: permission.name,
+          viewerPermission: permission,
+        };
+      }
+    }
+
+    return {
+      defaultViewerName: candidateNames[0] || '',
+      viewerPermission: null,
+    };
+  }, [resolvePermissionsForName, status, user?.displayName, user?.matchNames]);
 
   const canViewAnyPayTable = canAccessAdminTools;
 
@@ -127,7 +150,26 @@ export default function PayScreen() {
     return uniqueByNormalizedName([...permissionNames, ...fromEvents]);
   }, [events]);
 
-  const canPickPerson = canViewAnyPayTable;
+  const delegatedPeople = useMemo(() => {
+    const delegationKeys = PAY_VIEW_DELEGATION_MAP[normalizeNameKey(defaultViewerName)] ?? [];
+    if (delegationKeys.length === 0) return [];
+    return uniqueByNormalizedName(
+      delegationKeys
+        .map((delegatedKey) => allPeople.find((name) => normalizeNameKey(name) === delegatedKey) || '')
+        .filter(Boolean),
+    );
+  }, [allPeople, defaultViewerName]);
+
+  const selectablePeople = useMemo(() => {
+    if (!canViewPayFramework) return [];
+    if (canViewAnyPayTable) return allPeople;
+
+    const ownName =
+      allPeople.find((name) => normalizeNameKey(name) === normalizeNameKey(defaultViewerName)) || defaultViewerName;
+    return uniqueByNormalizedName([ownName, ...delegatedPeople].filter(Boolean));
+  }, [allPeople, canViewAnyPayTable, canViewPayFramework, defaultViewerName, delegatedPeople]);
+
+  const canPickPerson = canViewAnyPayTable || selectablePeople.length > 1;
 
   const [selectedPersonName, setSelectedPersonName] = useState<string>('');
   const [isPersonPickerOpen, setIsPersonPickerOpen] = useState(false);
@@ -182,14 +224,18 @@ export default function PayScreen() {
       return '';
     }
 
-    const hasSelected = selectedPersonName && allPeople.some((name) => normalizeNameKey(name) === normalizeNameKey(selectedPersonName));
+    const hasSelected =
+      selectedPersonName &&
+      selectablePeople.some((name) => normalizeNameKey(name) === normalizeNameKey(selectedPersonName));
     if (hasSelected) return selectedPersonName;
 
-    const defaultInList = allPeople.find((name) => normalizeNameKey(name) === normalizeNameKey(defaultViewerName));
+    const defaultInList = selectablePeople.find(
+      (name) => normalizeNameKey(name) === normalizeNameKey(defaultViewerName),
+    );
     if (defaultInList) return defaultInList;
 
-    return allPeople[0] || defaultViewerName;
-  }, [allPeople, canPickPerson, canViewPayFramework, defaultViewerName, selectedPersonName]);
+    return selectablePeople[0] || defaultViewerName;
+  }, [canPickPerson, canViewPayFramework, defaultViewerName, selectablePeople, selectedPersonName]);
 
   const rows = useMemo(() => {
     if (!effectivePersonName) return [];
@@ -337,7 +383,7 @@ export default function PayScreen() {
             </Pressable>
             {isPersonPickerOpen ? (
               <View style={styles.dropdownList}>
-                {allPeople.map((name) => {
+                {selectablePeople.map((name) => {
                   const selected = normalizeNameKey(name) === normalizeNameKey(effectivePersonName);
                   return (
                     <Pressable

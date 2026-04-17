@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -23,6 +23,7 @@ const DEFAULT_PLAN_YEAR = 2026;
 const DEFAULT_BASE_ADDRESS = 'Anatomy Tattoo, Portland, OR';
 const BASE_INCLUDED_HOURS = 5;
 const DEPOSIT_RATE_PERCENT = 30;
+type HeaderActionFeedback = 'share' | 'view' | 'copy' | null;
 
 function parseNumberInput(value: string): number {
   const normalized = value.trim().replace(/,/g, '');
@@ -179,6 +180,8 @@ export default function PricingScreen() {
   const [existingPickerOpen, setExistingPickerOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [isSavingEntry, setIsSavingEntry] = useState(false);
+  const [headerActionFeedback, setHeaderActionFeedback] = useState<HeaderActionFeedback>(null);
+  const headerActionFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selectedSchedule = PRICING_SCHEDULE_BY_YEAR[selectedYear] ?? {};
   const pricingSheetPublicUrl =
@@ -272,6 +275,26 @@ export default function PricingScreen() {
   const radiusFeeLabel = 'Radius Fee';
   const travelDistanceDisplayLabel = `Travel Distance (first ${freeRadiusMiles} mi included)`;
   const travelDistanceLabel = hasTravelDistance ? `${parsedTravelDistanceMiles.toFixed(1)} mi` : 'Not entered';
+
+  function showActionFeedback(action: Exclude<HeaderActionFeedback, null>) {
+    setHeaderActionFeedback(action);
+    if (headerActionFeedbackTimeoutRef.current) {
+      clearTimeout(headerActionFeedbackTimeoutRef.current);
+    }
+    headerActionFeedbackTimeoutRef.current = setTimeout(() => {
+      setHeaderActionFeedback((current) => (current === action ? null : current));
+      headerActionFeedbackTimeoutRef.current = null;
+    }, 260);
+  }
+
+  useEffect(
+    () => () => {
+      if (headerActionFeedbackTimeoutRef.current) {
+        clearTimeout(headerActionFeedbackTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   async function runRadiusLookup() {
     const venue = eventAddress.trim();
@@ -498,13 +521,19 @@ export default function PricingScreen() {
           <ThemedText style={styles.title}>Price Plan</ThemedText>
           <View style={styles.headerActions}>
             <Pressable
-              style={styles.iconActionButton}
+              style={[styles.iconActionButton, headerActionFeedback === 'share' ? styles.iconActionButtonActive : null]}
               onPress={() => {
+                showActionFeedback('share');
                 void copyPricingSheetPublicUrl();
               }}>
               <MaterialIcons name="share" size={16} color="#d9e9ff" />
             </Pressable>
-            <Pressable style={styles.iconActionButton} onPress={openPricingSheetPublicUrl}>
+            <Pressable
+              style={[styles.iconActionButton, headerActionFeedback === 'view' ? styles.iconActionButtonActive : null]}
+              onPress={() => {
+                showActionFeedback('view');
+                openPricingSheetPublicUrl();
+              }}>
               <MaterialIcons name="search" size={16} color="#d9e9ff" />
             </Pressable>
           </View>
@@ -742,8 +771,15 @@ export default function PricingScreen() {
             </View>
         </View>
         <Pressable
-          style={[styles.iconActionButton, styles.copyTableIconButton]}
-          onPress={() => void copyPricingTableToClipboard()}>
+          style={[
+            styles.iconActionButton,
+            styles.copyTableIconButton,
+            headerActionFeedback === 'copy' ? styles.iconActionButtonActive : null,
+          ]}
+          onPress={() => {
+            showActionFeedback('copy');
+            void copyPricingTableToClipboard();
+          }}>
           <MaterialIcons name="content-copy" size={16} color="#cfe2ff" />
         </Pressable>
 
@@ -918,6 +954,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#132235',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconActionButtonActive: {
+    borderColor: '#6db6ff',
+    backgroundColor: '#24588c',
+    shadowColor: '#78bbff',
+    shadowOpacity: 0.55,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 0 },
   },
   copyTableIconButton: {
     alignSelf: 'flex-start',
