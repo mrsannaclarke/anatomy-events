@@ -13,6 +13,7 @@
       "bundleIdentifier": "com.anatomytattoo.anatomyevents"
     },
     "android": {
+      "package": "com.anatomytattoo.anatomyevents",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
