@@ -38,6 +38,7 @@ const DEPOSIT_PAID_OR_LATER_STATUSES = new Set([
 const DEFAULT_DEPOSIT_RATE = 0.3;
 
 type FallbackAppointmentPoint = {
+  eventId: string;
   ts: number;
   hasKnownTime: boolean;
 };
@@ -267,22 +268,75 @@ function parseClockMinutes(value: string): number | null {
   return hour * 60 + minute;
 }
 
+function normalizeNameKeyForFallback(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function splitClientNameCandidates(rawClientName: string): string[] {
+  const raw = rawClientName.trim();
+  if (!raw) return [];
+
+  const candidates = new Set<string>();
+  const full = normalizeNameKeyForFallback(raw);
+  if (full) candidates.add(full);
+
+  raw
+    .split(/\s*(?:&|\/|\+|,|\band\b)\s*/i)
+    .map((value) => normalizeNameKeyForFallback(value))
+    .filter(Boolean)
+    .forEach((value) => candidates.add(value));
+
+  return [...candidates];
+}
+
+function normalizeEmailKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizePhoneKey(value: string): string {
+  const digits = value.replace(/\D+/g, '');
+  if (digits.length < 7) return '';
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+function buildClientIdentityKeys(event: EventRecord): string[] {
+  const keys = new Set<string>();
+
+  const emailKey = normalizeEmailKey(event.email);
+  if (emailKey) keys.add(`email:${emailKey}`);
+
+  const phoneKey = normalizePhoneKey(event.contactPhone);
+  if (phoneKey) keys.add(`phone:${phoneKey}`);
+
+  splitClientNameCandidates(event.clientName).forEach((name) => {
+    if (name.length >= 3) keys.add(`name:${name}`);
+  });
+
+  return [...keys];
+}
+
 function buildEventAppointmentPoint(event: EventRecord): FallbackAppointmentPoint | null {
   const baseTs = parseEventDateTimestamp(event.eventDate);
   if (baseTs == null) return null;
 
   if (hasExplicitTimeInDate(event.eventDate)) {
-    return { ts: baseTs, hasKnownTime: true };
+    return { eventId: event.id, ts: baseTs, hasKnownTime: true };
   }
 
   const eventStartMinutes = parseClockMinutes(event.eventStartTime);
   if (eventStartMinutes == null) {
-    return { ts: baseTs, hasKnownTime: false };
+    return { eventId: event.id, ts: baseTs, hasKnownTime: false };
   }
 
   const eventDate = new Date(baseTs);
   eventDate.setHours(Math.floor(eventStartMinutes / 60), eventStartMinutes % 60, 0, 0);
-  return { ts: eventDate.getTime(), hasKnownTime: true };
+  return { eventId: event.id, ts: eventDate.getTime(), hasKnownTime: true };
 }
 
 function formatFallbackAppointmentValue(point: FallbackAppointmentPoint): string {
@@ -473,31 +527,41 @@ export default function EventsScreen() {
     [visibleEvents],
   );
   const fallbackAppointmentsByEventId = useMemo(() => {
-    const byClientKey: Record<string, FallbackAppointmentPoint[]> = {};
+    const pointsByEventId: Record<string, FallbackAppointmentPoint> = {};
+    const indexByIdentityKey: Record<string, string[]> = {};
 
     events.forEach((event) => {
-      const clientKey = event.clientName.trim().toLowerCase();
-      if (!clientKey) return;
       const point = buildEventAppointmentPoint(event);
-      if (!point) return;
-      if (!byClientKey[clientKey]) byClientKey[clientKey] = [];
-      byClientKey[clientKey].push(point);
-    });
+      if (point) {
+        pointsByEventId[event.id] = point;
+      }
 
-    Object.values(byClientKey).forEach((points) => {
-      points.sort((a, b) => a.ts - b.ts);
+      const identityKeys = buildClientIdentityKeys(event);
+      identityKeys.forEach((key) => {
+        if (!indexByIdentityKey[key]) indexByIdentityKey[key] = [];
+        indexByIdentityKey[key].push(event.id);
+      });
     });
 
     const map: Record<string, FallbackAppointmentPair> = {};
     const nowTs = Date.now();
     events.forEach((event) => {
-      const clientKey = event.clientName.trim().toLowerCase();
-      if (!clientKey) {
+      const identityKeys = buildClientIdentityKeys(event);
+      if (identityKeys.length === 0) {
         map[event.id] = { upcoming: null, last: null };
         return;
       }
 
-      const points = byClientKey[clientKey] || [];
+      const relatedEventIds = new Set<string>();
+      identityKeys.forEach((key) => {
+        const ids = indexByIdentityKey[key] || [];
+        ids.forEach((id) => relatedEventIds.add(id));
+      });
+
+      const points = [...relatedEventIds]
+        .map((id) => pointsByEventId[id])
+        .filter((value): value is FallbackAppointmentPoint => Boolean(value))
+        .sort((a, b) => a.ts - b.ts);
       let upcoming: FallbackAppointmentPoint | null = null;
       let last: FallbackAppointmentPoint | null = null;
 
