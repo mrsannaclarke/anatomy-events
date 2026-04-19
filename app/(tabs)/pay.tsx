@@ -14,6 +14,7 @@ import { useEvents } from '@/context/events-context';
 import { useAuthFramework } from '@/lib/auth-framework';
 import { formatCurrency } from '@/lib/event-math';
 import {
+  formatEventDateDisplay,
   getCompletedAtDisplayLabel,
   getCompletedYearKey,
   getPersonPayRow,
@@ -487,7 +488,9 @@ export default function PayScreen() {
                   <ThemedText style={styles.rowTitlePrice}>{formatCurrency(row.totalPayout)}</ThemedText>
                 </View>
                 <View style={styles.rowDateBlock}>
-                  <ThemedText style={styles.rowDate}>{row.event.eventDate || 'No date'}</ThemedText>
+                  <ThemedText style={styles.rowDate}>
+                    {formatEventDateDisplay(row.event.eventDate) || 'No date'}
+                  </ThemedText>
                   <ThemedText style={styles.completedAtText}>Completed: {completedAtLabel || 'timestamp pending'}</ThemedText>
                 </View>
               </View>

@@ -15,6 +15,7 @@ import { useAuthFramework } from '@/lib/auth-framework';
 import { computeEventTotals, formatCurrency, parseMoney } from '@/lib/event-math';
 import {
   buildPricingSchedulePayoutKey,
+  formatEventDateDisplay,
   getCompletedAtDisplayLabel,
   getCompletedYearKey,
   getPersonPayRow,
@@ -718,7 +719,7 @@ export default function ShopProfitScreen() {
                 <ThemedText style={styles.eventTotal}>{formatCurrency(card.shopTotal)}</ThemedText>
               </View>
               <View style={styles.eventDateBlock}>
-                <ThemedText style={styles.eventMeta}>{card.event.eventDate || 'No date'}</ThemedText>
+                <ThemedText style={styles.eventMeta}>{formatEventDateDisplay(card.event.eventDate) || 'No date'}</ThemedText>
                 <ThemedText style={styles.eventMeta}>Completed: {completedAt || 'timestamp pending'}</ThemedText>
               </View>
             </View>

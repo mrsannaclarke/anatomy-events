@@ -400,6 +400,28 @@ export function parseEventTimestamp(value: string): number | null {
   return Number.isNaN(fallback) ? null : fallback;
 }
 
+export function formatEventDateDisplay(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const slashDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (slashDate) return trimmed;
+
+  const isoDate = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+  if (isoDate) {
+    const year = Number.parseInt(isoDate[1], 10);
+    const month = Number.parseInt(isoDate[2], 10);
+    const day = Number.parseInt(isoDate[3], 10);
+    if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+      return `${month}/${day}/${year}`;
+    }
+  }
+
+  const parsed = Date.parse(trimmed);
+  if (Number.isNaN(parsed)) return trimmed;
+  return new Date(parsed).toLocaleDateString();
+}
+
 export function sortRowsByEventDate(a: PersonPayRow, b: PersonPayRow): number {
   const aDate = parseEventTimestamp(a.event.eventDate);
   const bDate = parseEventTimestamp(b.event.eventDate);

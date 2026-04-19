@@ -7,7 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { CALENDAR_SYNC_CONFIG } from '@/constants/calendar-sync';
 import { getStaffColor } from '@/constants/staff-colors';
-import { clearPersistedEventsCache, useEvents } from '@/context/events-context';
+import { useEvents } from '@/context/events-context';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { useAuthFramework } from '@/lib/auth-framework';
 import { fireAndForgetAuditLog } from '@/lib/audit-log';
@@ -309,9 +309,32 @@ function normalizeTimeForLedger(value: string): string {
   return `${hour}:${minute}${meridiem ? ` ${meridiem}` : ''}`;
 }
 
+function formatEventDateForLedger(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const slashDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (slashDate) return trimmed;
+
+  const isoDate = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+  if (isoDate) {
+    const year = Number.parseInt(isoDate[1], 10);
+    const month = Number.parseInt(isoDate[2], 10);
+    const day = Number.parseInt(isoDate[3], 10);
+    if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+      return `${month}/${day}/${year}`;
+    }
+  }
+
+  const parsed = Date.parse(trimmed);
+  if (Number.isNaN(parsed)) return trimmed;
+  return new Date(parsed).toLocaleDateString();
+}
+
 function buildLedgerDateLine(event: EventRecord): string {
   const parts: string[] = [];
-  if (event.eventDate.trim()) parts.push(event.eventDate.trim());
+  const formattedEventDate = formatEventDateForLedger(event.eventDate);
+  if (formattedEventDate) parts.push(formattedEventDate);
 
   const setup = normalizeTimeForLedger(event.setupTime);
   if (setup) parts.push(`Setup ${setup}`);
@@ -457,10 +480,8 @@ export default function EventsScreen() {
     setIsHardRefreshing(true);
     setIsRefreshing(true);
     setSheetSyncError('');
-    setSheetSyncStatus('Clearing local cache and forcing fresh sheet pull...');
+    setSheetSyncStatus('Forcing fresh sheet pull...');
     try {
-      await clearPersistedEventsCache();
-      replaceEvents([]);
       await refreshFromSheet();
     } finally {
       setIsHardRefreshing(false);
@@ -571,7 +592,7 @@ export default function EventsScreen() {
               disabled={isRefreshing || isHardRefreshing}>
               <MaterialIcons name="cleaning-services" size={13} color="#ffd8dd" />
               <ThemedText style={styles.syncHardRefreshButtonText}>
-                {isHardRefreshing ? 'Clearing...' : 'Clear Cache'}
+                {isHardRefreshing ? 'Syncing...' : 'Force Pull'}
               </ThemedText>
             </Pressable>
           </View>

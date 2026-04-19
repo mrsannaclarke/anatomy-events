@@ -165,12 +165,6 @@ const STAFF_TAB_COL_EVENT_COMPLETE_ROW_LINK = 25;
 
 const STAFF_TAB_CACHE_TTL_MS = 1000 * 60 * 5;
 const STAFF_TAB_DIAGNOSTIC_ISSUE_LIMIT = 40;
-const PRICING_SCHEDULE_COL_PLAN_NAME = 0;
-const PRICING_SCHEDULE_COL_ARTISTS = 1;
-const PRICING_SCHEDULE_COL_RADIUS_ARTIST_SHARE = 6;
-const PRICING_SCHEDULE_COL_EXTRA_HOURLY_ARTIST_SHARE = 8;
-const PRICING_SCHEDULE_COL_CUSTOM_FLASH_ARTIST_BONUS = 10;
-const PRICING_SCHEDULE_COL_BASE_PAY_PER_ARTIST = 19;
 const EVENT_COMPLETE_COL_ENTRY_ID = 0;
 const EVENT_COMPLETE_COL_ARTIST_NAMES = 4;
 const EVENT_COMPLETE_COL_COUNTER_NAMES = 8;
@@ -327,6 +321,17 @@ function normalizeImportedTime(value: string): string {
   const raw = value.trim();
   if (!raw) return '';
 
+  const isoTimeMatch = raw.match(/^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?Z?$/);
+  if (isoTimeMatch) {
+    const h24 = Number.parseInt(isoTimeMatch[1], 10);
+    const minute = Number.parseInt(isoTimeMatch[2], 10);
+    if (h24 >= 0 && h24 <= 23 && minute >= 0 && minute <= 59) {
+      const meridiem = h24 >= 12 ? 'PM' : 'AM';
+      const h12 = h24 % 12 || 12;
+      return `${h12}:${String(minute).padStart(2, '0')} ${meridiem}`;
+    }
+  }
+
   const meridiemMatch = raw.match(/^(\d{1,4})(?::(\d{2}))?(?::\d{2})?\s*([AaPp])(?:\.?\s*[Mm]\.?)?$/);
   if (meridiemMatch) {
     const digits = meridiemMatch[1];
@@ -358,6 +363,26 @@ function normalizeImportedTime(value: string): string {
       const meridiem = h24 >= 12 ? 'PM' : 'AM';
       const h12 = h24 % 12 || 12;
       return `${h12}:${String(minute).padStart(2, '0')} ${meridiem}`;
+    }
+  }
+
+  return raw;
+}
+
+function normalizeImportedDate(value: string): string {
+  const raw = value.trim();
+  if (!raw) return '';
+
+  const slashDateMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (slashDateMatch) return raw;
+
+  const isoDateMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+  if (isoDateMatch) {
+    const year = Number.parseInt(isoDateMatch[1], 10);
+    const month = Number.parseInt(isoDateMatch[2], 10);
+    const day = Number.parseInt(isoDateMatch[3], 10);
+    if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+      return `${month}/${day}/${year}`;
     }
   }
 
@@ -441,6 +466,28 @@ function canonicalHeaderLabel(value: string | undefined): string {
   return normalizeCell(value)
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
+}
+
+function getHeaderIndexByAliases(header: string[] | undefined, aliases: string[]): number {
+  if (!header || header.length === 0) return -1;
+  const byCanonical = new Map<string, number>();
+  header.forEach((value, index) => {
+    const canonical = canonicalHeaderLabel(value);
+    if (!canonical) return;
+    if (!byCanonical.has(canonical)) byCanonical.set(canonical, index);
+  });
+
+  for (const alias of aliases) {
+    const found = byCanonical.get(canonicalHeaderLabel(alias));
+    if (found != null) return found;
+  }
+
+  return -1;
+}
+
+function cellAt(cells: string[] | undefined, index: number): string {
+  if (!cells || index < 0 || index >= cells.length) return '';
+  return normalizeCell(cells[index]);
 }
 
 function isExpectedStaffTabHeaderShape(header: string[]): boolean {
@@ -578,6 +625,7 @@ function normalizeEvent(raw: ApiEvent, fallbackId: string): EventRecord {
   merged.setupTime = normalizeImportedTime(merged.setupTime);
   merged.eventStartTime = normalizeImportedTime(merged.eventStartTime);
   merged.eventEndTime = normalizeImportedTime(merged.eventEndTime);
+  merged.eventDate = normalizeImportedDate(merged.eventDate);
   merged.artistNames = normalizeArtistNamesToEdEntry(merged.artistNames);
   merged.status = normalizeUnifiedStatus(merged.status, merged.payStatus);
   merged.payStatus = merged.status;
@@ -839,35 +887,102 @@ export async function pullHistoricalPayoutOverridesFromStaffTabs(
   return snapshot.overrides;
 }
 
-export async function pullPricingSchedulePayoutMapFromSheet(
-  config: SheetSyncConfig,
-): Promise<PricingSchedulePayoutMap> {
-  assertConfigured(config);
-
-  const data = await fetchSheetTabRows(config, 'Pricing Schedule', 200);
+function buildPricingScheduleMapFromSheetRows(data: SheetTabRowsResponse): PricingSchedulePayoutMap {
   const map: PricingSchedulePayoutMap = {};
+  const header = data.header || [];
+
+  const planNameIndex = getHeaderIndexByAliases(header, ['plan name', 'plan year']);
+  const artistsIndex = getHeaderIndexByAliases(header, ['artists']);
+  const basePayIndex = getHeaderIndexByAliases(header, ['base pay per artist', 'base rate per artist (5h)']);
+  const customFlashArtistIndex = getHeaderIndexByAliases(header, ['custom flash artist bonus']);
+  const radiusArtistIndex = getHeaderIndexByAliases(header, ['radius artist share %', 'radius artist %']);
+  const extraHourlyArtistIndex = getHeaderIndexByAliases(header, ['extra hourly artist share %', 'extra hourly artist %']);
 
   (data.rows || []).forEach((row) => {
     const rowNumber = Number.parseInt(String(row.rowNumber || 0), 10);
     if (!rowNumber || rowNumber <= 1) return;
 
     const cells = row.cells || [];
-    const planName = normalizeCell(cells[PRICING_SCHEDULE_COL_PLAN_NAME]);
-    const artistCount = parsePositiveInteger(cells[PRICING_SCHEDULE_COL_ARTISTS]);
+    const planName = normalizeCell(cellAt(cells, planNameIndex));
+    const artistCount = parsePositiveInteger(cellAt(cells, artistsIndex));
     if (!planName || !artistCount) return;
 
     const key = buildPricingSchedulePayoutKey(planName, artistCount);
     map[key] = {
-      basePayPerArtist: Math.max(0, parseMoney(cells[PRICING_SCHEDULE_COL_BASE_PAY_PER_ARTIST] || '')),
+      basePayPerArtist: Math.max(
+        0,
+        parseMoney(cellAt(cells, basePayIndex)),
+      ),
       customFlashArtistBonus: Math.max(
         0,
-        parseMoney(cells[PRICING_SCHEDULE_COL_CUSTOM_FLASH_ARTIST_BONUS] || ''),
+        parseMoney(cellAt(cells, customFlashArtistIndex)),
       ),
-      radiusArtistSharePct: Math.max(0, parsePercent(cells[PRICING_SCHEDULE_COL_RADIUS_ARTIST_SHARE])),
+      radiusArtistSharePct: Math.max(
+        0,
+        parsePercent(cellAt(cells, radiusArtistIndex)),
+      ),
       extraHourlyArtistSharePct: Math.max(
         0,
-        parsePercent(cells[PRICING_SCHEDULE_COL_EXTRA_HOURLY_ARTIST_SHARE]),
+        parsePercent(cellAt(cells, extraHourlyArtistIndex)),
       ),
+    };
+  });
+
+  return map;
+}
+
+export async function pullPricingSchedulePayoutMapFromSheet(
+  config: SheetSyncConfig,
+): Promise<PricingSchedulePayoutMap> {
+  assertConfigured(config);
+
+  try {
+    const pricingScheduleData = await fetchSheetTabRows(config, 'Pricing Schedule', 200);
+    return buildPricingScheduleMapFromSheetRows(pricingScheduleData);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error || '');
+    if (!isSheetTabNotFoundError(message, 'Pricing Schedule')) {
+      throw error;
+    }
+  }
+
+  const pricingRulesData = await fetchSheetTabRows(config, 'Pricing Rules', 200);
+  return buildPricingScheduleMapFromSheetRows(pricingRulesData);
+}
+
+function buildCompletedAssignmentsFromEventsRows(data: SheetTabRowsResponse): CompletedEventStaffAssignmentMap {
+  const map: CompletedEventStaffAssignmentMap = {};
+  const header = data.header || [];
+
+  const entryIdIndex = getHeaderIndexByAliases(header, ['entry id']);
+  const artistNamesIndex = getHeaderIndexByAliases(header, ['artist names']);
+  const counterNamesIndex = getHeaderIndexByAliases(header, ['counter names']);
+
+  (data.rows || []).forEach((row) => {
+    const rowNumber = Number.parseInt(String(row.rowNumber || 0), 10);
+    if (!rowNumber || rowNumber <= 1) return;
+    const cells = row.cells || [];
+    const entryId = normalizeCell(cellAt(cells, entryIdIndex));
+    if (!entryId) return;
+
+    map[entryId] = {
+      artistNames: normalizeCell(cellAt(cells, artistNamesIndex)),
+      counterNames: normalizeCell(cellAt(cells, counterNamesIndex)),
+      artistPayTotal: 0,
+      counterFeeTotal: 0,
+      optionalFeeTotal: 0,
+      radiusFeeTotal: 0,
+      radiusShopTotal: 0,
+      extraHourlyArtistTotal: 0,
+      extraHourlyShopTotal: 0,
+      customFlashFeeTotal: 0,
+      customFlashShopTotal: 0,
+      temporaryTattooFeeTotal: 0,
+      tempFacilityLicenseFeeTotal: 0,
+      totalForEvent: 0,
+      shopProfit: 0,
+      hasTotalForEvent: false,
+      hasShopProfit: false,
     };
   });
 
@@ -878,40 +993,49 @@ export async function pullCompletedEventStaffAssignmentsFromSheet(
   config: SheetSyncConfig,
 ): Promise<CompletedEventStaffAssignmentMap> {
   assertConfigured(config);
+  try {
+    const data = await fetchSheetTabRows(config, 'Event Complete', 1000);
+    const map: CompletedEventStaffAssignmentMap = {};
 
-  const data = await fetchSheetTabRows(config, 'Event Complete', 1000);
-  const map: CompletedEventStaffAssignmentMap = {};
+    (data.rows || []).forEach((row) => {
+      const rowNumber = Number.parseInt(String(row.rowNumber || 0), 10);
+      if (!rowNumber || rowNumber <= 1) return;
 
-  (data.rows || []).forEach((row) => {
-    const rowNumber = Number.parseInt(String(row.rowNumber || 0), 10);
-    if (!rowNumber || rowNumber <= 1) return;
+      const cells = row.cells || [];
+      const entryId = normalizeCell(cells[EVENT_COMPLETE_COL_ENTRY_ID]);
+      if (!entryId) return;
 
-    const cells = row.cells || [];
-    const entryId = normalizeCell(cells[EVENT_COMPLETE_COL_ENTRY_ID]);
-    if (!entryId) return;
+      map[entryId] = {
+        artistNames: normalizeCell(cells[EVENT_COMPLETE_COL_ARTIST_NAMES]),
+        counterNames: normalizeCell(cells[EVENT_COMPLETE_COL_COUNTER_NAMES]),
+        artistPayTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_ARTIST_PAY] || '')),
+        counterFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_COUNTER_FEE] || '')),
+        optionalFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_OPTIONAL_FEE] || '')),
+        radiusFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_FEE] || '')),
+        radiusShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_SHOP] || '')),
+        extraHourlyArtistTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_ARTIST] || '')),
+        extraHourlyShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_SHOP] || '')),
+        customFlashFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_FEE] || '')),
+        customFlashShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_SHOP] || '')),
+        temporaryTattooFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TEMP_TATTOO_FEE] || '')),
+        tempFacilityLicenseFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TFL_FEE] || '')),
+        totalForEvent: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT] || '')),
+        shopProfit: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_SHOP_PROFIT] || '')),
+        hasTotalForEvent: normalizeCell(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT]).length > 0,
+        hasShopProfit: normalizeCell(cells[EVENT_COMPLETE_COL_SHOP_PROFIT]).length > 0,
+      };
+    });
 
-    map[entryId] = {
-      artistNames: normalizeCell(cells[EVENT_COMPLETE_COL_ARTIST_NAMES]),
-      counterNames: normalizeCell(cells[EVENT_COMPLETE_COL_COUNTER_NAMES]),
-      artistPayTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_ARTIST_PAY] || '')),
-      counterFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_COUNTER_FEE] || '')),
-      optionalFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_OPTIONAL_FEE] || '')),
-      radiusFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_FEE] || '')),
-      radiusShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_SHOP] || '')),
-      extraHourlyArtistTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_ARTIST] || '')),
-      extraHourlyShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_SHOP] || '')),
-      customFlashFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_FEE] || '')),
-      customFlashShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_SHOP] || '')),
-      temporaryTattooFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TEMP_TATTOO_FEE] || '')),
-      tempFacilityLicenseFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TFL_FEE] || '')),
-      totalForEvent: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT] || '')),
-      shopProfit: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_SHOP_PROFIT] || '')),
-      hasTotalForEvent: normalizeCell(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT]).length > 0,
-      hasShopProfit: normalizeCell(cells[EVENT_COMPLETE_COL_SHOP_PROFIT]).length > 0,
-    };
-  });
+    return map;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error || '');
+    if (!isSheetTabNotFoundError(message, 'Event Complete')) {
+      throw error;
+    }
+  }
 
-  return map;
+  const eventsData = await fetchSheetTabRows(config, 'Events', 2000);
+  return buildCompletedAssignmentsFromEventsRows(eventsData);
 }
 
 export async function pullGeneratedDocUrlsByEntryId(
@@ -952,12 +1076,11 @@ async function fetchSheetTabRows(
     }),
   );
   if (config.apiToken) rowsUrl.searchParams.set('token', config.apiToken);
+  applyReadCacheBust(rowsUrl);
 
   const response = await fetch(rowsUrl.toString(), {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers: readRequestHeaders(),
   });
   const data = await parseJson<SheetTabRowsResponse>(response);
   if (!response.ok || !data.ok) {
