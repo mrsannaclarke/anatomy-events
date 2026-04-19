@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { CALENDAR_SYNC_CONFIG } from '@/constants/calendar-sync';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
@@ -208,6 +209,10 @@ export default function EventNotesScreen() {
         <ThemedText type="subtitle">Event not found</ThemedText>
       </View>
     );
+  }
+
+  if (isLoadingAppointments) {
+    return <AppLoadingScreen />;
   }
 
   const currentEvent = event;
