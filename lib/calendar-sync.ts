@@ -150,6 +150,17 @@ function normalizeText(value: string): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9@._+\-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeNameText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -160,6 +171,56 @@ function normalizePhoneDigits(value: string): string {
 
 function getCalendarSearchText(entry: CalendarEvent): string {
   return normalizeText(`${entry.summary} ${entry.description} ${entry.location}`);
+}
+
+function splitClientNameCandidates(rawClientName: string): string[] {
+  const raw = rawClientName.trim();
+  if (!raw) return [];
+
+  const candidates = new Set<string>();
+  const full = normalizeNameText(raw);
+  if (full) candidates.add(full);
+
+  const splitParts = raw
+    .split(/\s*(?:&|\/|\+|,|\band\b)\s*/i)
+    .map((value) => normalizeNameText(value))
+    .filter(Boolean);
+  for (const part of splitParts) {
+    candidates.add(part);
+  }
+
+  return [...candidates];
+}
+
+function isNameCandidateMatch(candidate: string, haystack: string): boolean {
+  if (!candidate) return false;
+  if (candidate.length >= 4 && haystack.includes(candidate)) {
+    return true;
+  }
+
+  const candidateParts = candidate.split(' ').filter((part) => part.length >= 2);
+  if (candidateParts.length >= 2) {
+    const first = candidateParts[0];
+    const last = candidateParts[candidateParts.length - 1];
+    if (haystack.includes(first) && haystack.includes(last)) {
+      return true;
+    }
+  }
+
+  const haystackTokens = new Set(haystack.split(' ').filter((part) => part.length >= 3));
+  const significantParts = candidateParts.filter((part) => part.length >= 4);
+  if (significantParts.length >= 2) {
+    const overlapCount = significantParts.filter((part) => haystackTokens.has(part)).length;
+    if (overlapCount >= 2) {
+      return true;
+    }
+  }
+
+  if (candidateParts.length === 1 && candidateParts[0].length >= 5) {
+    return haystackTokens.has(candidateParts[0]);
+  }
+
+  return false;
 }
 
 export function filterCalendarEventsByRange(
@@ -176,21 +237,17 @@ function getMatchTypeForCalendarEvent(
   ledgerEvent: EventRecord,
   calendarEvent: CalendarEvent,
 ): 'email' | 'phone' | 'name' | null {
-  const email = normalizeText(ledgerEvent.email);
+  const email = ledgerEvent.email.trim().toLowerCase();
   const phoneDigits = normalizePhoneDigits(ledgerEvent.contactPhone);
-  const name = normalizeText(ledgerEvent.clientName);
-
-  const nameParts = name
-    .split(' ')
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const nameCandidates = splitClientNameCandidates(ledgerEvent.clientName);
 
   const haystack = getCalendarSearchText(calendarEvent);
+  const haystackRaw = `${calendarEvent.summary} ${calendarEvent.description} ${calendarEvent.location}`.toLowerCase();
   const haystackDigits = normalizePhoneDigits(
     `${calendarEvent.summary} ${calendarEvent.description} ${calendarEvent.location}`,
   );
 
-  if (email && haystack.includes(email)) {
+  if (email && haystackRaw.includes(email)) {
     return 'email';
   }
 
@@ -201,11 +258,9 @@ function getMatchTypeForCalendarEvent(
     }
   }
 
-  if (name) {
-    const fullNameMatch = name.length >= 4 && haystack.includes(name);
-    const firstLastMatch =
-      nameParts.length >= 2 && haystack.includes(nameParts[0]) && haystack.includes(nameParts[nameParts.length - 1]);
-    if (fullNameMatch || firstLastMatch) {
+  if (nameCandidates.length > 0) {
+    const hasNameMatch = nameCandidates.some((candidate) => isNameCandidateMatch(candidate, haystack));
+    if (hasNameMatch) {
       return 'name';
     }
   }
