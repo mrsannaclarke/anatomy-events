@@ -75,10 +75,6 @@ export default function TabLayout() {
     return <AppLoadingScreen />;
   }
 
-  if (status !== 'signed_out' && isRouteLoading) {
-    return <AppLoadingScreen />;
-  }
-
   const canViewAdminTab = canAccessAdminToolsForViewer;
   const canViewPricingTab = canAccessAdminToolsForViewer;
   const payoutDisabledForCurrentLogin = isPayoutDisabledForUser(user);
@@ -91,8 +87,9 @@ export default function TabLayout() {
       Boolean(viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter')));
 
   return (
-    <Tabs
-      screenOptions={{
+    <>
+      <Tabs
+        screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         sceneStyle: {
           backgroundColor: '#0b1117',
@@ -215,14 +212,20 @@ export default function TabLayout() {
           href: null,
         }}
       />
-      <Tabs.Screen
-        name="event/[id]/generators-files"
-        options={{
-          title: 'Generators & Files',
-          href: null,
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="event/[id]/generators-files"
+          options={{
+            title: 'Generators & Files',
+            href: null,
+          }}
+        />
+      </Tabs>
+      {isRouteLoading ? (
+        <View style={styles.routeLoadingOverlay} pointerEvents="auto">
+          <AppLoadingScreen />
+        </View>
+      ) : null}
+    </>
   );
 }
 
@@ -257,6 +260,11 @@ const styles = StyleSheet.create({
   googleButtonDisabled: {
     backgroundColor: '#7e6943',
     opacity: 0.7,
+  },
+  routeLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 50,
+    elevation: 50,
   },
   googleButtonText: {
     color: '#0f1620',
