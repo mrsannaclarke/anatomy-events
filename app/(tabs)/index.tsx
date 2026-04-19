@@ -22,7 +22,7 @@ import { readLatestCommunicationByEventIds, type EventActivityEntry } from '@/li
 import { pullEventsFromSheet } from '@/lib/sheets-sync';
 import type { EventRecord } from '@/types/events';
 
-const CLOSED_AO_STATUSES = new Set(['cancelled', 'canceled', 'event complete']);
+const COMPLETE_AO_STATUSES = new Set(['complete', 'event complete', 'event complete balance late']);
 const PRIORITY_AO_STATUSES = new Set(['deposit paid', 'deposit complete', 'deposit completed']);
 const DEPOSIT_PAID_OR_LATER_STATUSES = new Set([
   'deposit paid',
@@ -56,10 +56,10 @@ function isDepositCompleted(event: EventRecord): boolean {
   return PRIORITY_AO_STATUSES.has(normalized);
 }
 
-function isClosedProject(event: EventRecord): boolean {
+function isCompleteProject(event: EventRecord): boolean {
   const normalized = normalizeStatus(getUnifiedStatus(event));
   if (!normalized) return false;
-  return CLOSED_AO_STATUSES.has(normalized);
+  return COMPLETE_AO_STATUSES.has(normalized);
 }
 
 function getStatusChipLabel(event: EventRecord): string {
@@ -392,7 +392,7 @@ export default function EventsScreen() {
     };
 
   const visibleEvents = useMemo(() => {
-    const openEvents = events.filter((event) => !isClosedProject(event));
+    const openEvents = events.filter((event) => !isCompleteProject(event));
     const depositCompletedEvents = openEvents.filter(isDepositCompleted).sort(sortByEventDate);
     const otherOpenEvents = openEvents.filter((event) => !isDepositCompleted(event)).sort(sortByEventDate);
     return [...depositCompletedEvents, ...otherOpenEvents];
@@ -791,7 +791,7 @@ export default function EventsScreen() {
       {visibleEvents.length === 0 ? (
         <View style={styles.emptyState}>
           <ThemedText style={styles.emptyStateText}>
-            No open projects right now. AO statuses marked Cancelled or Event Complete are hidden.
+            No events to show. Rows with complete status are hidden.
           </ThemedText>
         </View>
       ) : null}
