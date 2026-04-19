@@ -15,6 +15,7 @@ import {
   readEventActivityLog,
   type EventActivityEntry,
 } from '@/lib/event-activity-log';
+import { parseEventTimestamp } from '@/lib/pay-framework';
 
 const EVENT_STATUS_OPTIONS = [
   'Inquiry Recieved',
@@ -72,6 +73,39 @@ function normalizeStatusValue(value: string): string {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');
+}
+
+function formatFallbackAppointmentDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function buildFallbackAppointmentTexts(
+  allEvents: ReturnType<typeof useEvents>['events'],
+  currentEvent: NonNullable<ReturnType<typeof useEvents>['events'][number]>,
+): { upcoming: string; last: string } {
+  const clientKey = currentEvent.clientName.trim().toLowerCase();
+  if (!clientKey) return { upcoming: '', last: '' };
+
+  const relatedEventTimestamps = allEvents
+    .filter((event) => event.id !== currentEvent.id && event.clientName.trim().toLowerCase() === clientKey)
+    .map((event) => parseEventTimestamp(event.eventDate))
+    .filter((value): value is number => value != null)
+    .sort((a, b) => a - b);
+
+  if (relatedEventTimestamps.length === 0) return { upcoming: '', last: '' };
+
+  const now = Date.now();
+  const upcomingTs = relatedEventTimestamps.find((timestamp) => timestamp >= now) || null;
+  const lastTs = [...relatedEventTimestamps].reverse().find((timestamp) => timestamp <= now) || null;
+
+  return {
+    upcoming: upcomingTs ? formatFallbackAppointmentDate(upcomingTs) : '',
+    last: lastTs ? formatFallbackAppointmentDate(lastTs) : '',
+  };
 }
 
 function typeLabel(entry: EventActivityEntry): string {
@@ -135,6 +169,8 @@ export default function EventNotesScreen() {
       setUpcomingAppointmentText('Loading...');
       setLastAppointmentText('Loading...');
 
+      const fallback = buildFallbackAppointmentTexts(events, targetEvent);
+
       try {
         const calendarEvents = await loadCalendarEvents(CALENDAR_SYNC_CONFIG, SHEET_SYNC_CONFIG);
         if (!isMounted) return;
@@ -145,18 +181,18 @@ export default function EventNotesScreen() {
         if (match?.upcomingEvent) {
           setUpcomingAppointmentText(formatCalendarMatchDate(match.upcomingEvent.start));
         } else {
-          setUpcomingAppointmentText('No upcoming appointment found');
+          setUpcomingAppointmentText(fallback.upcoming || 'No upcoming appointment found');
         }
 
         if (match?.lastPastEvent) {
           setLastAppointmentText(formatCalendarMatchDate(match.lastPastEvent.start));
         } else {
-          setLastAppointmentText('No previous appointment found');
+          setLastAppointmentText(fallback.last || 'No previous appointment found');
         }
       } catch {
         if (!isMounted) return;
-        setUpcomingAppointmentText('Unable to load appointments');
-        setLastAppointmentText('Unable to load appointments');
+        setUpcomingAppointmentText(fallback.upcoming || 'No upcoming appointment found');
+        setLastAppointmentText(fallback.last || 'No previous appointment found');
       } finally {
         if (isMounted) setIsLoadingAppointments(false);
       }
@@ -166,7 +202,7 @@ export default function EventNotesScreen() {
     return () => {
       isMounted = false;
     };
-  }, [event]);
+  }, [event, events]);
 
   if (!event) {
     return (
