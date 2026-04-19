@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { CALENDAR_SYNC_CONFIG } from '@/constants/calendar-sync';
 import { getStaffColor } from '@/constants/staff-colors';
@@ -494,6 +495,7 @@ export default function EventsScreen() {
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
   const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingCalendarMatches, setIsLoadingCalendarMatches] = useState(true);
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
   const [latestCommunicationByEventId, setLatestCommunicationByEventId] = useState<Record<string, EventActivityEntry>>(
     {},
@@ -651,6 +653,14 @@ export default function EventsScreen() {
     let isMounted = true;
 
     async function runCalendarMatch() {
+      if (!isMounted) return;
+      setIsLoadingCalendarMatches(true);
+      if (events.length === 0) {
+        setCalendarMatches({});
+        setIsLoadingCalendarMatches(false);
+        return;
+      }
+
       const attemptLimit = 3;
       let lastError: unknown = null;
 
@@ -661,6 +671,7 @@ export default function EventsScreen() {
 
           const matchMap = buildCalendarMatchMap(events, calendarEvents);
           setCalendarMatches(matchMap);
+          setIsLoadingCalendarMatches(false);
           return;
         } catch (error) {
           lastError = error;
@@ -672,6 +683,7 @@ export default function EventsScreen() {
 
       if (!isMounted) return;
       setCalendarMatches({});
+      setIsLoadingCalendarMatches(false);
       if (lastError) {
         console.warn('Unable to check calendar feed.', lastError);
       }
@@ -712,6 +724,10 @@ export default function EventsScreen() {
     },
     [],
   );
+
+  if (isLoadingCalendarMatches && events.length > 0) {
+    return <AppLoadingScreen />;
+  }
 
   return (
     <ScrollView
