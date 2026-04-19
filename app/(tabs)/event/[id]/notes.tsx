@@ -57,6 +57,12 @@ const DISCORD_EVENT_CHANNEL_MAP: Record<
     channelUrl: 'https://discord.com/channels/690967847303643146/1481742663253360670',
     channelLabel: '💍shandra-knapstad-sept-8',
   },
+  '3463': {
+    webhookUrl:
+      'https://discord.com/api/webhooks/1495422445580976290/0FE__S43X5ZLlHEft64G054a92JxI-ou8gSlPzcI5aoyIR5BemvpCNVw1Ff2jSGEJajU',
+    channelUrl: 'https://discord.com/channels/690967847303643146/1474491753557000333',
+    channelLabel: '💍rachel-milstein-wedding-sept-12',
+  },
 };
 
 type EventTypeVisual = {
