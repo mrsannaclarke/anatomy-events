@@ -22,7 +22,7 @@ import { readLatestCommunicationByEventIds, type EventActivityEntry } from '@/li
 import { pullEventsFromSheet } from '@/lib/sheets-sync';
 import type { EventRecord } from '@/types/events';
 
-const CLOSED_AO_STATUSES = new Set(['cancelled', 'canceled', 'event complete', 'event complete balance late']);
+const CLOSED_AO_STATUSES = new Set(['cancelled', 'canceled', 'event complete']);
 const PRIORITY_AO_STATUSES = new Set(['deposit paid', 'deposit complete', 'deposit completed']);
 const DEPOSIT_PAID_OR_LATER_STATUSES = new Set([
   'deposit paid',
@@ -472,6 +472,9 @@ export default function EventsScreen() {
   const refreshFromSheet = useCallback(async () => {
     try {
       const pulledEvents = await pullEventsFromSheet(SHEET_SYNC_CONFIG);
+      if (pulledEvents.length === 0 && events.length > 0) {
+        throw new Error('Sheet returned 0 rows. Kept current cached events to prevent an accidental wipe.');
+      }
       replaceEvents(pulledEvents);
       fireAndForgetAuditLog({
         eventType: 'sheet_pull',
@@ -490,7 +493,7 @@ export default function EventsScreen() {
         message,
       });
     }
-  }, [replaceEvents]);
+  }, [events.length, replaceEvents]);
 
   async function handlePullToRefresh() {
     setIsRefreshing(true);
@@ -788,7 +791,7 @@ export default function EventsScreen() {
       {visibleEvents.length === 0 ? (
         <View style={styles.emptyState}>
           <ThemedText style={styles.emptyStateText}>
-            No open projects right now. AO statuses marked cancelled or fully completed are hidden.
+            No open projects right now. AO statuses marked Cancelled or Event Complete are hidden.
           </ThemedText>
         </View>
       ) : null}
