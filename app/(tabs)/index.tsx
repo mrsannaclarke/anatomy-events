@@ -225,6 +225,14 @@ function parseEventDateTimestamp(value: string): number | null {
   return Number.isNaN(fallback) ? null : fallback;
 }
 
+function formatFallbackAppointmentDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 function isLikelyValidAddress(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed) return false;
@@ -398,6 +406,45 @@ export default function EventsScreen() {
     [visibleEvents],
   );
   const hiddenClosedCount = Math.max(events.length - visibleEvents.length, 0);
+  const fallbackLastAppointmentByEventId = useMemo(() => {
+    const byClientKey: Record<string, number[]> = {};
+
+    events.forEach((event) => {
+      const clientKey = event.clientName.trim().toLowerCase();
+      if (!clientKey) return;
+      const ts = parseEventDateTimestamp(event.eventDate);
+      if (ts == null) return;
+      if (!byClientKey[clientKey]) byClientKey[clientKey] = [];
+      byClientKey[clientKey].push(ts);
+    });
+
+    Object.values(byClientKey).forEach((timestamps) => {
+      timestamps.sort((a, b) => a - b);
+    });
+
+    const map: Record<string, number | null> = {};
+    const nowTs = Date.now();
+    events.forEach((event) => {
+      const clientKey = event.clientName.trim().toLowerCase();
+      const ts = parseEventDateTimestamp(event.eventDate);
+      if (!clientKey || ts == null) {
+        map[event.id] = null;
+        return;
+      }
+
+      const timestamps = byClientKey[clientKey] || [];
+      let best: number | null = null;
+      timestamps.forEach((candidate) => {
+        if (candidate >= nowTs) return;
+        if (candidate >= ts) return;
+        if (best == null || candidate > best) best = candidate;
+      });
+
+      map[event.id] = best;
+    });
+
+    return map;
+  }, [events]);
 
   function openEvent(
     id: string,
@@ -622,6 +669,7 @@ export default function EventsScreen() {
         const typeVisual = getEventTypeVisual(event.eventType);
         const upcomingAppointment = calendarMatch?.upcomingEvent ?? null;
         const lastAppointment = calendarMatch?.lastPastEvent ?? null;
+        const fallbackLastAppointmentTs = fallbackLastAppointmentByEventId[event.id];
         const addToGoogleCalendarUrl = buildGoogleCalendarUrlForEvent(event);
         const mapUrl = buildMapUrlForEvent(event);
         const artistRosterLabel = getArtistRosterLabel(event);
@@ -724,6 +772,10 @@ export default function EventsScreen() {
             {lastAppointment ? (
               <ThemedText style={styles.editHint}>
                 Last Appt: {formatCalendarMatchDate(lastAppointment.start)}
+              </ThemedText>
+            ) : fallbackLastAppointmentTs ? (
+              <ThemedText style={styles.editHint}>
+                Last Appt: {formatFallbackAppointmentDate(fallbackLastAppointmentTs)}
               </ThemedText>
             ) : null}
             {latestCommunication ? (
