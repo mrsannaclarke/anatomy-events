@@ -579,7 +579,7 @@ export default function EventNotesScreen() {
             if (entryError) setEntryError('');
           }}
           multiline
-          placeholder="Add communication update for this client..."
+          placeholder="Add a post to notify team"
           placeholderTextColor="#6f849a"
         />
       </View>
@@ -592,7 +592,7 @@ export default function EventNotesScreen() {
           }}
           disabled={isSubmittingEntry}>
           <ThemedText style={styles.primaryButtonText}>
-            {isSubmittingEntry ? 'Posting...' : 'Post Communication Entry'}
+            {isSubmittingEntry ? 'Posting...' : 'Post'}
           </ThemedText>
         </Pressable>
         {entryStatus ? <ThemedText style={styles.helperText}>{entryStatus}</ThemedText> : null}
@@ -600,7 +600,7 @@ export default function EventNotesScreen() {
       </View>
 
       <View style={[styles.section, styles.logSection]}>
-        <ThemedText style={styles.sectionTitle}>Communication Entry Feed</ThemedText>
+        <ThemedText style={styles.sectionTitle}>Feed</ThemedText>
         {isLoadingActivity ? <ThemedText style={styles.infoLine}>Loading feed...</ThemedText> : null}
         {!isLoadingActivity && activityEntries.length === 0 ? (
           <ThemedText style={styles.infoLine}>No communication entries yet.</ThemedText>
