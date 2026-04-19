@@ -6,6 +6,12 @@ export interface CalendarSyncConfig {
   monthsAhead: number;
 }
 
+const DEFAULT_CALENDAR_ICS_URLS = [
+  'https://calendar.google.com/calendar/ical/ds0rvh3aca5an0945nvqch4bt8%40group.calendar.google.com/private-1e228a80bbab6e84f331a1ac8b50eddb/basic.ics',
+  'https://calendar.google.com/calendar/ical/3a9a300d8b145bb1135f8b8f2fd3d0d9def28d964e0f160c8c3373d9e6ec6085%40group.calendar.google.com/private-9e760b5ca4490cf3a055ac64154a0a9c/basic.ics',
+  'https://calendar.google.com/calendar/ical/ladyshytattoos%40gmail.com/private-01fdceb7fc4ea0c4375b1200604b389b/basic.ics',
+] as const;
+
 const extra = ((Constants.expoConfig?.extra ??
   Constants.manifest2?.extra ??
   {}) as {
@@ -39,13 +45,15 @@ function parsePositiveInt(value: string | number | undefined, fallback: number):
   return n;
 }
 
+const configuredCalendarIcsUrls = [
+  ...parseCalendarUrlList(extra.calendarIcsUrls),
+  ...parseCalendarUrlList(extra.calendarIcsUrl),
+  ...parseCalendarUrlList(envIcsUrls),
+  ...parseCalendarUrlList(envIcsUrl),
+].filter((url, index, all) => all.indexOf(url) === index);
+
 export const CALENDAR_SYNC_CONFIG: CalendarSyncConfig = {
-  icsUrls: [
-    ...parseCalendarUrlList(extra.calendarIcsUrls),
-    ...parseCalendarUrlList(extra.calendarIcsUrl),
-    ...parseCalendarUrlList(envIcsUrls),
-    ...parseCalendarUrlList(envIcsUrl),
-  ].filter((url, index, all) => all.indexOf(url) === index),
+  icsUrls: configuredCalendarIcsUrls.length > 0 ? configuredCalendarIcsUrls : [...DEFAULT_CALENDAR_ICS_URLS],
   monthsBack: parsePositiveInt(extra.calendarMonthsBack ?? envMonthsBack, 12),
   monthsAhead: parsePositiveInt(extra.calendarMonthsAhead ?? envMonthsAhead, 12),
 };
