@@ -17,7 +17,7 @@ interface EventsContextValue {
 }
 
 const EventsContext = createContext<EventsContextValue | null>(null);
-export const EVENTS_STORAGE_KEY = 'anatomy_events_v2';
+export const EVENTS_STORAGE_KEY = 'anatomy_events_v3';
 
 function hydrateRecord(partial: Partial<EventRecord>): EventRecord {
   return {
