@@ -90,128 +90,128 @@ export default function TabLayout() {
     <>
       <Tabs
         screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        sceneStyle: {
-          backgroundColor: '#0b1117',
-        },
-        headerStyle: {
-          backgroundColor: '#0f1620',
-        },
-        headerTintColor: '#e3ecf8',
-        headerTitleStyle: {
-          fontWeight: '700',
-        },
-        headerRight: () => (
-          <Pressable style={styles.switchUserButton} onPress={signOut}>
-            <Text style={styles.switchUserButtonText}>Switch User</Text>
-          </Pressable>
-        ),
-        tabBarStyle: {
-          backgroundColor: '#0f1620',
-          borderTopColor: '#1e2a38',
-          height: 72,
-        },
-        tabBarItemStyle: {
-          paddingTop: 4,
-          paddingBottom: 0,
-        },
-        tabBarLabelStyle: {
-          marginBottom: 2,
-        },
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Events',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="pricing"
-        options={{
-          title: 'Pricing Calculator',
-          tabBarLabel: 'Pricing',
-          href: canViewPricingTab ? undefined : null,
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="dollarsign" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Generator',
-          href: null,
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="pay"
-        options={{
-          title: 'Payout',
-          tabBarLabel: 'Payout',
-          href: canViewPayTab ? undefined : null,
-          tabBarIcon: ({ color }) => <MaterialIcons size={24} name="payments" color={String(color)} />,
-        }}
-      />
-      <Tabs.Screen
-        name="admin"
-        options={{
-          title: 'Admin',
-          href: canViewAdminTab ? undefined : null,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.crop.circle.badge.checkmark" color={color} />
+          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          sceneStyle: {
+            backgroundColor: '#0b1117',
+          },
+          headerStyle: {
+            backgroundColor: '#0f1620',
+          },
+          headerTintColor: '#e3ecf8',
+          headerTitleStyle: {
+            fontWeight: '700',
+          },
+          headerRight: () => (
+            <Pressable style={styles.switchUserButton} onPress={signOut}>
+              <Text style={styles.switchUserButtonText}>Switch User</Text>
+            </Pressable>
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="audit-log"
-        options={{
-          title: 'Audit Log',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="completed-payouts"
-        options={{
-          title: 'Payout Ledger',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="admin-promotion"
-        options={{
-          title: 'Admin Promotion',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="shop-profit"
-        options={{
-          title: 'Payout Ledger',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="event/[id]"
-        options={{
-          title: 'Staff Assignements',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="event/[id]/client-details"
-        options={{
-          title: 'Client Details',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="event/[id]/notes"
-        options={{
-          title: 'Notes',
-          href: null,
-        }}
-      />
+          tabBarStyle: {
+            backgroundColor: '#0f1620',
+            borderTopColor: '#1e2a38',
+            height: 72,
+          },
+          tabBarItemStyle: {
+            paddingTop: 4,
+            paddingBottom: 0,
+          },
+          tabBarLabelStyle: {
+            marginBottom: 2,
+          },
+          tabBarButton: HapticTab,
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Events',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="pricing"
+          options={{
+            title: 'Pricing Calculator',
+            tabBarLabel: 'Pricing',
+            href: canViewPricingTab ? undefined : null,
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="dollarsign" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: 'Generator',
+            href: null,
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="pay"
+          options={{
+            title: 'Payout',
+            tabBarLabel: 'Payout',
+            href: canViewPayTab ? undefined : null,
+            tabBarIcon: ({ color }) => <MaterialIcons size={24} name="payments" color={String(color)} />,
+          }}
+        />
+        <Tabs.Screen
+          name="admin"
+          options={{
+            title: 'Admin',
+            href: canViewAdminTab ? undefined : null,
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="person.crop.circle.badge.checkmark" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="audit-log"
+          options={{
+            title: 'Audit Log',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="completed-payouts"
+          options={{
+            title: 'Payout Ledger',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="admin-promotion"
+          options={{
+            title: 'Admin Promotion',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="shop-profit"
+          options={{
+            title: 'Payout Ledger',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="event/[id]"
+          options={{
+            title: 'Staff Assignements',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="event/[id]/client-details"
+          options={{
+            title: 'Client Details',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="event/[id]/notes"
+          options={{
+            title: 'Notes',
+            href: null,
+          }}
+        />
         <Tabs.Screen
           name="event/[id]/generators-files"
           options={{
