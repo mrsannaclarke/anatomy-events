@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ARTIST_PAY_SHEET_TABS } from '@/constants/pay-framework';
 import { DEFAULT_WEB_APP_URL, type SheetSyncConfig } from '@/constants/sheets-sync';
 import { computeEventTotals, parseMoney } from '@/lib/event-math';
@@ -164,6 +165,8 @@ const STAFF_TAB_COL_ARTIST_TOTAL = 10;
 const STAFF_TAB_COL_EVENT_COMPLETE_ROW_LINK = 25;
 
 const STAFF_TAB_CACHE_TTL_MS = 1000 * 60 * 5;
+const STAFF_TAB_PERSISTED_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
+const STAFF_TAB_PERSISTED_CACHE_KEY = 'anatomy_staff_tab_overrides_cache_v1';
 const STAFF_TAB_DIAGNOSTIC_ISSUE_LIMIT = 40;
 const EVENT_COMPLETE_COL_ENTRY_ID = 0;
 const EVENT_COMPLETE_COL_ARTIST_NAMES = 4;
@@ -450,6 +453,53 @@ function buildLegacyPayoutFallbackConfig(config: SheetSyncConfig): SheetSyncConf
 
 function buildConfigKey(config: SheetSyncConfig): string {
   return `${config.webAppUrl.trim()}::${config.apiToken.trim()}`;
+}
+
+type PersistedStaffTabOverridesCache = {
+  configKey: string;
+  fetchedAtMs: number;
+  snapshot: StaffTabPayoutOverridesSnapshot;
+};
+
+async function readPersistedStaffTabOverridesCache(
+  configKey: string,
+  nowMs: number,
+): Promise<PersistedStaffTabOverridesCache | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STAFF_TAB_PERSISTED_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<PersistedStaffTabOverridesCache> | null;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.configKey !== 'string' || parsed.configKey !== configKey) return null;
+    if (typeof parsed.fetchedAtMs !== 'number' || !Number.isFinite(parsed.fetchedAtMs)) return null;
+
+    const ageMs = nowMs - parsed.fetchedAtMs;
+    if (ageMs < 0 || ageMs > STAFF_TAB_PERSISTED_CACHE_TTL_MS) return null;
+
+    const snapshot = parsed.snapshot as StaffTabPayoutOverridesSnapshot | undefined;
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    if (!snapshot.overrides || typeof snapshot.overrides !== 'object') return null;
+    if (!snapshot.diagnostics || typeof snapshot.diagnostics !== 'object') return null;
+
+    return {
+      configKey,
+      fetchedAtMs: parsed.fetchedAtMs,
+      snapshot,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function writePersistedStaffTabOverridesCache(
+  cache: PersistedStaffTabOverridesCache,
+): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STAFF_TAB_PERSISTED_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Ignore cache write failures; network path remains authoritative.
+  }
 }
 
 function toPositiveMoney(value: string): number {
@@ -1144,6 +1194,14 @@ export async function pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
     return cachedStaffTabOverrides.snapshot;
   }
 
+  if (!forceRefresh) {
+    const persisted = await readPersistedStaffTabOverridesCache(configKey, now);
+    if (persisted) {
+      cachedStaffTabOverrides = persisted;
+      return persisted.snapshot;
+    }
+  }
+
   const diagnostics = createDiagnostics();
   const allowedTabs = new Set(ARTIST_PAY_SHEET_TABS.map((name) => normalizeNameKey(name)));
   let staffTabs: string[] = [];
@@ -1204,6 +1262,11 @@ export async function pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
             fetchedAtMs: now,
             snapshot: legacySnapshot,
           };
+          void writePersistedStaffTabOverridesCache({
+            configKey,
+            fetchedAtMs: now,
+            snapshot: legacySnapshot,
+          });
           return legacySnapshot;
         }
       } catch (legacyError) {
@@ -1412,6 +1475,11 @@ export async function pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
             fetchedAtMs: now,
             snapshot: legacySnapshot,
           };
+          void writePersistedStaffTabOverridesCache({
+            configKey,
+            fetchedAtMs: now,
+            snapshot: legacySnapshot,
+          });
           return legacySnapshot;
         }
       } catch (legacyError) {
@@ -1425,6 +1493,11 @@ export async function pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
     fetchedAtMs: now,
     snapshot,
   };
+  void writePersistedStaffTabOverridesCache({
+    configKey,
+    fetchedAtMs: now,
+    snapshot,
+  });
 
   return snapshot;
 }
