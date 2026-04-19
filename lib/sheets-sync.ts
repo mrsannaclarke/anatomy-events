@@ -24,6 +24,20 @@ interface ListEventsResponse {
   events?: ApiEvent[];
 }
 
+interface HealthResponse {
+  ok: boolean;
+  error?: string;
+  version?: string;
+  spreadsheetId?: string;
+  sourceMode?: string;
+  sheetStats?: {
+    Events?: {
+      rows?: number;
+      columns?: number;
+    };
+  };
+}
+
 interface ListArtistsResponse {
   ok: boolean;
   error?: string;
@@ -203,6 +217,13 @@ export type CompletedEventStaffAssignment = {
 };
 
 export type CompletedEventStaffAssignmentMap = Record<string, CompletedEventStaffAssignment>;
+
+export interface SheetSyncHealthSnapshot {
+  version: string;
+  spreadsheetId: string;
+  sourceMode: string;
+  eventsRows: number;
+}
 
 function sortArtistNamesByPreferredOrder(names: string[]): string[] {
   return [...names].sort((a, b) => {
@@ -572,6 +593,18 @@ function buildUrl(base: string, params: Record<string, string>): string {
   return url.toString();
 }
 
+function applyReadCacheBust(url: URL): void {
+  url.searchParams.set('_ts', `${Date.now()}`);
+}
+
+function readRequestHeaders(): Record<string, string> {
+  return {
+    Accept: 'application/json',
+    'Cache-Control': 'no-cache, no-store, max-age=0',
+    Pragma: 'no-cache',
+  };
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   const text = await response.text();
   try {
@@ -604,12 +637,11 @@ export async function pullEventsFromSheet(config: SheetSyncConfig): Promise<Even
   if (config.apiToken) {
     url.searchParams.set('token', config.apiToken);
   }
+  applyReadCacheBust(url);
 
   const response = await fetch(url.toString(), {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers: readRequestHeaders(),
   });
 
   const data = await parseJson<ListEventsResponse>(response);
@@ -639,12 +671,11 @@ export async function pullEventByEntryId(
   });
   const finalUrl = new URL(url);
   if (config.apiToken) finalUrl.searchParams.set('token', config.apiToken);
+  applyReadCacheBust(finalUrl);
 
   const response = await fetch(finalUrl.toString(), {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers: readRequestHeaders(),
   });
 
   const data = await parseJson<{ ok: boolean; error?: string; event?: ApiEvent }>(response);
@@ -655,6 +686,44 @@ export async function pullEventByEntryId(
 
   if (!data.event) return null;
   return normalizeEvent(data.event, `sheet-${entryId}`);
+}
+
+export async function pullSheetSyncHealth(config: SheetSyncConfig): Promise<SheetSyncHealthSnapshot | null> {
+  assertConfigured(config);
+
+  const url = new URL(
+    buildUrl(config.webAppUrl, {
+      action: 'health',
+    }),
+  );
+  if (config.apiToken) {
+    url.searchParams.set('token', config.apiToken);
+  }
+  applyReadCacheBust(url);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: readRequestHeaders(),
+  });
+
+  const data = await parseJson<HealthResponse>(response);
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || `Failed to pull sheet health (HTTP ${response.status}).`);
+  }
+
+  const spreadsheetId = String(data.spreadsheetId || '').trim();
+  const sourceMode = String(data.sourceMode || '').trim();
+  const version = String(data.version || '').trim();
+  const eventsRows = Number(data.sheetStats?.Events?.rows || 0);
+
+  if (!spreadsheetId) return null;
+
+  return {
+    version,
+    spreadsheetId,
+    sourceMode,
+    eventsRows: Number.isFinite(eventsRows) ? eventsRows : 0,
+  };
 }
 
 export async function pullActiveArtistsFromSheet(config: SheetSyncConfig): Promise<string[]> {

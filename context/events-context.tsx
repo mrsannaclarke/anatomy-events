@@ -17,7 +17,7 @@ interface EventsContextValue {
 }
 
 const EventsContext = createContext<EventsContextValue | null>(null);
-const STORAGE_KEY = 'anatomy_events_v2';
+export const EVENTS_STORAGE_KEY = 'anatomy_events_v2';
 
 function hydrateRecord(partial: Partial<EventRecord>): EventRecord {
   return {
@@ -38,7 +38,7 @@ export function EventsProvider({ children }: PropsWithChildren) {
 
     async function loadFromStorage() {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        const raw = await AsyncStorage.getItem(EVENTS_STORAGE_KEY);
         if (!raw) return;
 
         const parsed = JSON.parse(raw) as {
@@ -73,7 +73,7 @@ export function EventsProvider({ children }: PropsWithChildren) {
     if (!isHydrated) return;
 
     AsyncStorage.setItem(
-      STORAGE_KEY,
+      EVENTS_STORAGE_KEY,
       JSON.stringify({
         events,
         selectedEventId,
@@ -255,4 +255,8 @@ export function useEvents(): EventsContextValue {
   }
 
   return context;
+}
+
+export async function clearPersistedEventsCache(): Promise<void> {
+  await AsyncStorage.removeItem(EVENTS_STORAGE_KEY);
 }
