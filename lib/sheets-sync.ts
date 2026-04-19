@@ -646,10 +646,11 @@ function applyReadCacheBust(url: URL): void {
 }
 
 function readRequestHeaders(): Record<string, string> {
+  // Keep headers CORS-safelisted for web (GitHub Pages -> Apps Script).
+  // Non-simple headers (e.g. Cache-Control/Pragma) trigger OPTIONS preflight,
+  // and Apps Script /exec responds 405 to OPTIONS, causing sheet pulls to fail.
   return {
     Accept: 'application/json',
-    'Cache-Control': 'no-cache, no-store, max-age=0',
-    Pragma: 'no-cache',
   };
 }
 
