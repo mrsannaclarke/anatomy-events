@@ -220,6 +220,7 @@ export default function EventGeneratorsFilesScreen() {
   const [generatedContractUrl, setGeneratedContractUrl] = useState('');
   const [generatedTflUrl, setGeneratedTflUrl] = useState('');
   const [artImageUrlInput, setArtImageUrlInput] = useState('');
+  const [pendingArtUrlInput, setPendingArtUrlInput] = useState('');
   const [artStatus, setArtStatus] = useState('');
   const [artError, setArtError] = useState('');
   const [isSavingArt, setIsSavingArt] = useState(false);
@@ -240,6 +241,7 @@ export default function EventGeneratorsFilesScreen() {
       contractNotes: targetEvent.contractNotes || '',
     });
     setArtImageUrlInput(savedArtImageUrls.join('\n'));
+    setPendingArtUrlInput('');
     setSelectedArtIndex(0);
     setArtStatus('');
     setArtError('');
@@ -297,6 +299,7 @@ export default function EventGeneratorsFilesScreen() {
         if (savedArtImageUrls.length > 0) {
           setArtImageUrlInput(savedArtImageUrls.join('\n'));
           setSelectedArtIndex(0);
+          setPendingArtUrlInput('');
           const primarySavedArtImageUrl = savedArtImageUrls[0] || '';
           if (primarySavedArtImageUrl !== asUrl(targetEvent!.artImageUrl || '')) {
             setSelectedEventId(targetEvent!.id);
@@ -324,7 +327,6 @@ export default function EventGeneratorsFilesScreen() {
     () => artImageUrls[selectedArtIndex] || artImageUrls[0] || '',
     [artImageUrls, selectedArtIndex],
   );
-  const artImagePreviewUrl = useMemo(() => toRenderableImageUrl(selectedArtImageUrl), [selectedArtImageUrl]);
   const contractGenerated = Boolean(latestContractUrl);
   const tflGenerated = Boolean(latestTflUrl);
   const generatorsLocked = contractGenerated && tflGenerated;
@@ -517,19 +519,33 @@ export default function EventGeneratorsFilesScreen() {
     }
   }
 
-  async function handleSaveArtImage() {
-    const trimmedInput = artImageUrlInput.trim();
-    const parsedArtUrls = parseArtImageUrls(artImageUrlInput);
-    if (trimmedInput && parsedArtUrls.length === 0) {
-      setArtError('Enter one or more valid public image URLs (https://...), one per line.');
+  async function handleAddArtUrl() {
+    const parsedIncomingUrls = parseArtImageUrls(pendingArtUrlInput);
+    if (parsedIncomingUrls.length === 0) {
+      setArtError('Enter a valid public image URL (https://...).');
       setArtStatus('');
       return;
     }
-    await persistArtImages(parsedArtUrls);
+
+    const mergedArtUrls = [...artImageUrls, ...parsedIncomingUrls].filter(
+      (url, index, all) => url && all.indexOf(url) === index,
+    );
+    if (mergedArtUrls.length === artImageUrls.length) {
+      setPendingArtUrlInput('');
+      setArtError('');
+      setArtStatus('That art URL is already added.');
+      return;
+    }
+
+    setArtImageUrlInput(mergedArtUrls.join('\n'));
+    setPendingArtUrlInput('');
+    setSelectedArtIndex(Math.max(0, mergedArtUrls.length - 1));
+    await persistArtImages(mergedArtUrls);
   }
 
   async function handleDeleteSavedArt() {
     setArtImageUrlInput('');
+    setPendingArtUrlInput('');
     setSelectedArtIndex(0);
     await persistArtImages([]);
   }
@@ -934,66 +950,68 @@ export default function EventGeneratorsFilesScreen() {
             </ThemedText>
           </Pressable>
         </View>
-        <TextInput
-          style={[styles.input, styles.multilineInput]}
-          value={artImageUrlInput}
-          onChangeText={(text) => {
-            setArtImageUrlInput(text);
-            if (artError) setArtError('');
-            if (artStatus) setArtStatus('');
-          }}
-          placeholder="Paste one or more public image URLs (one per line)"
-          placeholderTextColor="#6f849a"
-          autoCapitalize="none"
-          autoCorrect={false}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
-        {artImageUrls.length > 0 ? (
-          <View style={styles.artSelectorWrap}>
-            <ThemedText style={styles.infoText}>
-              Loaded {artImageUrls.length} art link{artImageUrls.length === 1 ? '' : 's'}.
-            </ThemedText>
-            <View style={styles.buttonRow}>
-              {artImageUrls.map((_, index) => {
-                const isSelected = index === selectedArtIndex;
-                return (
-                  <Pressable
-                    key={`art-selector-${index}`}
-                    style={[
-                      styles.linkButton,
-                      isSelected ? styles.contractLinkButton : null,
-                      actionFeedbackKey === `select_art_${index}` ? styles.pressableGlow : null,
-                    ]}
-                    onPress={() => {
-                      showActionFeedback(`select_art_${index}`);
-                      setSelectedArtIndex(index);
-                    }}>
-                    <ThemedText style={[styles.linkText, isSelected ? styles.contractLinkText : null]}>
-                      Art {index + 1}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        ) : null}
-        <View style={styles.buttonRow}>
+        <View style={styles.artInputRow}>
+          <TextInput
+            style={[styles.input, styles.artUrlInput]}
+            value={pendingArtUrlInput}
+            onChangeText={(text) => {
+              setPendingArtUrlInput(text);
+              if (artError) setArtError('');
+              if (artStatus) setArtStatus('');
+            }}
+            placeholder="Paste image URL and tap Add URL"
+            placeholderTextColor="#6f849a"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
           <Pressable
             style={[
               styles.actionButton,
-              actionFeedbackKey === 'save_art' ? styles.pressableGlow : null,
+              actionFeedbackKey === 'add_art_url' ? styles.pressableGlow : null,
               isSavingArt || isUploadingArt ? styles.actionButtonDisabled : null,
             ]}
             onPress={() => {
-              showActionFeedback('save_art');
-              void handleSaveArtImage();
+              showActionFeedback('add_art_url');
+              void handleAddArtUrl();
             }}
             disabled={isSavingArt || isUploadingArt}>
-            <MaterialIcons name="save" size={14} color="#dceafe" />
-            <ThemedText style={styles.actionButtonText}>{isSavingArt ? 'Saving Art...' : 'Save Art URLs'}</ThemedText>
+            <MaterialIcons name="add-link" size={14} color="#dceafe" />
+            <ThemedText style={styles.actionButtonText}>{isSavingArt ? 'Saving...' : 'Add URL'}</ThemedText>
           </Pressable>
+        </View>
+        {artImageUrls.length > 0 ? (
+          <ThemedText style={styles.infoText}>
+            {artImageUrls.length} saved art thumbnail{artImageUrls.length === 1 ? '' : 's'}. Tap any thumbnail to open the file.
+          </ThemedText>
+        ) : null}
+        {artImageUrls.length > 0 ? (
+          <View style={styles.artThumbGrid}>
+            {artImageUrls.map((url, index) => {
+              const isSelected = index === selectedArtIndex;
+              const thumbUrl = toRenderableImageUrl(url);
+              return (
+                <Pressable
+                  key={`art-thumb-${index}`}
+                  style={[
+                    styles.artThumbButton,
+                    isSelected ? styles.artThumbButtonActive : null,
+                    actionFeedbackKey === `open_art_thumb_${index}` ? styles.pressableGlow : null,
+                  ]}
+                  onPress={() => {
+                    showActionFeedback(`open_art_thumb_${index}`);
+                    setSelectedArtIndex(index);
+                    void Linking.openURL(url);
+                  }}>
+                  <Image source={{ uri: thumbUrl }} style={styles.artThumbImage} resizeMode="cover" />
+                  <View style={styles.artThumbLabelWrap}>
+                    <ThemedText style={styles.artThumbLabel}>Art {index + 1}</ThemedText>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+        <View style={styles.buttonRow}>
           {canUseAdvancedArtActions && artImageUrls.length > 0 ? (
             <Pressable
               style={[
@@ -1057,12 +1075,6 @@ export default function EventGeneratorsFilesScreen() {
         </View>
         {artStatus ? <ThemedText style={styles.infoText}>{artStatus}</ThemedText> : null}
         {artError ? <ThemedText style={styles.errorText}>{artError}</ThemedText> : null}
-        {artImagePreviewUrl && artImageUrls.length > 1 ? (
-          <ThemedText style={styles.infoText}>
-            Previewing Art {selectedArtIndex + 1} of {artImageUrls.length}
-          </ThemedText>
-        ) : null}
-        {artImagePreviewUrl ? <Image source={{ uri: artImagePreviewUrl }} style={styles.artPreview} resizeMode="cover" /> : null}
       </View>
     </ScrollView>
   );
@@ -1195,11 +1207,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
   },
-  multilineInput: {
-    minHeight: 100,
-  },
-  artSelectorWrap: {
+  artInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+  },
+  artUrlInput: {
+    flex: 1,
   },
   errorText: {
     color: '#ff9aa7',
@@ -1240,12 +1254,34 @@ const styles = StyleSheet.create({
     color: '#9cb1c8',
     lineHeight: 19,
   },
-  artPreview: {
-    width: '100%',
-    minHeight: 180,
-    borderRadius: 12,
+  artThumbGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  artThumbButton: {
+    width: 104,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#2f4358',
+    borderColor: '#2b3f55',
     backgroundColor: '#0f1620',
+    overflow: 'hidden',
+  },
+  artThumbButtonActive: {
+    borderColor: '#67a9ff',
+  },
+  artThumbImage: {
+    width: '100%',
+    height: 84,
+    backgroundColor: '#0f1620',
+  },
+  artThumbLabelWrap: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  artThumbLabel: {
+    color: '#cde0f5',
+    fontWeight: '700',
+    fontSize: 12,
   },
 });
