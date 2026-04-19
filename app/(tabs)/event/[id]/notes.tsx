@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
@@ -19,6 +19,7 @@ import {
 } from '@/lib/calendar-sync';
 import {
   appendEventActivityLog,
+  removeEventActivityEntry,
   removeEventActivityEntriesByActor,
   readEventActivityLog,
   type EventActivityEntry,
@@ -132,6 +133,7 @@ export default function EventNotesScreen() {
   const [entryError, setEntryError] = useState('');
   const [entryStatus, setEntryStatus] = useState('');
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
+  const [deletingEntryId, setDeletingEntryId] = useState('');
 
   const event = events.find((item) => item.id === id);
   const eventId = event?.id || '';
@@ -330,6 +332,56 @@ export default function EventNotesScreen() {
     }
   }
 
+  async function deleteLogEntry(entryId: string) {
+    if (!entryId) return;
+    setDeletingEntryId(entryId);
+    setEntryError('');
+    setEntryStatus('');
+    try {
+      const removed = await removeEventActivityEntry(currentEvent.id, entryId);
+      if (!removed) {
+        setEntryError('Unable to delete log entry.');
+        return;
+      }
+      const nextEntries = await readEventActivityLog(currentEvent.id);
+      setActivityEntries(nextEntries.filter((entry) => entry.actor !== 'Discord'));
+      setEntryStatus('Log entry deleted.');
+    } catch {
+      setEntryError('Unable to delete log entry.');
+    } finally {
+      setDeletingEntryId('');
+    }
+  }
+
+  function confirmDeleteLogEntry(entryId: string) {
+    if (!entryId || deletingEntryId) return;
+
+    if (Platform.OS === 'web') {
+      const browserApi = globalThis as unknown as { confirm?: (message?: string) => boolean };
+      const confirmed = browserApi.confirm ? browserApi.confirm('Delete this log entry?') : true;
+      if (confirmed) {
+        void deleteLogEntry(entryId);
+      }
+      return;
+    }
+
+    Alert.alert(
+      'Delete Log Entry?',
+      'This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void deleteLogEntry(entryId);
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  }
+
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.topRow}>
@@ -406,7 +458,25 @@ export default function EventNotesScreen() {
               <View key={entry.id} style={styles.logCard}>
                 <View style={styles.logTopRow}>
                   <ThemedText style={styles.logType}>{typeLabel(entry)}</ThemedText>
-                  <ThemedText style={styles.logTime}>{formatTimestamp(entry.timestamp)}</ThemedText>
+                  <View style={styles.logTopActions}>
+                    <ThemedText style={styles.logTime}>{formatTimestamp(entry.timestamp)}</ThemedText>
+                    {canEditStatus ? (
+                      <Pressable
+                        style={[
+                          styles.logDeleteButton,
+                          deletingEntryId === entry.id ? styles.buttonDisabled : null,
+                        ]}
+                        onPress={() => {
+                          confirmDeleteLogEntry(entry.id);
+                        }}
+                        disabled={Boolean(deletingEntryId)}>
+                        <MaterialIcons name="delete-outline" size={12} color="#ffb8c0" />
+                        <ThemedText style={styles.logDeleteText}>
+                          {deletingEntryId === entry.id ? 'Deleting...' : 'Delete'}
+                        </ThemedText>
+                      </Pressable>
+                    ) : null}
+                  </View>
                 </View>
                 <ThemedText style={styles.logActor}>{entry.actor}</ThemedText>
                 {entry.type === 'status_update' && entry.statusFrom && entry.statusTo ? (
@@ -609,9 +679,13 @@ const styles = StyleSheet.create({
   },
   logTopRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 8,
+  },
+  logTopActions: {
+    alignItems: 'flex-end',
+    gap: 6,
   },
   logType: {
     color: '#f1f6fd',
@@ -629,6 +703,22 @@ const styles = StyleSheet.create({
   logMessage: {
     color: '#d9e6f5',
     lineHeight: 18,
+  },
+  logDeleteButton: {
+    borderWidth: 1,
+    borderColor: '#6a2d3a',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#2a1620',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  logDeleteText: {
+    color: '#ffb8c0',
+    fontWeight: '700',
+    fontSize: 11,
   },
   logLinkButton: {
     marginTop: 5,

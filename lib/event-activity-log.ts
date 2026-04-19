@@ -132,6 +132,23 @@ export function fireAndForgetEventActivityLog(input: Parameters<typeof appendEve
   void appendEventActivityLog(input);
 }
 
+export async function removeEventActivityEntry(eventId: string, entryId: string): Promise<boolean> {
+  const eventKey = String(eventId || '').trim();
+  const entryKey = String(entryId || '').trim();
+  if (!eventKey || !entryKey) return false;
+
+  const all = await readAllEventActivityEntries();
+  const next = all.filter((entry) => !(entry.eventId === eventKey && entry.id === entryKey));
+  if (next.length === all.length) return false;
+
+  try {
+    await AsyncStorage.setItem(EVENT_ACTIVITY_STORAGE_KEY, JSON.stringify(next.slice(0, EVENT_ACTIVITY_MAX_ENTRIES)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function removeEventActivityEntriesByActor(eventId: string, actor: string): Promise<number> {
   const eventKey = String(eventId || '').trim();
   const actorKey = String(actor || '').trim();
