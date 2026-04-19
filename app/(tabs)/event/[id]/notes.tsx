@@ -106,18 +106,6 @@ function normalizeStatusValue(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
-function typeLabel(entry: EventActivityEntry): string {
-  if (
-    entry.type === 'status_update' &&
-    normalizeStatusValue(entry.statusTo || '').includes('event complete')
-  ) {
-    return 'Client Payment Completed';
-  }
-  if (entry.type === 'status_update') return 'Status Update';
-  if (entry.type === 'staff_note') return 'Communication Entry';
-  return 'Action';
-}
-
 export default function EventNotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -448,64 +436,6 @@ export default function EventNotesScreen() {
       </View>
 
       <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>Log</ThemedText>
-        {isLoadingActivity ? <ThemedText style={styles.infoLine}>Loading log...</ThemedText> : null}
-        {!isLoadingActivity && activityEntries.length === 0 ? (
-          <ThemedText style={styles.infoLine}>No activity entries yet for this event.</ThemedText>
-        ) : null}
-        {!isLoadingActivity
-          ? activityEntries.map((entry) => (
-              <View key={entry.id} style={styles.logCard}>
-                <View style={styles.logTopRow}>
-                  <ThemedText style={styles.logType}>{typeLabel(entry)}</ThemedText>
-                  <View style={styles.logTopActions}>
-                    <ThemedText style={styles.logTime}>{formatTimestamp(entry.timestamp)}</ThemedText>
-                    {canEditStatus ? (
-                      <Pressable
-                        style={[
-                          styles.logDeleteButton,
-                          deletingEntryId === entry.id ? styles.buttonDisabled : null,
-                        ]}
-                        onPress={() => {
-                          confirmDeleteLogEntry(entry.id);
-                        }}
-                        disabled={Boolean(deletingEntryId)}>
-                        <MaterialIcons name="delete-outline" size={12} color="#ffb8c0" />
-                        <ThemedText style={styles.logDeleteText}>
-                          {deletingEntryId === entry.id ? 'Deleting...' : 'Delete'}
-                        </ThemedText>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                </View>
-                <ThemedText style={styles.logActor}>{entry.actor}</ThemedText>
-                {entry.type === 'status_update' && entry.statusFrom && entry.statusTo ? (
-                  <ThemedText style={styles.logMessage}>
-                    {entry.statusFrom}
-                    {' -> '}
-                    {entry.statusTo}
-                  </ThemedText>
-                ) : (
-                  <ThemedText style={styles.logMessage}>{entry.message}</ThemedText>
-                )}
-                {entry.discordChannelUrl ? (
-                  <Pressable
-                    style={styles.logLinkButton}
-                    onPress={() => {
-                      void Linking.openURL(entry.discordChannelUrl || '');
-                    }}>
-                    <MaterialIcons name="open-in-new" size={12} color="#bfe1ff" />
-                    <ThemedText style={styles.logLinkText}>
-                      Posted to {entry.discordChannelLabel || 'Discord Channel'}
-                    </ThemedText>
-                  </Pressable>
-                ) : null}
-              </View>
-            ))
-          : null}
-      </View>
-
-      <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Communication Entry</ThemedText>
         <TextInput
           style={[styles.input, styles.inputMultiline]}
@@ -533,6 +463,62 @@ export default function EventNotesScreen() {
         </Pressable>
         {entryStatus ? <ThemedText style={styles.helperText}>{entryStatus}</ThemedText> : null}
         {entryError ? <ThemedText style={styles.errorText}>{entryError}</ThemedText> : null}
+      </View>
+
+      <View style={[styles.section, styles.logSection]}>
+        <ThemedText style={styles.sectionTitle}>Communication Entry Feed</ThemedText>
+        {isLoadingActivity ? <ThemedText style={styles.infoLine}>Loading feed...</ThemedText> : null}
+        {!isLoadingActivity && activityEntries.length === 0 ? (
+          <ThemedText style={styles.infoLine}>No communication entries yet.</ThemedText>
+        ) : null}
+        {!isLoadingActivity
+          ? activityEntries.map((entry) => (
+              <View key={entry.id} style={styles.feedRow}>
+                <View style={styles.feedHeaderRow}>
+                  <ThemedText style={styles.feedMeta}>
+                    Communication Entry • {formatTimestamp(entry.timestamp)} • {entry.actor}
+                  </ThemedText>
+                  {canEditStatus ? (
+                    <Pressable
+                      style={[
+                        styles.logDeleteButton,
+                        deletingEntryId === entry.id ? styles.buttonDisabled : null,
+                      ]}
+                      onPress={() => {
+                        confirmDeleteLogEntry(entry.id);
+                      }}
+                      disabled={Boolean(deletingEntryId)}>
+                      <MaterialIcons name="delete-outline" size={12} color="#ffb8c0" />
+                      <ThemedText style={styles.logDeleteText}>
+                        {deletingEntryId === entry.id ? 'Deleting...' : 'Delete'}
+                      </ThemedText>
+                    </Pressable>
+                  ) : null}
+                </View>
+                {entry.type === 'status_update' && entry.statusFrom && entry.statusTo ? (
+                  <ThemedText style={styles.feedMessage}>
+                    Status Update: {entry.statusFrom}
+                    {' -> '}
+                    {entry.statusTo}
+                  </ThemedText>
+                ) : (
+                  <ThemedText style={styles.feedMessage}>{entry.message}</ThemedText>
+                )}
+                {entry.discordChannelUrl ? (
+                  <Pressable
+                    style={styles.logLinkButton}
+                    onPress={() => {
+                      void Linking.openURL(entry.discordChannelUrl || '');
+                    }}>
+                    <MaterialIcons name="open-in-new" size={12} color="#bfe1ff" />
+                    <ThemedText style={styles.logLinkText}>
+                      Posted to {entry.discordChannelLabel || 'Discord Channel'}
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
+              </View>
+            ))
+          : null}
       </View>
     </ScrollView>
   );
@@ -669,40 +655,30 @@ const styles = StyleSheet.create({
     color: '#d9e6f5',
     lineHeight: 19,
   },
-  logCard: {
-    borderWidth: 1,
-    borderColor: '#2a3c50',
-    borderRadius: 10,
-    backgroundColor: '#0f1620',
-    padding: 10,
-    gap: 3,
+  logSection: {
+    marginTop: 8,
   },
-  logTopRow: {
+  feedRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#223244',
+    paddingVertical: 8,
+    gap: 4,
+  },
+  feedHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  logTopActions: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  logType: {
-    color: '#f1f6fd',
-    fontWeight: '700',
-  },
-  logTime: {
+  feedMeta: {
     color: '#98aec6',
-    fontSize: 12,
+    fontSize: 11,
+    flex: 1,
   },
-  logActor: {
-    color: '#b4cae2',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  logMessage: {
+  feedMessage: {
     color: '#d9e6f5',
     lineHeight: 18,
+    fontSize: 13,
   },
   logDeleteButton: {
     borderWidth: 1,
