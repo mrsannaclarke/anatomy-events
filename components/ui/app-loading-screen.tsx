@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 
@@ -78,7 +78,6 @@ export function AppLoadingScreen() {
           <Image source={logoSource} style={styles.logoImage} />
         </View>
         <ThemedText style={styles.title}>Anatomy Events</ThemedText>
-        <ActivityIndicator color="#f2c066" />
       </View>
     </View>
   );
@@ -166,17 +165,14 @@ const styles = StyleSheet.create({
     width: 122,
     height: 122,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#314862',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-    backgroundColor: '#101a25',
     overflow: 'hidden',
   },
   logoImage: {
-    width: 116,
-    height: 116,
+    width: 122,
+    height: 122,
     borderRadius: 999,
   },
   title: {
