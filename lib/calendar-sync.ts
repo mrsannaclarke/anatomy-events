@@ -563,6 +563,10 @@ async function fetchIcsDirect(icsUrl: string): Promise<string> {
       if (!text.trim()) {
         throw new Error('Calendar fetch returned empty payload.');
       }
+      const normalizedPreview = text.slice(0, 5000).toUpperCase();
+      if (!normalizedPreview.includes('BEGIN:VCALENDAR') || !normalizedPreview.includes('BEGIN:VEVENT')) {
+        throw new Error('Calendar fetch returned a non-ICS payload.');
+      }
 
       if (timeoutId) clearTimeout(timeoutId);
       return text;
@@ -611,6 +615,13 @@ function buildAllOriginsRawUrl(icsUrl: string): string {
   return `https://api.allorigins.win/raw?url=${encodeURIComponent(normalized)}`;
 }
 
+function buildCodeTabsUrl(icsUrl: string): string {
+  const trimmed = icsUrl.trim();
+  if (!trimmed) return '';
+  const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(normalized)}`;
+}
+
 async function fetchIcsViaAllOrigins(icsUrls: string[]): Promise<string> {
   const relayUrls = normalizeCalendarUrlList(icsUrls)
     .map((icsUrl) => buildAllOriginsRawUrl(icsUrl))
@@ -632,6 +643,32 @@ async function fetchIcsViaAllOrigins(icsUrls: string[]): Promise<string> {
       throw new Error(String(firstFailure.reason || 'Calendar CORS relay fetch failed.'));
     }
     throw new Error('Calendar CORS relay fetch failed.');
+  }
+
+  return combineIcsPayloads(successfulPayloads);
+}
+
+async function fetchIcsViaCodeTabs(icsUrls: string[]): Promise<string> {
+  const relayUrls = normalizeCalendarUrlList(icsUrls)
+    .map((icsUrl) => buildCodeTabsUrl(icsUrl))
+    .filter(Boolean);
+  if (relayUrls.length === 0) {
+    throw new Error('No ICS URLs available for CodeTabs relay fallback.');
+  }
+
+  const settled = await Promise.allSettled(relayUrls.map((relayUrl) => fetchIcsDirect(relayUrl)));
+  const successfulPayloads = settled
+    .filter((entry): entry is PromiseFulfilledResult<string> => entry.status === 'fulfilled')
+    .map((entry) => entry.value);
+
+  if (successfulPayloads.length === 0) {
+    const firstFailure = settled.find(
+      (entry): entry is PromiseRejectedResult => entry.status === 'rejected',
+    );
+    if (firstFailure) {
+      throw new Error(String(firstFailure.reason || 'Calendar CodeTabs relay fetch failed.'));
+    }
+    throw new Error('Calendar CodeTabs relay fetch failed.');
   }
 
   return combineIcsPayloads(successfulPayloads);
@@ -697,20 +734,38 @@ export async function loadCalendarEvents(
 ): Promise<CalendarEvent[]> {
   const directIcsUrls = normalizeCalendarUrlList(calendarConfig.icsUrls);
   let rawIcs = '';
+  const isWebRuntime = typeof window !== 'undefined' && typeof document !== 'undefined';
 
   if (directIcsUrls.length > 0) {
-    try {
-      rawIcs = await fetchIcsDirectMany(directIcsUrls);
-    } catch {
+    const fetchers: Array<() => Promise<string>> = isWebRuntime
+      ? [
+          () => fetchIcsViaCodeTabs(directIcsUrls),
+          () => fetchIcsViaAllOrigins(directIcsUrls),
+          () => fetchIcsDirectMany(directIcsUrls),
+          () => fetchIcsViaProxy(directIcsUrls, sheetSyncConfig),
+          () => fetchIcsViaProxy(null, sheetSyncConfig),
+        ]
+      : [
+          () => fetchIcsDirectMany(directIcsUrls),
+          () => fetchIcsViaCodeTabs(directIcsUrls),
+          () => fetchIcsViaAllOrigins(directIcsUrls),
+          () => fetchIcsViaProxy(directIcsUrls, sheetSyncConfig),
+          () => fetchIcsViaProxy(null, sheetSyncConfig),
+        ];
+
+    let lastError: unknown = null;
+    for (const fetcher of fetchers) {
       try {
-        rawIcs = await fetchIcsViaAllOrigins(directIcsUrls);
-      } catch {
-        try {
-          rawIcs = await fetchIcsViaProxy(directIcsUrls, sheetSyncConfig);
-        } catch {
-          rawIcs = await fetchIcsViaProxy(null, sheetSyncConfig);
-        }
+        rawIcs = await fetcher();
+        if (rawIcs.trim()) break;
+      } catch (error) {
+        lastError = error;
       }
+    }
+
+    if (!rawIcs.trim()) {
+      if (lastError instanceof Error) throw lastError;
+      throw new Error('Calendar fetch failed for all configured sources.');
     }
   } else {
     rawIcs = await fetchIcsViaProxy(null, sheetSyncConfig);
