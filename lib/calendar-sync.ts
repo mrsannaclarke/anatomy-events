@@ -18,6 +18,16 @@ export interface CalendarMatch {
   lastPastEvent: CalendarEvent | null;
 }
 
+export interface FallbackAppointmentPoint {
+  ts: number;
+  hasKnownTime: boolean;
+}
+
+export interface FallbackAppointmentLookup {
+  upcoming: FallbackAppointmentPoint | null;
+  last: FallbackAppointmentPoint | null;
+}
+
 function unfoldIcsLines(ics: string): string[] {
   return ics
     .replace(/\r\n/g, '\n')
@@ -194,6 +204,159 @@ function splitClientNameCandidates(rawClientName: string): string[] {
   }
 
   return [...candidates];
+}
+
+function hasExplicitTimeInDate(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return /t\d{2}:\d{2}/i.test(trimmed) || /\b\d{1,2}:\d{2}\s*([ap]m)?\b/i.test(trimmed);
+}
+
+function parseClockMinutes(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const match = trimmed.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap]m)?$/i);
+  if (!match) return null;
+
+  let hour = Number.parseInt(match[1], 10);
+  const minute = Number.parseInt(match[2] || '0', 10);
+  const meridiem = (match[3] || '').toLowerCase();
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || minute < 0 || minute > 59) return null;
+
+  if (meridiem) {
+    if (hour < 1 || hour > 12) return null;
+    if (meridiem === 'am') {
+      if (hour === 12) hour = 0;
+    } else if (hour !== 12) {
+      hour += 12;
+    }
+  } else if (hour > 23) {
+    return null;
+  }
+
+  return hour * 60 + minute;
+}
+
+function buildFallbackPointFromEventRecord(event: EventRecord): FallbackAppointmentPoint | null {
+  const trimmedDate = event.eventDate.trim();
+  if (!trimmedDate) return null;
+  const baseTs = Date.parse(trimmedDate);
+  if (Number.isNaN(baseTs)) return null;
+
+  if (hasExplicitTimeInDate(trimmedDate)) {
+    return { ts: baseTs, hasKnownTime: true };
+  }
+
+  const eventStartMinutes = parseClockMinutes(event.eventStartTime);
+  if (eventStartMinutes == null) {
+    return { ts: baseTs, hasKnownTime: false };
+  }
+
+  const eventDate = new Date(baseTs);
+  eventDate.setHours(Math.floor(eventStartMinutes / 60), eventStartMinutes % 60, 0, 0);
+  return { ts: eventDate.getTime(), hasKnownTime: true };
+}
+
+function normalizeEmailKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizePhoneKey(value: string): string {
+  const digits = normalizePhoneDigits(value);
+  if (digits.length < 7) return '';
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+function buildIdentityKeysForEventRecord(event: EventRecord): string[] {
+  const keys = new Set<string>();
+
+  const emailKey = normalizeEmailKey(event.email);
+  if (emailKey) keys.add(`email:${emailKey}`);
+
+  const phoneKey = normalizePhoneKey(event.contactPhone);
+  if (phoneKey) keys.add(`phone:${phoneKey}`);
+
+  const fullName = normalizeNameText(event.clientName);
+  if (fullName.length >= 3) {
+    keys.add(`name:${fullName}`);
+    const strippedAndKey = fullName
+      .split(' ')
+      .filter((token) => token && token !== 'and')
+      .join(' ');
+    if (strippedAndKey.length >= 3 && strippedAndKey !== fullName) {
+      keys.add(`name:${strippedAndKey}`);
+    }
+  }
+
+  return [...keys];
+}
+
+export function lookupFallbackAppointments(
+  allEvents: EventRecord[],
+  currentEvent: EventRecord,
+  nowTs = Date.now(),
+): FallbackAppointmentLookup {
+  const pointsByEventId: Record<string, FallbackAppointmentPoint> = {};
+  const indexByIdentityKey: Record<string, string[]> = {};
+
+  allEvents.forEach((event) => {
+    const point = buildFallbackPointFromEventRecord(event);
+    if (point) pointsByEventId[event.id] = point;
+
+    const identityKeys = buildIdentityKeysForEventRecord(event);
+    identityKeys.forEach((key) => {
+      if (!indexByIdentityKey[key]) indexByIdentityKey[key] = [];
+      indexByIdentityKey[key].push(event.id);
+    });
+  });
+
+  const identityKeys = buildIdentityKeysForEventRecord(currentEvent);
+  if (identityKeys.length === 0) {
+    return { upcoming: null, last: null };
+  }
+
+  const relatedEventIds = new Set<string>();
+  identityKeys.forEach((key) => {
+    const ids = indexByIdentityKey[key] || [];
+    ids.forEach((id) => relatedEventIds.add(id));
+  });
+  relatedEventIds.delete(currentEvent.id);
+
+  const points = [...relatedEventIds]
+    .map((id) => pointsByEventId[id])
+    .filter((value): value is FallbackAppointmentPoint => Boolean(value))
+    .sort((a, b) => a.ts - b.ts);
+
+  const upcoming: FallbackAppointmentPoint | null = null;
+  let last: FallbackAppointmentPoint | null = null;
+  for (let i = points.length - 1; i >= 0; i -= 1) {
+    if (points[i].ts <= nowTs) {
+      last = points[i];
+      break;
+    }
+  }
+
+  return { upcoming, last };
+}
+
+export function formatFallbackAppointmentPoint(point: FallbackAppointmentPoint): string {
+  const date = new Date(point.ts);
+  if (!point.hasKnownTime) {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function isNameCandidateMatch(candidate: string, haystack: string): boolean {

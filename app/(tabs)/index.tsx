@@ -278,21 +278,19 @@ function normalizeNameKeyForFallback(value: string): string {
     .trim();
 }
 
-function splitClientNameCandidates(rawClientName: string): string[] {
-  const raw = rawClientName.trim();
-  if (!raw) return [];
+function buildClientNameFallbackKeys(rawClientName: string): string[] {
+  const full = normalizeNameKeyForFallback(rawClientName);
+  if (!full) return [];
 
-  const candidates = new Set<string>();
-  const full = normalizeNameKeyForFallback(raw);
-  if (full) candidates.add(full);
-
-  raw
-    .split(/\s*(?:&|\/|\+|,|\band\b)\s*/i)
-    .map((value) => normalizeNameKeyForFallback(value))
-    .filter(Boolean)
-    .forEach((value) => candidates.add(value));
-
-  return [...candidates];
+  const keys = new Set<string>([full]);
+  const strippedAndKey = full
+    .split(' ')
+    .filter((token) => token && token !== 'and')
+    .join(' ');
+  if (strippedAndKey && strippedAndKey !== full) {
+    keys.add(strippedAndKey);
+  }
+  return [...keys];
 }
 
 function normalizeEmailKey(value: string): string {
@@ -314,7 +312,7 @@ function buildClientIdentityKeys(event: EventRecord): string[] {
   const phoneKey = normalizePhoneKey(event.contactPhone);
   if (phoneKey) keys.add(`phone:${phoneKey}`);
 
-  splitClientNameCandidates(event.clientName).forEach((name) => {
+  buildClientNameFallbackKeys(event.clientName).forEach((name) => {
     if (name.length >= 3) keys.add(`name:${name}`);
   });
 
@@ -557,20 +555,14 @@ export default function EventsScreen() {
         const ids = indexByIdentityKey[key] || [];
         ids.forEach((id) => relatedEventIds.add(id));
       });
+      relatedEventIds.delete(event.id);
 
       const points = [...relatedEventIds]
         .map((id) => pointsByEventId[id])
         .filter((value): value is FallbackAppointmentPoint => Boolean(value))
         .sort((a, b) => a.ts - b.ts);
-      let upcoming: FallbackAppointmentPoint | null = null;
+      const upcoming: FallbackAppointmentPoint | null = null;
       let last: FallbackAppointmentPoint | null = null;
-
-      for (const point of points) {
-        if (point.ts >= nowTs) {
-          upcoming = point;
-          break;
-        }
-      }
       for (let i = points.length - 1; i >= 0; i -= 1) {
         if (points[i].ts <= nowTs) {
           last = points[i];
