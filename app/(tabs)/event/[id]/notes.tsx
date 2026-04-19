@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
@@ -22,6 +22,7 @@ import {
   readEventActivityLog,
   type EventActivityEntry,
 } from '@/lib/event-activity-log';
+import { postDiscordWebhookMessage } from '@/lib/discord-sync';
 
 const EVENT_STATUS_OPTIONS = [
   'Inquiry Recieved',
@@ -41,6 +42,22 @@ const EVENT_STATUS_OPTIONS = [
   'Event Complete',
   'Event Complete Balance Late',
 ];
+
+const DISCORD_EVENT_CHANNEL_MAP: Record<
+  string,
+  {
+    webhookUrl: string;
+    channelUrl: string;
+    channelLabel: string;
+  }
+> = {
+  '3545': {
+    webhookUrl:
+      'https://discord.com/api/webhooks/1495421300972327165/0cjK9p1RSQFu3q1ih9kD3VeV5HW3SF4WG6pcy0N_PXftnRb2zaQ-8zXybig_F4XJIjaY',
+    channelUrl: 'https://discord.com/channels/690967847303643146/1481742663253360670',
+    channelLabel: '💍shandra-knapstad-sept-8',
+  },
+};
 
 type EventTypeVisual = {
   icon: React.ComponentProps<typeof MaterialIcons>['name'];
@@ -82,6 +99,7 @@ function normalizeStatusValue(value: string): string {
 }
 
 function typeLabel(entry: EventActivityEntry): string {
+  if (entry.actor === 'Discord') return 'Discord Sync';
   if (
     entry.type === 'status_update' &&
     normalizeStatusValue(entry.statusTo || '').includes('event complete')
@@ -91,6 +109,11 @@ function typeLabel(entry: EventActivityEntry): string {
   if (entry.type === 'status_update') return 'Status Update';
   if (entry.type === 'staff_note') return 'Communication Entry';
   return 'Action';
+}
+
+function extractDiscordChannelUrl(message: string): string {
+  const match = String(message || '').match(/https:\/\/discord\.com\/channels\/\d+\/\d+/i);
+  return match ? match[0] : '';
 }
 
 export default function EventNotesScreen() {
@@ -218,6 +241,10 @@ export default function EventNotesScreen() {
   const currentEvent = event;
   const typeVisual = getEventTypeVisual(currentEvent.eventType);
   const unifiedStatus = currentEvent.status.trim() || currentEvent.payStatus.trim() || 'Open';
+  const discordTarget =
+    DISCORD_EVENT_CHANNEL_MAP[(currentEvent.entryId || '').trim()] ||
+    DISCORD_EVENT_CHANNEL_MAP[(currentEvent.id || '').trim()] ||
+    null;
 
   async function updateUnifiedStatus(value: string) {
     const previousStatus = currentEvent.status.trim() || currentEvent.payStatus.trim() || '';
@@ -258,10 +285,47 @@ export default function EventNotesScreen() {
         message: note,
       });
 
+      let discordStatusSuffix = '';
+      if (discordTarget) {
+        const discordMessageLines = [
+          '📝 New communication entry',
+          `Client: ${currentEvent.clientName || 'Unknown Client'}`,
+          `Entry ID: ${(currentEvent.entryId || currentEvent.id || '').trim() || 'N/A'}`,
+          `Posted by: ${actorName}`,
+          '',
+          note,
+        ];
+        const discordMessage = discordMessageLines.join('\n').trim();
+
+        try {
+          await postDiscordWebhookMessage({
+            webhookUrl: discordTarget.webhookUrl,
+            content: discordMessage,
+            username: 'Anatomy Event Log',
+          });
+          await appendEventActivityLog({
+            eventId: currentEvent.id,
+            actor: 'Discord',
+            type: 'action',
+            message: `Posted to ${discordTarget.channelLabel}: ${discordTarget.channelUrl}`,
+          });
+          discordStatusSuffix = ' Discord synced.';
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : 'Unknown Discord error.';
+          await appendEventActivityLog({
+            eventId: currentEvent.id,
+            actor: 'Discord',
+            type: 'action',
+            message: `Discord post failed for ${discordTarget.channelLabel}: ${reason}`,
+          });
+          discordStatusSuffix = ' Discord sync failed.';
+        }
+      }
+
       const nextEntries = await readEventActivityLog(currentEvent.id);
       setActivityEntries(nextEntries);
       setNewNote('');
-      setEntryStatus('Communication entry posted.');
+      setEntryStatus(`Communication entry posted.${discordStatusSuffix}`);
     } catch {
       setEntryStatus('');
       setEntryError('Unable to post communication entry.');
@@ -358,6 +422,18 @@ export default function EventNotesScreen() {
                 ) : (
                   <ThemedText style={styles.logMessage}>{entry.message}</ThemedText>
                 )}
+                {entry.actor === 'Discord' && extractDiscordChannelUrl(entry.message) ? (
+                  <Pressable
+                    style={styles.logLinkButton}
+                    onPress={() => {
+                      const url = extractDiscordChannelUrl(entry.message);
+                      if (!url) return;
+                      void Linking.openURL(url);
+                    }}>
+                    <MaterialIcons name="open-in-new" size={12} color="#bfe1ff" />
+                    <ThemedText style={styles.logLinkText}>Open Discord Channel</ThemedText>
+                  </Pressable>
+                ) : null}
               </View>
             ))
           : null}
@@ -557,6 +633,24 @@ const styles = StyleSheet.create({
   logMessage: {
     color: '#d9e6f5',
     lineHeight: 18,
+  },
+  logLinkButton: {
+    marginTop: 5,
+    borderWidth: 1,
+    borderColor: '#3f78b4',
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    backgroundColor: '#18395a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+  },
+  logLinkText: {
+    color: '#bfe1ff',
+    fontWeight: '700',
+    fontSize: 11,
   },
   primaryButton: {
     borderRadius: 10,
