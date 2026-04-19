@@ -37,6 +37,16 @@ const DEPOSIT_PAID_OR_LATER_STATUSES = new Set([
 ]);
 const DEFAULT_DEPOSIT_RATE = 0.3;
 
+type FallbackAppointmentPoint = {
+  ts: number;
+  hasKnownTime: boolean;
+};
+
+type FallbackAppointmentPair = {
+  upcoming: FallbackAppointmentPoint | null;
+  last: FallbackAppointmentPoint | null;
+};
+
 function normalizeStatus(value: string): string {
   return value
     .trim()
@@ -225,11 +235,72 @@ function parseEventDateTimestamp(value: string): number | null {
   return Number.isNaN(fallback) ? null : fallback;
 }
 
-function formatFallbackAppointmentDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
+function hasExplicitTimeInDate(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return /t\d{2}:\d{2}/i.test(trimmed) || /\b\d{1,2}:\d{2}\s*([ap]m)?\b/i.test(trimmed);
+}
+
+function parseClockMinutes(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const match = trimmed.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap]m)?$/i);
+  if (!match) return null;
+
+  let hour = Number.parseInt(match[1], 10);
+  const minute = Number.parseInt(match[2] || '0', 10);
+  const meridiem = (match[3] || '').toLowerCase();
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || minute < 0 || minute > 59) return null;
+
+  if (meridiem) {
+    if (hour < 1 || hour > 12) return null;
+    if (meridiem === 'am') {
+      if (hour === 12) hour = 0;
+    } else if (hour !== 12) {
+      hour += 12;
+    }
+  } else if (hour > 23) {
+    return null;
+  }
+
+  return hour * 60 + minute;
+}
+
+function buildEventAppointmentPoint(event: EventRecord): FallbackAppointmentPoint | null {
+  const baseTs = parseEventDateTimestamp(event.eventDate);
+  if (baseTs == null) return null;
+
+  if (hasExplicitTimeInDate(event.eventDate)) {
+    return { ts: baseTs, hasKnownTime: true };
+  }
+
+  const eventStartMinutes = parseClockMinutes(event.eventStartTime);
+  if (eventStartMinutes == null) {
+    return { ts: baseTs, hasKnownTime: false };
+  }
+
+  const eventDate = new Date(baseTs);
+  eventDate.setHours(Math.floor(eventStartMinutes / 60), eventStartMinutes % 60, 0, 0);
+  return { ts: eventDate.getTime(), hasKnownTime: true };
+}
+
+function formatFallbackAppointmentValue(point: FallbackAppointmentPoint): string {
+  const date = new Date(point.ts);
+  if (!point.hasKnownTime) {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 
@@ -401,41 +472,49 @@ export default function EventsScreen() {
     () => visibleEvents.map((event) => event.id).filter(Boolean).join('|'),
     [visibleEvents],
   );
-  const fallbackLastAppointmentByEventId = useMemo(() => {
-    const byClientKey: Record<string, number[]> = {};
+  const fallbackAppointmentsByEventId = useMemo(() => {
+    const byClientKey: Record<string, FallbackAppointmentPoint[]> = {};
 
     events.forEach((event) => {
       const clientKey = event.clientName.trim().toLowerCase();
       if (!clientKey) return;
-      const ts = parseEventDateTimestamp(event.eventDate);
-      if (ts == null) return;
+      const point = buildEventAppointmentPoint(event);
+      if (!point) return;
       if (!byClientKey[clientKey]) byClientKey[clientKey] = [];
-      byClientKey[clientKey].push(ts);
+      byClientKey[clientKey].push(point);
     });
 
-    Object.values(byClientKey).forEach((timestamps) => {
-      timestamps.sort((a, b) => a - b);
+    Object.values(byClientKey).forEach((points) => {
+      points.sort((a, b) => a.ts - b.ts);
     });
 
-    const map: Record<string, number | null> = {};
+    const map: Record<string, FallbackAppointmentPair> = {};
     const nowTs = Date.now();
     events.forEach((event) => {
       const clientKey = event.clientName.trim().toLowerCase();
-      const ts = parseEventDateTimestamp(event.eventDate);
-      if (!clientKey || ts == null) {
-        map[event.id] = null;
+      if (!clientKey) {
+        map[event.id] = { upcoming: null, last: null };
         return;
       }
 
-      const timestamps = byClientKey[clientKey] || [];
-      let best: number | null = null;
-      timestamps.forEach((candidate) => {
-        if (candidate >= nowTs) return;
-        if (candidate >= ts) return;
-        if (best == null || candidate > best) best = candidate;
-      });
+      const points = byClientKey[clientKey] || [];
+      let upcoming: FallbackAppointmentPoint | null = null;
+      let last: FallbackAppointmentPoint | null = null;
 
-      map[event.id] = best;
+      for (const point of points) {
+        if (point.ts >= nowTs) {
+          upcoming = point;
+          break;
+        }
+      }
+      for (let i = points.length - 1; i >= 0; i -= 1) {
+        if (points[i].ts <= nowTs) {
+          last = points[i];
+          break;
+        }
+      }
+
+      map[event.id] = { upcoming, last };
     });
 
     return map;
@@ -600,7 +679,20 @@ export default function EventsScreen() {
         const typeVisual = getEventTypeVisual(event.eventType);
         const upcomingAppointment = calendarMatch?.upcomingEvent ?? null;
         const lastAppointment = calendarMatch?.lastPastEvent ?? null;
-        const fallbackLastAppointmentTs = fallbackLastAppointmentByEventId[event.id];
+        const fallbackAppointments = fallbackAppointmentsByEventId[event.id] || {
+          upcoming: null,
+          last: null,
+        };
+        const upcomingAppointmentText = upcomingAppointment
+          ? formatCalendarMatchDate(upcomingAppointment.start)
+          : fallbackAppointments.upcoming
+            ? formatFallbackAppointmentValue(fallbackAppointments.upcoming)
+            : 'No upcoming appointment found';
+        const lastAppointmentText = lastAppointment
+          ? formatCalendarMatchDate(lastAppointment.start)
+          : fallbackAppointments.last
+            ? formatFallbackAppointmentValue(fallbackAppointments.last)
+            : 'No previous appointment found';
         const addToGoogleCalendarUrl = buildGoogleCalendarUrlForEvent(event);
         const mapUrl = buildMapUrlForEvent(event);
         const artistRosterLabel = getArtistRosterLabel(event);
@@ -674,14 +766,6 @@ export default function EventsScreen() {
                 </ThemedText>
               )}
             </View>
-            {upcomingAppointment ? (
-              <View style={styles.calendarRow}>
-                <ThemedText style={styles.calendarLine}>
-                  Upcoming Appt: {formatCalendarMatchDate(upcomingAppointment.start)}
-                </ThemedText>
-              </View>
-            ) : null}
-
             {canViewAdminMoney && shouldShowRosterTotals(event) ? (
               <View style={styles.amountRow}>
                 <View>
@@ -775,15 +859,10 @@ export default function EventsScreen() {
                 <View />
               )}
             </View>
-            {lastAppointment ? (
-              <ThemedText style={styles.editHint}>
-                Last Appt: {formatCalendarMatchDate(lastAppointment.start)}
-              </ThemedText>
-            ) : fallbackLastAppointmentTs ? (
-              <ThemedText style={styles.editHint}>
-                Last Appt: {formatFallbackAppointmentDate(fallbackLastAppointmentTs)}
-              </ThemedText>
-            ) : null}
+            <View style={styles.appointmentFooter}>
+              <ThemedText style={styles.appointmentFooterLine}>Next Appt: {upcomingAppointmentText}</ThemedText>
+              <ThemedText style={styles.appointmentFooterLine}>Last Appt: {lastAppointmentText}</ThemedText>
+            </View>
           </View>
         );
       })}
@@ -976,16 +1055,6 @@ const styles = StyleSheet.create({
     shadowRadius: 7,
     shadowOffset: { width: 0, height: 0 },
   },
-  calendarLine: {
-    color: '#b9d5f6',
-    lineHeight: 21,
-    fontWeight: '600',
-  },
-  calendarRow: {
-    marginTop: 2,
-    gap: 8,
-    alignItems: 'flex-start',
-  },
   calendarCompactButton: {
     paddingHorizontal: 8,
     paddingVertical: 5,
@@ -1039,10 +1108,14 @@ const styles = StyleSheet.create({
     color: '#f1c84b',
     fontWeight: '800',
   },
-  editHint: {
+  appointmentFooter: {
     marginTop: 6,
-    color: '#7f93ab',
+    gap: 2,
+  },
+  appointmentFooterLine: {
+    color: '#90a6c1',
     fontSize: 13,
+    lineHeight: 18,
   },
   communicationPreviewBox: {
     marginTop: 7,

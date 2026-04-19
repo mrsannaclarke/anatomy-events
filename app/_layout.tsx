@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { RainbowSparkleBackground, type SparkleStyle } from '@/components/ui/rainbow-sparkle-background';
 import { EventsProvider } from '@/context/events-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthFrameworkProvider } from '@/lib/auth-framework';
@@ -24,8 +23,6 @@ export default function RootLayout() {
       background: '#0b1117',
     },
   };
-
-  const sparkleStyle: SparkleStyle = 'stars';
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -66,12 +63,10 @@ export default function RootLayout() {
       <EventsProvider>
         <ThemeProvider value={appTheme}>
           <View style={styles.appShell}>
-            <RainbowSparkleBackground sparkleStyle={sparkleStyle} />
             <Stack screenOptions={{ contentStyle: { backgroundColor: '#0b1117' } }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'How It Works' }} />
             </Stack>
-            <RainbowSparkleBackground overlayOnly sparkleStyle={sparkleStyle} />
           </View>
           <StatusBar style="auto" />
         </ThemeProvider>
