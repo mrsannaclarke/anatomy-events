@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { getHistoricalArtistBreakdownOverride } from '@/constants/historical-payout-truth';
@@ -323,15 +324,16 @@ export default function PayScreen() {
     );
   }
 
+  if (payoutOverrideStatus === 'loading') {
+    return <AppLoadingScreen />;
+  }
+
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Pay Schedule</ThemedText>
         {!canPickPerson ? (
           <ThemedText style={styles.helperTextInfo}>Access limited to your own payout schedule.</ThemedText>
-        ) : null}
-        {payoutOverrideStatus === 'loading' ? (
-          <ThemedText style={styles.helperTextInfo}>Loading historical payout overrides…</ThemedText>
         ) : null}
         {payoutOverrideStatus === 'error' ? (
           <ThemedText style={styles.helperTextError}>Payout sync issue. Using schedule totals.</ThemedText>

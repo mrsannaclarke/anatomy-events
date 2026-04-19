@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -14,7 +14,9 @@ import { useAuthFramework } from '@/lib/auth-framework';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const pathname = usePathname();
   const [isSigningIn, setIsSigningIn] = React.useState(false);
+  const [isRouteLoading, setIsRouteLoading] = React.useState(false);
   const {
     status,
     isHydrating,
@@ -28,6 +30,17 @@ export default function TabLayout() {
     errorMessage,
     config,
   } = useAuthFramework();
+
+  React.useEffect(() => {
+    setIsRouteLoading(true);
+    const timeoutId = setTimeout(() => {
+      setIsRouteLoading(false);
+    }, 220);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [pathname]);
 
   if (status === 'signed_out') {
     return (
@@ -59,6 +72,10 @@ export default function TabLayout() {
   }
 
   if (isHydrating) {
+    return <AppLoadingScreen />;
+  }
+
+  if (status !== 'signed_out' && isRouteLoading) {
     return <AppLoadingScreen />;
   }
 

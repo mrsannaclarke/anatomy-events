@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { STAFF_PERMISSIONS } from '@/constants/auth-permissions';
@@ -581,6 +582,10 @@ export default function ShopProfitScreen() {
         </View>
       </View>
     );
+  }
+
+  if (syncStatus === 'loading') {
+    return <AppLoadingScreen />;
   }
 
   return (
