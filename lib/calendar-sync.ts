@@ -576,22 +576,19 @@ async function fetchIcsDirectMany(icsUrls: string[]): Promise<string> {
   return combineIcsPayloads(successfulPayloads);
 }
 
-function buildJinaRelayUrl(icsUrl: string): string {
+function buildAllOriginsRawUrl(icsUrl: string): string {
   const trimmed = icsUrl.trim();
   if (!trimmed) return '';
-  if (/^https?:\/\//i.test(trimmed)) {
-    const downgraded = trimmed.replace(/^https:\/\//i, 'http://');
-    return `https://r.jina.ai/${downgraded}`;
-  }
-  return `https://r.jina.ai/http://${trimmed}`;
+  const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return `https://api.allorigins.win/raw?url=${encodeURIComponent(normalized)}`;
 }
 
-async function fetchIcsViaRelay(icsUrls: string[]): Promise<string> {
+async function fetchIcsViaAllOrigins(icsUrls: string[]): Promise<string> {
   const relayUrls = normalizeCalendarUrlList(icsUrls)
-    .map((icsUrl) => buildJinaRelayUrl(icsUrl))
+    .map((icsUrl) => buildAllOriginsRawUrl(icsUrl))
     .filter(Boolean);
   if (relayUrls.length === 0) {
-    throw new Error('No ICS URLs available for relay fallback.');
+    throw new Error('No ICS URLs available for CORS relay fallback.');
   }
 
   const settled = await Promise.allSettled(relayUrls.map((relayUrl) => fetchIcsDirect(relayUrl)));
@@ -604,9 +601,9 @@ async function fetchIcsViaRelay(icsUrls: string[]): Promise<string> {
       (entry): entry is PromiseRejectedResult => entry.status === 'rejected',
     );
     if (firstFailure) {
-      throw new Error(String(firstFailure.reason || 'Calendar relay fetch failed.'));
+      throw new Error(String(firstFailure.reason || 'Calendar CORS relay fetch failed.'));
     }
-    throw new Error('Calendar relay fetch failed.');
+    throw new Error('Calendar CORS relay fetch failed.');
   }
 
   return combineIcsPayloads(successfulPayloads);
@@ -678,10 +675,10 @@ export async function loadCalendarEvents(
       rawIcs = await fetchIcsDirectMany(directIcsUrls);
     } catch {
       try {
-        rawIcs = await fetchIcsViaProxy(directIcsUrls, sheetSyncConfig);
+        rawIcs = await fetchIcsViaAllOrigins(directIcsUrls);
       } catch {
         try {
-          rawIcs = await fetchIcsViaRelay(directIcsUrls);
+          rawIcs = await fetchIcsViaProxy(directIcsUrls, sheetSyncConfig);
         } catch {
           rawIcs = await fetchIcsViaProxy(null, sheetSyncConfig);
         }
