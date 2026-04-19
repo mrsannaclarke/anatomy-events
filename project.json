@@ -1,20 +1,24 @@
 {
   "project": {
     "name": "Anatomy Events",
-    "updated_at": "2026-04-17",
+    "updated_at": "2026-04-18",
     "owner": "Anna / Anatomy Tattoo"
   },
   "source_links": {
-    "sheet_url": "https://docs.google.com/spreadsheets/d/1VMuggaK9t0dsDDMqW7Crl28_mXyA-b9vnIkB5ys2uUo/edit?gid=1325964236#gid=1325964236",
-    "script_url": "https://script.google.com/u/0/home/projects/1dqkPklrBJt9JZIDcUqVjrA1u2o-Xr9QE8jZxiCfsYqCTQTrtQhEDe94t/edit",
+    "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455",
+    "script_url": "https://script.google.com/u/0/home/projects/1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK/edit",
     "generated_contracts_folder_url": "https://drive.google.com/drive/folders/1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy?usp=drive_link",
     "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
     "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
-    "sheet_id": "1VMuggaK9t0dsDDMqW7Crl28_mXyA-b9vnIkB5ys2uUo",
-    "script_id": "1dqkPklrBJt9JZIDcUqVjrA1u2o-Xr9QE8jZxiCfsYqCTQTrtQhEDe94t",
-    "web_app_deployment_id": "AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec"
+    "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
+    "script_id": "1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK",
+    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
+    "weekly_sheet_url": "https://docs.google.com/spreadsheets/d/1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw/edit?gid=1568490049#gid=1568490049",
+    "weekly_sheet_id": "1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw",
+    "master_sheet_url": "https://docs.google.com/spreadsheets/d/1SqOSuyRKrsgJP4bBdt_Lz9ILa_xXG8o9JuasG6IQ-qk/edit?gid=168785747#gid=168785747",
+    "master_sheet_id": "1SqOSuyRKrsgJP4bBdt_Lz9ILa_xXG8o9JuasG6IQ-qk"
   },
   "staging_next_source_links": {
     "status": "staging_script_v2_credit_push_not_connected_to_app",
@@ -27,7 +31,7 @@
     "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
     "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA/exec",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
     "local_workspace_path": "/Users/Anna/Documents/Project Files/Event Details Project/clean-source-v2",
     "script_bootstrap": {
       "created": true,
@@ -44,10 +48,263 @@
         "artist credit outbound write to external spreadsheets via Credit Sources mapping",
         "legacy Event Details -> Events migration helper with update/insert behavior"
       ],
-      "credit_flow": "manual credit in Staff Directory -> push outbound to target artist sheets (not inbound pull)"
+      "credit_flow": "manual credit in Staff Directory -> push outbound to target artist sheets (not inbound pull)",
+      "last_remote_init": {
+        "date": "2026-04-17",
+        "actions": [
+          "bootstrapv2",
+          "seedcore",
+          "synclicenses",
+          "migratelegacy",
+          "seteventlinks_backfill_from_legacy_event_endpoint"
+        ],
+        "result": "success",
+        "migrate_result": {
+          "inserted": 9,
+          "updated": 0,
+          "skipped": 43,
+          "skippedCancelled": 1,
+          "deletedCancelled": 0
+        },
+        "events_status_counts": {
+          "Event Complete": 6,
+          "Deposit Paid": 1,
+          "Awaiting Follow Up": 1,
+          "Post Consult Decision": 1
+        },
+        "generated_links_backfill": {
+          "contracts": 5,
+          "licenses": 2,
+          "uploaded_art": 0,
+          "method": "per-entry old source action=event by Entry ID",
+          "note": "old source action=events omits some contract URLs; per-entry endpoint used as source of truth"
+        },
+        "credit_sources_configured": 12,
+        "credit_sources_not_configured": 2,
+        "credit_sources_configuration_note": "Configured 12 artist rows with known external spreadsheet IDs; target tab/cell defaulted to <ArtistName>!A1 pending external access validation. Anna/Anne remain unmapped due missing sheet IDs.",
+        "credit_sources_missing_names": [
+          "Anna",
+          "Anne"
+        ]
+      },
+      "auth_hardening_note": "Token-secured GET admin actions are enabled as fallback when POST is intercepted. UrlFetchApp scope is not granted in this deployment. External spreadsheet permission checks may return Apps Script HTML permission pages until the deploying account has access.",
+      "app_cutover_status": "do_not_connect_app_until_validation_signoff",
+      "migration_policy": "Migrate only non-cancelled legacy rows. Cancelled/canceled rows are excluded from V2 events.",
+      "generator_dependency_note": "Generator links were backfilled from the old production script per-entry endpoint by Entry ID; current staging has 5 contract URLs and 2 license URLs across imported rows.",
+      "workbook_tab_cleanup": {
+        "date": "2026-04-17",
+        "action": "deleted_legacy_tabs",
+        "deleted_count": 16,
+        "deleted_tabs": [
+          "Event Request Form Responses",
+          "Helper Completed Events",
+          "Event Complete",
+          "Shop Profit",
+          "Tomma",
+          "Shy",
+          "Megan",
+          "Drew",
+          "Sisi",
+          "Summer",
+          "Lucky",
+          "Lindsay",
+          "Jazz",
+          "Jayden",
+          "Anna",
+          "Agnes"
+        ],
+        "remaining_tabs": [
+          "Events",
+          "Staff Directory",
+          "Pricing Rules",
+          "Credit Sources",
+          "Generated Files",
+          "Audit Log",
+          "Settings",
+          "Event Details",
+          "Artist License Source",
+          "Pricing Schedule"
+        ],
+        "restore_action": "none_deleted_tabs_are_permanent"
+      },
+      "counter_assignment_validation": {
+        "date": "2026-04-17",
+        "status": "resolved",
+        "issue": "Duplicate Events showed Jacob-only counter assignment because malformed #REF rows in duplicate Event Details skipped Megan counter event during initial migration.",
+        "fix": "Added partial upsert reconciliation endpoint and synced all non-cancelled original entries (15/15) by Entry ID from old source; removed Codex test row 999999.",
+        "result": {
+          "non_cancelled_entry_ids_present": 15,
+          "missing_non_cancelled_ids": 0,
+          "counter_examples": [
+            {
+              "entryId": "820",
+              "client": "Kynzi and Alejandro",
+              "counter": "Jacob"
+            },
+            {
+              "entryId": "1065",
+              "client": "Jaimee Lyne",
+              "counter": "megan"
+            }
+          ],
+          "key_field_mismatches_excluding_date_format": 0
+        },
+        "note": "Date values differ in API representation format (MM/DD/YYYY vs ISO timestamp) but refer to same sheet dates."
+      }
     },
-    "web_app_deployment_id": "AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA",
-    "web_app_deployment_version": 6
+    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
+    "web_app_deployment_version": 37,
+    "local_weekly_project_json_path": "/Users/Anna/Documents/Project Files/Event Details Project/weekly sheets project.json",
+    "last_link_parity_check": {
+      "date": "2026-04-17",
+      "method": "entry-by-entry legacy action=event -> staging action=seteventlinks (token-auth GET)",
+      "result": {
+        "events": 15,
+        "contracts": 8,
+        "licenses": 2,
+        "uploaded_art": 0
+      },
+      "notes": [
+        "Staging built-in action=backfillgeneratedlinks currently fails with missing UrlFetchApp external_request scope in deployment authorization.",
+        "Direct client-side relay avoided UrlFetch scope dependency and restored available generated links found in legacy source."
+      ]
+    },
+    "last_parity_audit": {
+      "date": "2026-04-17",
+      "source_non_cancelled_count": 15,
+      "staging_count": 15,
+      "missing_in_staging": 0,
+      "extra_in_staging": 0,
+      "critical_field_mismatch_entry_count": 1,
+      "critical_field_mismatch_entry_ids": [
+        "1728"
+      ],
+      "link_parity_checked_on_staging_linked_entries": 11,
+      "link_parity_reported_mismatch_entries": [],
+      "reliability_notes": [
+        "Legacy source per-entry endpoint action=event showed intermittent timeout/no-payload behavior during audit.",
+        "Link mismatch set may include timeout-induced false positives; re-check when endpoint stabilizes."
+      ],
+      "local_report_path": "/Users/Anna/Documents/Project Files/Event Details Project/clean-source-v2/reports/parity-audit-2026-04-17.md",
+      "step_2_1_resolution_date": "2026-04-17",
+      "critical_field_mismatch_entry_count_after_fix": 0,
+      "fixed_entry_ids": [
+        "1728"
+      ],
+      "fix_details": "Staging parser now preserves parenthesis-negative values; Entry 1728 Staff Adjustment Amount corrected to -200 and verified with legacy-style upsert payload.",
+      "deployment_after_fix": {
+        "deployment_id": "AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA",
+        "version": 28,
+        "description": "r20 signed adjustment parser"
+      },
+      "link_parity_recheck_date": "2026-04-17",
+      "link_parity_recheck_result": "resolved_timeout_artifacts_rows_1229_3545_now_match",
+      "link_parity_recheck_sample": [
+        {
+          "entryId": "1229",
+          "contract_match": true,
+          "license_match": true
+        },
+        {
+          "entryId": "3545",
+          "contract_match": true,
+          "license_match": true
+        }
+      ],
+      "overall_parity_state": "clean_for_entry_set_critical_payout_fields_and_rechecked_link_rows"
+    },
+    "previous_web_app_deployment_id": "AKfycbwt6UUW-h4gdFUoW92b9FUUu07Lto_4IJFEFtF3myfkUIfC_hYy-dff73mVKRzeOfqW4w",
+    "deployment_note": "Use @37 URL for latest staging handlers (credit-ledger dedupe/fingerprint guard + generated-files sync + signed adjustments).",
+    "last_remote_init": {
+      "generated_links_backfill": {
+        "current_generated_files_tab": {
+          "date": "2026-04-17",
+          "artifact_rows": 14,
+          "contracts": 11,
+          "licenses": 3,
+          "uploaded_art": 0,
+          "source": "rebuilt_from_events_links_via_action=rebuildartifacts"
+        }
+      }
+    },
+    "credit_ledger_backfill": {
+      "date": "2026-04-17",
+      "source": "legacy_staff_tabs_via_production_sheettabrows",
+      "source_staff_tabs_count": 12,
+      "appended_rows": 19,
+      "total_ledger_rows_after": 19,
+      "recompute": {
+        "staff_rows": 18,
+        "staff_updated": 18,
+        "unresolved_count": 0
+      },
+      "current_credit_top": [
+        {
+          "name": "Tomma",
+          "amount": 8612.13
+        },
+        {
+          "name": "Shy",
+          "amount": 6477.63
+        },
+        {
+          "name": "Megan",
+          "amount": 1845.75
+        },
+        {
+          "name": "Drew",
+          "amount": 1050
+        },
+        {
+          "name": "Sisi",
+          "amount": 1000
+        }
+      ],
+      "source_tag": "legacy-staff-tab-import"
+    },
+    "credit_ledger_reconciliation": {
+      "date": "2026-04-18",
+      "deployment_used": {
+        "id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
+        "version": 37
+      },
+      "issue": "Older staging deployments accepted duplicate legacy-import ledger writes; Tomma carryover doubled.",
+      "runtime_fix": "Credit-ledger fingerprint dedupe enforced in append endpoints (`appendcreditledger` and `appendcreditledgerbatch`) with explicit skippedDuplicate/skippedInvalid response fields.",
+      "data_fix": {
+        "rollback_entry": {
+          "staff": "Tomma",
+          "entry_id": 1,
+          "delta_credit": -1200,
+          "source": "stale-runtime-rollback"
+        },
+        "reconcile_entries_appended": 8,
+        "reconcile_source": "legacy-import-dedupe-reconcile",
+        "total_reconcile_delta": -8612.13,
+        "ledger_rows_after": 38
+      },
+      "post_recompute_current_credit_top": [
+        {
+          "name": "Tomma",
+          "amount": 8612.13
+        },
+        {
+          "name": "Shy",
+          "amount": 6477.63
+        },
+        {
+          "name": "Megan",
+          "amount": 1845.75
+        },
+        {
+          "name": "Drew",
+          "amount": 1050
+        },
+        {
+          "name": "Sisi",
+          "amount": 1000
+        }
+      ]
+    }
   },
   "current_rules": {
     "home_page": {
@@ -391,7 +648,20 @@
       "Clean-source V2 deployment advanced to `@2` (2026-04-17): redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with clean architecture + artist credit-source support. App still not pointed to staging source.",
       "Clean-source V2 credit-direction update (2026-04-17): changed credit integration to outbound writes. `Staff Directory.Current Credit` is now source-of-truth, and `Credit Sources` stores target spreadsheet/tab/cell mappings for `v2PushStaffCredits` to write credits into external artist sheets.",
       "Clean-source V2 deployment advanced to `@6` (2026-04-17): force-pushed latest script and redeployed staging web app `AKfycbxCsETuWS84X7XYsvIGKpdbJPpxMlLpn-UBea_MwSriiqjEe5wqRq-jlViuMCwV_wQkBA` with outbound credit-write flow (`v2PushStaffCredits`) plus staff-license sync (`v2SyncStaffLicensesFromArtistSource`). App still not pointed to staging source.",
-      "Clean-source V2 staff-license sync (2026-04-17): added `v2SyncStaffLicensesFromArtistSource` to pull `Artist License Source` records into `Staff Directory` (`ED Entry`, aliases, license number, license active, assignment) so TFL generation data is preserved in the new source model."
+      "Clean-source V2 staff-license sync (2026-04-17): added `v2SyncStaffLicensesFromArtistSource` to pull `Artist License Source` records into `Staff Directory` (`ED Entry`, aliases, license number, license active, assignment) so TFL generation data is preserved in the new source model.",
+      "Ecosystem integrity contract (2026-04-17): documented app -> Event Details -> weekly sheets -> master books data chain in docs/ecosystem-map.md, with explicit source-of-truth ordering and required reconciliation gates before any staging-source cutover.",
+      "Staging generated-link parity checkpoint (2026-04-17): switched clasp to workspace account, validated deployment @27 access, and restored generated file links via entry-by-entry legacy relay (events=15, contracts=8, licenses=2). Built-in backfill action currently blocked by missing UrlFetchApp external_request scope authorization.",
+      "Staging parity audit snapshot (2026-04-17): non-cancelled Entry ID set matches source 15/15 with one payout-critical drift candidate (Entry 1728 staff adjustment semantics). Link-parity checks are partially inconclusive due intermittent source action=event timeouts.",
+      "Staging signed-adjustment fix (2026-04-17): deployed clean-source-v2 @28 with parenthesis-negative number parsing, then corrected Entry 1728 Staff Adjustment Amount to -200. Critical payout-field parity is now 0 mismatches (entry set 15/15).",
+      "Staging parity recheck (2026-04-17): previously flagged link mismatches (1229, 3545) were timeout artifacts and now confirm exact source/staging matches. Current parity state is clean for entry set + critical payout fields + rechecked link rows.",
+      "Staging generated-files sync upgrade (2026-04-17): added action `rebuildartifacts` and auto-sync hooks so `Generated Files` is rebuilt from `Events` link columns after migration, link updates, and event upserts/deletes. Current staging artifacts: 14 rows (11 contracts, 3 licenses).",
+      "Staging credit-ledger upgrade (2026-04-17): added `Credit Ledger` tab + actions (`appendcreditledger`, `recomputestaffcredits`, `seedcreditledger`). Staff `Current Credit` is now recomputed carryover output from ledger deltas and remains the outbound value pushed to external weekly sheets.",
+      "Staging deployment advanced to @30 (2026-04-17): use `AKfycbwPs...` exec URL for latest r21/r22 code paths. Older deployment URLs can serve stale pre-ledger handlers.",
+      "Staging ledger import (2026-04-17): backfilled Credit Ledger from legacy staff payout tabs (19 rows across 12 staff tabs) and recomputed Staff Directory carryover credits; unresolved mappings = 0.",
+      "Staging deployment advanced to @32 (2026-04-17): use `AKfycbx1Ok...` exec URL for batch ledger import action (`appendcreditledgerbatch`) and latest source-v2 handlers.",
+      "Staging duplicate-guard verification (2026-04-18): deployment @33 (`AKfycbyRO...`) was confirmed stale (old `skipped` response shape and duplicate appends still possible).",
+      "Staging deployment advanced to @37 (2026-04-18): use `AKfycbywkj...` exec URL. Credit-ledger fingerprint column auto-migrates to 9 columns, `appendcreditledgerbatch` now returns `skippedInvalid` + `skippedDuplicate`, and duplicate replay no longer appends.",
+      "Ledger test rollback record (2026-04-18): appended explicit compensating entry for Tomma (`deltaCredit=-1200`, source=`stale-runtime-rollback`) to neutralize stale-runtime duplicate validation writes while preserving immutable audit history."
     ],
     "production_policy": {
       "public_anyone_with_link": false,
@@ -494,7 +764,16 @@
     "Verify OAuth redirect URIs stay aligned with active web host/build URL before release updates.",
     "Document any new spreadsheet tab integrations in this file as they are added.",
     "If Generate Contract/License returns unknown action, redeploy Apps Script web app version that includes `action=generatecontract` and `action=generatetfl`.",
-    "Notes page now owns uploaded flash/status + staff notes + statuses log, and event activity entries capture actor + timestamp when status changes or staff notes are added."
+    "Notes page now owns uploaded flash/status + staff notes + statuses log, and event activity entries capture actor + timestamp when status changes or staff notes are added.",
+    "Before staging cutover, run event-level parity check across production Event Details, weekly Totals, and master Books aggregates for a sampled date range.",
+    "Treat docs/ecosystem-map.md as the required contract for payout/accounting changes; update it when data-flow rules change.",
+    "Re-run generated-link parity for linked entries once production action=event endpoint latency stabilizes; treat current link mismatches as provisional if source returns timeout/no-payload.",
+    "When validating staging source-v2, use web app deployment @37 (`AKfycbywkj...`) because older deployment IDs can serve stale handlers.",
+    "Credit workflow in staging is ledger-first: append deltas in `Credit Ledger`, run `recomputestaffcredits` (or `pushcredits`, which auto-recomputes), then push to external weekly-sheet targets.",
+    "Generated Files tab is now derived from Events link columns; run `rebuildartifacts` after any external/manual link edits if artifact rows look out of sync.",
+    "Use staging deployment @37 (`AKfycbywkj...`) for source-v2 testing; older IDs may miss duplicate-guard fixes for `appendcreditledgerbatch`.",
+    "Credit carryover now comes from `Credit Ledger` deltas. To import historical payouts again, use source tag `legacy-staff-tab-import` and dedupe by (staff, entryId, delta, source).",
+    "Do not use staging deployment @33 (`AKfycbyRO...`) for financial imports; it was validated as stale and can append duplicate ledger rows."
   ],
   "notes": [
     "Staff uses the app; customers do not.",

@@ -9,7 +9,7 @@ import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
 import { useAuthFramework } from '@/lib/auth-framework';
 
 const EVENT_DETAILS_SHEET_URL =
-  'https://docs.google.com/spreadsheets/d/1VMuggaK9t0dsDDMqW7Crl28_mXyA-b9vnIkB5ys2uUo/edit?gid=1325964236#gid=1325964236';
+  'https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455';
 
 export default function AdminScreen() {
   const router = useRouter();
@@ -59,7 +59,7 @@ export default function AdminScreen() {
           <Pressable style={styles.primaryButton} onPress={openEventDetailsSheet}>
             <View style={styles.buttonContent}>
               <MaterialIcons name="table-view" size={16} color="#fff" />
-              <ThemedText style={styles.primaryButtonText}>Open Event Details gSheet</ThemedText>
+              <ThemedText style={styles.primaryButtonText}>Open Anatomy Event App gSheet</ThemedText>
             </View>
           </Pressable>
 

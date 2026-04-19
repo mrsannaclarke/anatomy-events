@@ -238,20 +238,20 @@ export function RainbowSparkleBackground({ overlayOnly = false, sparkleStyle = '
   });
   const overlaySparkleOpacity = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.22, 0.52],
+    outputRange: [0.08, 0.2],
   });
 
   const twinkleOpacityA = twinkleA.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.16, 0.48],
+    outputRange: [0.06, 0.18],
   });
   const twinkleOpacityB = twinkleB.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.12, 0.42],
+    outputRange: [0.05, 0.16],
   });
   const twinkleOpacityC = twinkleC.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.14, 0.45],
+    outputRange: [0.055, 0.17],
   });
 
   const getOpacityForChannel = (channel: TwinkleChannel) => {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   starText: {
     position: 'absolute',
     fontWeight: '700',
-    textShadowColor: 'rgba(255,255,255,0.6)',
+    textShadowColor: 'rgba(255,255,255,0.3)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
     includeFontPadding: false,

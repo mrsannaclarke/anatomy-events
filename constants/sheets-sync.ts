@@ -13,7 +13,7 @@ const extra = ((Constants.expoConfig?.extra ??
 });
 
 export const DEFAULT_WEB_APP_URL =
-  'https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec';
+  'https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec';
 
 const envWebAppUrl =
   typeof process !== 'undefined' ? process.env.EXPO_PUBLIC_SHEET_SYNC_WEB_APP_URL : undefined;

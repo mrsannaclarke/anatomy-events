@@ -853,7 +853,7 @@ export async function pullGeneratedDocUrlsByEntryId(
   const wantedEntryId = normalizeCell(entryId);
   if (!wantedEntryId) return null;
 
-  const data = await fetchSheetTabRows(config, 'Event Details', 2000);
+  const data = await fetchSheetTabRows(config, 'Events', 2000);
   for (const row of data.rows || []) {
     const cells = row.cells || [];
     if (normalizeCell(cells[EVENT_DETAILS_COL_ENTRY_ID]) !== wantedEntryId) continue;
