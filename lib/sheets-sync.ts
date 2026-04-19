@@ -184,6 +184,8 @@ const EVENT_COMPLETE_COL_SHOP_PROFIT = 23;
 const EVENT_DETAILS_COL_ENTRY_ID = 1;
 const EVENT_DETAILS_COL_CONTRACT_URL = 32;
 const EVENT_DETAILS_COL_TFL_URL = 35;
+const LEGACY_PAYOUT_FALLBACK_WEB_APP_URL =
+  'https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec';
 let cachedStaffTabOverrides: {
   configKey: string;
   fetchedAtMs: number;
@@ -430,6 +432,20 @@ function normalizeCell(value: string | undefined): string {
 function normalizeUrlCell(value: string | undefined): string {
   const normalized = normalizeCell(value);
   return /^https?:\/\//i.test(normalized) ? normalized : '';
+}
+
+function normalizeWebAppUrlForCompare(value: string): string {
+  return value.trim().replace(/\/+$/, '');
+}
+
+function buildLegacyPayoutFallbackConfig(config: SheetSyncConfig): SheetSyncConfig | null {
+  const currentUrl = normalizeWebAppUrlForCompare(config.webAppUrl);
+  const legacyUrl = normalizeWebAppUrlForCompare(LEGACY_PAYOUT_FALLBACK_WEB_APP_URL);
+  if (!legacyUrl || currentUrl === legacyUrl) return null;
+  return {
+    ...config,
+    webAppUrl: LEGACY_PAYOUT_FALLBACK_WEB_APP_URL,
+  };
 }
 
 function buildConfigKey(config: SheetSyncConfig): string {
@@ -990,48 +1006,64 @@ function buildCompletedAssignmentsFromEventsRows(data: SheetTabRowsResponse): Co
   return map;
 }
 
+function buildCompletedAssignmentsFromEventCompleteRows(
+  data: SheetTabRowsResponse,
+): CompletedEventStaffAssignmentMap {
+  const map: CompletedEventStaffAssignmentMap = {};
+
+  (data.rows || []).forEach((row) => {
+    const rowNumber = Number.parseInt(String(row.rowNumber || 0), 10);
+    if (!rowNumber || rowNumber <= 1) return;
+
+    const cells = row.cells || [];
+    const entryId = normalizeCell(cells[EVENT_COMPLETE_COL_ENTRY_ID]);
+    if (!entryId) return;
+
+    map[entryId] = {
+      artistNames: normalizeCell(cells[EVENT_COMPLETE_COL_ARTIST_NAMES]),
+      counterNames: normalizeCell(cells[EVENT_COMPLETE_COL_COUNTER_NAMES]),
+      artistPayTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_ARTIST_PAY] || '')),
+      counterFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_COUNTER_FEE] || '')),
+      optionalFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_OPTIONAL_FEE] || '')),
+      radiusFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_FEE] || '')),
+      radiusShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_SHOP] || '')),
+      extraHourlyArtistTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_ARTIST] || '')),
+      extraHourlyShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_SHOP] || '')),
+      customFlashFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_FEE] || '')),
+      customFlashShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_SHOP] || '')),
+      temporaryTattooFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TEMP_TATTOO_FEE] || '')),
+      tempFacilityLicenseFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TFL_FEE] || '')),
+      totalForEvent: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT] || '')),
+      shopProfit: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_SHOP_PROFIT] || '')),
+      hasTotalForEvent: normalizeCell(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT]).length > 0,
+      hasShopProfit: normalizeCell(cells[EVENT_COMPLETE_COL_SHOP_PROFIT]).length > 0,
+    };
+  });
+
+  return map;
+}
+
 export async function pullCompletedEventStaffAssignmentsFromSheet(
   config: SheetSyncConfig,
 ): Promise<CompletedEventStaffAssignmentMap> {
   assertConfigured(config);
   try {
     const data = await fetchSheetTabRows(config, 'Event Complete', 1000);
-    const map: CompletedEventStaffAssignmentMap = {};
-
-    (data.rows || []).forEach((row) => {
-      const rowNumber = Number.parseInt(String(row.rowNumber || 0), 10);
-      if (!rowNumber || rowNumber <= 1) return;
-
-      const cells = row.cells || [];
-      const entryId = normalizeCell(cells[EVENT_COMPLETE_COL_ENTRY_ID]);
-      if (!entryId) return;
-
-      map[entryId] = {
-        artistNames: normalizeCell(cells[EVENT_COMPLETE_COL_ARTIST_NAMES]),
-        counterNames: normalizeCell(cells[EVENT_COMPLETE_COL_COUNTER_NAMES]),
-        artistPayTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_ARTIST_PAY] || '')),
-        counterFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_COUNTER_FEE] || '')),
-        optionalFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_OPTIONAL_FEE] || '')),
-        radiusFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_FEE] || '')),
-        radiusShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_RADIUS_SHOP] || '')),
-        extraHourlyArtistTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_ARTIST] || '')),
-        extraHourlyShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_EXTRA_HOURLY_SHOP] || '')),
-        customFlashFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_FEE] || '')),
-        customFlashShopTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_CUSTOM_FLASH_SHOP] || '')),
-        temporaryTattooFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TEMP_TATTOO_FEE] || '')),
-        tempFacilityLicenseFeeTotal: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TFL_FEE] || '')),
-        totalForEvent: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT] || '')),
-        shopProfit: Math.max(0, parseMoney(cells[EVENT_COMPLETE_COL_SHOP_PROFIT] || '')),
-        hasTotalForEvent: normalizeCell(cells[EVENT_COMPLETE_COL_TOTAL_FOR_EVENT]).length > 0,
-        hasShopProfit: normalizeCell(cells[EVENT_COMPLETE_COL_SHOP_PROFIT]).length > 0,
-      };
-    });
-
-    return map;
+    return buildCompletedAssignmentsFromEventCompleteRows(data);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error || '');
     if (!isSheetTabNotFoundError(message, 'Event Complete')) {
       throw error;
+    }
+
+    const legacyFallbackConfig = buildLegacyPayoutFallbackConfig(config);
+    if (legacyFallbackConfig) {
+      try {
+        const legacyData = await fetchSheetTabRows(legacyFallbackConfig, 'Event Complete', 1000);
+        return buildCompletedAssignmentsFromEventCompleteRows(legacyData);
+      } catch (legacyError) {
+        console.warn('Legacy payout fallback could not load Event Complete tab.', legacyError);
+      }
     }
   }
 
@@ -1156,6 +1188,26 @@ export async function pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
   diagnostics.checkedTabs = staffTabs.length;
 
   if (staffTabs.length === 0) {
+    const legacyFallbackConfig = buildLegacyPayoutFallbackConfig(config);
+    if (legacyFallbackConfig) {
+      try {
+        const legacySnapshot = await pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
+          legacyFallbackConfig,
+          { forceRefresh: true },
+        );
+        if (Object.keys(legacySnapshot.overrides).length > 0) {
+          cachedStaffTabOverrides = {
+            configKey,
+            fetchedAtMs: now,
+            snapshot: legacySnapshot,
+          };
+          return legacySnapshot;
+        }
+      } catch (legacyError) {
+        console.warn('Legacy payout fallback could not load staff-tab overrides.', legacyError);
+      }
+    }
+
     const emptySnapshot: StaffTabPayoutOverridesSnapshot = {
       overrides: {},
       diagnostics,
@@ -1342,6 +1394,28 @@ export async function pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
     overrides,
     diagnostics,
   };
+
+  if (Object.keys(snapshot.overrides).length === 0) {
+    const legacyFallbackConfig = buildLegacyPayoutFallbackConfig(config);
+    if (legacyFallbackConfig) {
+      try {
+        const legacySnapshot = await pullHistoricalPayoutOverridesSnapshotFromStaffTabs(
+          legacyFallbackConfig,
+          { forceRefresh: true },
+        );
+        if (Object.keys(legacySnapshot.overrides).length > 0) {
+          cachedStaffTabOverrides = {
+            configKey,
+            fetchedAtMs: now,
+            snapshot: legacySnapshot,
+          };
+          return legacySnapshot;
+        }
+      } catch (legacyError) {
+        console.warn('Legacy payout fallback returned no staff-tab overrides.', legacyError);
+      }
+    }
+  }
 
   cachedStaffTabOverrides = {
     configKey,
