@@ -535,19 +535,47 @@ export function buildCalendarMatchMap(
 }
 
 async function fetchIcsDirect(icsUrl: string): Promise<string> {
-  const response = await fetch(icsUrl, {
-    method: 'GET',
-    headers: {
-      Accept: 'text/calendar,*/*;q=0.8',
-    },
-  });
+  const attemptLimit = 3;
+  let lastError: Error | null = null;
 
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`Calendar fetch failed (HTTP ${response.status}).`);
+  for (let attempt = 0; attempt < attemptLimit; attempt += 1) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller
+      ? setTimeout(() => {
+          controller.abort();
+        }, 15000)
+      : null;
+
+    try {
+      const response = await fetch(icsUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'text/calendar,*/*;q=0.8',
+        },
+        signal: controller?.signal,
+      });
+
+      const text = await response.text();
+      if (!response.ok) {
+        throw new Error(`Calendar fetch failed (HTTP ${response.status}).`);
+      }
+
+      if (!text.trim()) {
+        throw new Error('Calendar fetch returned empty payload.');
+      }
+
+      if (timeoutId) clearTimeout(timeoutId);
+      return text;
+    } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId);
+      lastError = error instanceof Error ? error : new Error(String(error || 'Calendar fetch failed.'));
+      if (attempt < attemptLimit - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+      }
+    }
   }
 
-  return text;
+  throw lastError || new Error('Calendar fetch failed.');
 }
 
 function combineIcsPayloads(payloads: string[]): string {

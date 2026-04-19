@@ -145,7 +145,24 @@ export default function EventNotesScreen() {
       const fallback = lookupFallbackAppointments(events, currentEvent);
 
       try {
-        const calendarEvents = await loadCalendarEvents(CALENDAR_SYNC_CONFIG, SHEET_SYNC_CONFIG);
+        let calendarEvents: Awaited<ReturnType<typeof loadCalendarEvents>> = [];
+        const attemptLimit = 3;
+        let loaded = false;
+        let lastError: unknown = null;
+        for (let attempt = 0; attempt < attemptLimit; attempt += 1) {
+          try {
+            calendarEvents = await loadCalendarEvents(CALENDAR_SYNC_CONFIG, SHEET_SYNC_CONFIG);
+            loaded = true;
+            break;
+          } catch (error) {
+            lastError = error;
+            if (attempt < attemptLimit - 1) {
+              await new Promise((resolve) => setTimeout(resolve, 450 * (attempt + 1)));
+            }
+          }
+        }
+        if (!loaded && lastError) throw lastError;
+
         if (!isMounted) return;
 
         const matchMap = buildCalendarMatchMap([currentEvent], calendarEvents);

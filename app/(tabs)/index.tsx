@@ -651,16 +651,29 @@ export default function EventsScreen() {
     let isMounted = true;
 
     async function runCalendarMatch() {
-      try {
-        const calendarEvents = await loadCalendarEvents(CALENDAR_SYNC_CONFIG, SHEET_SYNC_CONFIG);
-        if (!isMounted) return;
+      const attemptLimit = 3;
+      let lastError: unknown = null;
 
-        const matchMap = buildCalendarMatchMap(events, calendarEvents);
-        setCalendarMatches(matchMap);
-      } catch (error) {
-        if (!isMounted) return;
-        setCalendarMatches({});
-        console.warn('Unable to check calendar feed.', error);
+      for (let attempt = 0; attempt < attemptLimit; attempt += 1) {
+        try {
+          const calendarEvents = await loadCalendarEvents(CALENDAR_SYNC_CONFIG, SHEET_SYNC_CONFIG);
+          if (!isMounted) return;
+
+          const matchMap = buildCalendarMatchMap(events, calendarEvents);
+          setCalendarMatches(matchMap);
+          return;
+        } catch (error) {
+          lastError = error;
+          if (attempt < attemptLimit - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 450 * (attempt + 1)));
+          }
+        }
+      }
+
+      if (!isMounted) return;
+      setCalendarMatches({});
+      if (lastError) {
+        console.warn('Unable to check calendar feed.', lastError);
       }
     }
 
