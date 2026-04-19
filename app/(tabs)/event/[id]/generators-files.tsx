@@ -109,7 +109,7 @@ function buildArtEmailBody(input: {
   clientName: string;
   eventType: string;
   eventDate: string;
-  artUrl: string;
+  artUrls: string[];
 }): string {
   const eventType = input.eventType.trim() || 'event';
   const eventDate = input.eventDate.trim() || 'your event date';
@@ -118,8 +118,12 @@ function buildArtEmailBody(input: {
     '',
     `Attached is your uploaded art for the ${eventType} on ${eventDate}.`,
   ];
-  if (input.artUrl.trim()) {
-    lines.push(`Art Link: ${input.artUrl.trim()}`);
+  const validArtUrls = input.artUrls.map((url) => asUrl(url)).filter(Boolean);
+  if (validArtUrls.length > 0) {
+    lines.push('Art Links:');
+    validArtUrls.forEach((url) => {
+      lines.push(`- ${url}`);
+    });
   }
   lines.push('');
   lines.push('Best regards,');
@@ -157,29 +161,51 @@ function toRenderableImageUrl(url: string): string {
   return `https://drive.google.com/uc?export=view&id=${driveId}`;
 }
 
-function readArtImageUrlFromNotes(notes: string): string {
+function parseArtImageUrls(value: string): string[] {
+  const rawTokens = String(value || '')
+    .split(/[\r\n,;]+/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const validUrls = rawTokens.map((item) => asUrl(item)).filter(Boolean);
+  return validUrls.filter((url, index, all) => all.indexOf(url) === index);
+}
+
+function readArtImageUrlsFromNotes(notes: string): string[] {
   const lines = String(notes || '')
     .split('\n')
     .map((line) => line.trim());
-  const tokenLine = lines.find((line) => line.startsWith(ART_IMAGE_NOTE_PREFIX));
-  if (!tokenLine) return '';
-  return asUrl(tokenLine.slice(ART_IMAGE_NOTE_PREFIX.length).trim());
+  const urlValues = lines
+    .filter((line) => line.startsWith(ART_IMAGE_NOTE_PREFIX))
+    .map((line) => line.slice(ART_IMAGE_NOTE_PREFIX.length).trim())
+    .filter(Boolean);
+  return parseArtImageUrls(urlValues.join('\n'));
 }
 
-function writeArtImageUrlToNotes(existingNotes: string, artImageUrl: string): string {
+function writeArtImageUrlsToNotes(existingNotes: string, artImageUrls: string[]): string {
   const lines = String(existingNotes || '')
     .split(/\r?\n/)
     .filter((line) => !line.trim().startsWith(ART_IMAGE_NOTE_PREFIX));
 
-  const normalizedArtUrl = asUrl(artImageUrl);
-  if (normalizedArtUrl) {
+  const normalizedArtUrls = artImageUrls
+    .map((url) => asUrl(url))
+    .filter(Boolean)
+    .filter((url, index, all) => all.indexOf(url) === index);
+  if (normalizedArtUrls.length > 0) {
     if (lines.length > 0 && lines[lines.length - 1].trim() !== '') {
       lines.push('');
     }
-    lines.push(`${ART_IMAGE_NOTE_PREFIX}${normalizedArtUrl}`);
+    normalizedArtUrls.forEach((url) => {
+      lines.push(`${ART_IMAGE_NOTE_PREFIX}${url}`);
+    });
   }
 
   return lines.join('\n').trimEnd();
+}
+
+function collectSavedArtImageUrls(input: { artImageUrl?: string; contractNotes?: string }): string[] {
+  const fromField = parseArtImageUrls(input.artImageUrl || '');
+  const fromNotes = readArtImageUrlsFromNotes(input.contractNotes || '');
+  return [...fromField, ...fromNotes].filter((url, index, all) => all.indexOf(url) === index);
 }
 
 export default function EventGeneratorsFilesScreen() {
@@ -198,6 +224,7 @@ export default function EventGeneratorsFilesScreen() {
   const [artError, setArtError] = useState('');
   const [isSavingArt, setIsSavingArt] = useState(false);
   const [isUploadingArt, setIsUploadingArt] = useState(false);
+  const [selectedArtIndex, setSelectedArtIndex] = useState(0);
   const [actionFeedbackKey, setActionFeedbackKey] = useState<string | null>(null);
   const actionFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -208,8 +235,12 @@ export default function EventGeneratorsFilesScreen() {
     if (!targetEvent) return;
     setGeneratedContractUrl(asUrl(targetEvent.contractUrl || ''));
     setGeneratedTflUrl(asUrl(targetEvent.tflUrl || ''));
-    const savedArtImageUrl = asUrl(targetEvent.artImageUrl || readArtImageUrlFromNotes(targetEvent.contractNotes || ''));
-    setArtImageUrlInput(savedArtImageUrl);
+    const savedArtImageUrls = collectSavedArtImageUrls({
+      artImageUrl: targetEvent.artImageUrl || '',
+      contractNotes: targetEvent.contractNotes || '',
+    });
+    setArtImageUrlInput(savedArtImageUrls.join('\n'));
+    setSelectedArtIndex(0);
     setArtStatus('');
     setArtError('');
   }, [event]);
@@ -226,15 +257,16 @@ export default function EventGeneratorsFilesScreen() {
         setLoadStatus('Checking generated files...');
         let contractUrl = '';
         let tflUrl = '';
-        let savedArtImageUrl = '';
+        let savedArtImageUrls: string[] = [];
 
         const pulledEvent = await pullEventByEntryId(SHEET_SYNC_CONFIG, entryId);
         if (pulledEvent) {
           contractUrl = asUrl(pulledEvent.contractUrl || '');
           tflUrl = asUrl(pulledEvent.tflUrl || '');
-          savedArtImageUrl = asUrl(
-            pulledEvent.artImageUrl || readArtImageUrlFromNotes(pulledEvent.contractNotes || ''),
-          );
+          savedArtImageUrls = collectSavedArtImageUrls({
+            artImageUrl: pulledEvent.artImageUrl || '',
+            contractNotes: pulledEvent.contractNotes || '',
+          });
         }
 
         if (!contractUrl || !tflUrl) {
@@ -262,11 +294,13 @@ export default function EventGeneratorsFilesScreen() {
           }
         }
 
-        if (savedArtImageUrl) {
-          setArtImageUrlInput(savedArtImageUrl);
-          if (savedArtImageUrl !== asUrl(targetEvent!.artImageUrl || '')) {
+        if (savedArtImageUrls.length > 0) {
+          setArtImageUrlInput(savedArtImageUrls.join('\n'));
+          setSelectedArtIndex(0);
+          const primarySavedArtImageUrl = savedArtImageUrls[0] || '';
+          if (primarySavedArtImageUrl !== asUrl(targetEvent!.artImageUrl || '')) {
             setSelectedEventId(targetEvent!.id);
-            updateEvent(targetEvent!.id, { artImageUrl: savedArtImageUrl });
+            updateEvent(targetEvent!.id, { artImageUrl: primarySavedArtImageUrl });
           }
         }
 
@@ -285,13 +319,27 @@ export default function EventGeneratorsFilesScreen() {
 
   const latestContractUrl = useMemo(() => generatedContractUrl.trim(), [generatedContractUrl]);
   const latestTflUrl = useMemo(() => generatedTflUrl.trim(), [generatedTflUrl]);
-  const artImageUrl = useMemo(() => asUrl(artImageUrlInput), [artImageUrlInput]);
-  const artImagePreviewUrl = useMemo(() => toRenderableImageUrl(artImageUrl), [artImageUrl]);
+  const artImageUrls = useMemo(() => parseArtImageUrls(artImageUrlInput), [artImageUrlInput]);
+  const selectedArtImageUrl = useMemo(
+    () => artImageUrls[selectedArtIndex] || artImageUrls[0] || '',
+    [artImageUrls, selectedArtIndex],
+  );
+  const artImagePreviewUrl = useMemo(() => toRenderableImageUrl(selectedArtImageUrl), [selectedArtImageUrl]);
   const contractGenerated = Boolean(latestContractUrl);
   const tflGenerated = Boolean(latestTflUrl);
   const generatorsLocked = contractGenerated && tflGenerated;
   const canViewGeneratedFiles = canAccessAdminToolsForViewer;
   const canUseAdvancedArtActions = canAccessAdminToolsForViewer;
+
+  useEffect(() => {
+    if (artImageUrls.length === 0) {
+      if (selectedArtIndex !== 0) setSelectedArtIndex(0);
+      return;
+    }
+    if (selectedArtIndex >= artImageUrls.length) {
+      setSelectedArtIndex(artImageUrls.length - 1);
+    }
+  }, [artImageUrls, selectedArtIndex]);
 
   function showActionFeedback(actionKey: string) {
     setActionFeedbackKey(actionKey);
@@ -425,7 +473,7 @@ export default function EventGeneratorsFilesScreen() {
     }
   }
 
-  async function persistArtImage(nextArtUrl: string) {
+  async function persistArtImages(nextArtUrls: string[]) {
     const entryId = currentEvent.entryId.trim();
     if (!entryId) {
       setArtError('Save this event to sheet first so art can be stored.');
@@ -433,28 +481,37 @@ export default function EventGeneratorsFilesScreen() {
       return;
     }
 
-    const nextContractNotes = writeArtImageUrlToNotes(currentEvent.contractNotes || '', nextArtUrl);
+    const normalizedArtUrls = nextArtUrls
+      .map((url) => asUrl(url))
+      .filter(Boolean)
+      .filter((url, index, all) => all.indexOf(url) === index);
+    const primaryArtUrl = normalizedArtUrls[0] || '';
+    const nextContractNotes = writeArtImageUrlsToNotes(currentEvent.contractNotes || '', normalizedArtUrls);
     setIsSavingArt(true);
     setArtError('');
-    setArtStatus('Saving art image...');
+    setArtStatus('Saving art links...');
     try {
       setSelectedEventId(currentEvent.id);
-      updateEvent(currentEvent.id, { contractNotes: nextContractNotes, artImageUrl: nextArtUrl });
+      updateEvent(currentEvent.id, { contractNotes: nextContractNotes, artImageUrl: primaryArtUrl });
 
       const latestEvent = events.find((item) => item.id === currentEvent.id) || currentEvent;
       const saved = await upsertEventToSheet(SHEET_SYNC_CONFIG, {
         ...latestEvent,
         contractNotes: nextContractNotes,
-        artImageUrl: nextArtUrl,
+        artImageUrl: primaryArtUrl,
       });
       const pulled = await pullEventByEntryId(SHEET_SYNC_CONFIG, saved.entryId || entryId);
       if (pulled) {
         upsertEventFromRemote(pulled);
       }
-      setArtStatus(nextArtUrl ? 'Art image saved.' : 'Art image removed.');
+      setArtStatus(
+        normalizedArtUrls.length > 0
+          ? `Saved ${normalizedArtUrls.length} art link${normalizedArtUrls.length === 1 ? '' : 's'}.`
+          : 'Art links removed.',
+      );
     } catch (error) {
       setArtStatus('');
-      setArtError(error instanceof Error ? error.message : 'Unable to save art image.');
+      setArtError(error instanceof Error ? error.message : 'Unable to save art links.');
     } finally {
       setIsSavingArt(false);
     }
@@ -462,21 +519,23 @@ export default function EventGeneratorsFilesScreen() {
 
   async function handleSaveArtImage() {
     const trimmedInput = artImageUrlInput.trim();
-    if (trimmedInput && !artImageUrl) {
-      setArtError('Enter a valid public image URL (https://...).');
+    const parsedArtUrls = parseArtImageUrls(artImageUrlInput);
+    if (trimmedInput && parsedArtUrls.length === 0) {
+      setArtError('Enter one or more valid public image URLs (https://...), one per line.');
       setArtStatus('');
       return;
     }
-    await persistArtImage(artImageUrl);
+    await persistArtImages(parsedArtUrls);
   }
 
   async function handleDeleteSavedArt() {
     setArtImageUrlInput('');
-    await persistArtImage('');
+    setSelectedArtIndex(0);
+    await persistArtImages([]);
   }
 
   function confirmDeleteSavedArt() {
-    if (!artImageUrl) return;
+    if (artImageUrls.length === 0) return;
 
     if (Platform.OS === 'web') {
       const browserApi = globalThis as unknown as { confirm?: (message?: string) => boolean };
@@ -512,8 +571,8 @@ export default function EventGeneratorsFilesScreen() {
       setArtError('Client email is missing on this event.');
       return;
     }
-    if (!artImageUrl) {
-      setArtError('No art image is available to email.');
+    if (artImageUrls.length === 0) {
+      setArtError('No art images are available to email.');
       return;
     }
 
@@ -522,7 +581,7 @@ export default function EventGeneratorsFilesScreen() {
       clientName: currentEvent.clientName,
       eventType: currentEvent.eventType,
       eventDate: currentEvent.eventDate,
-      artUrl: artImageUrl,
+      artUrls: artImageUrls,
     });
     const mailtoUrl = `mailto:${encodeURIComponent(toEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     try {
@@ -534,13 +593,15 @@ export default function EventGeneratorsFilesScreen() {
   }
 
   async function handleShareArtLink() {
-    if (!artImageUrl) {
-      setArtError('No art image is available to share.');
+    if (artImageUrls.length === 0) {
+      setArtError('No art images are available to share.');
       return;
     }
 
     try {
-      await Share.share({ message: artImageUrl, url: artImageUrl });
+      const message = artImageUrls.join('\n');
+      const shareUrl = selectedArtImageUrl || artImageUrls[0] || '';
+      await Share.share({ message, url: shareUrl });
       setArtError('');
     } catch {
       setArtError('Unable to share art link.');
@@ -596,11 +657,20 @@ export default function EventGeneratorsFilesScreen() {
         fileName,
       });
       upsertEventFromRemote(uploadedEvent);
-      const nextArtUrl = asUrl(
-        uploadedEvent.artImageUrl || readArtImageUrlFromNotes(uploadedEvent.contractNotes || ''),
-      );
-      if (nextArtUrl) setArtImageUrlInput(nextArtUrl);
-      setArtStatus('Art image uploaded.');
+      const nextUploadedUrl = collectSavedArtImageUrls({
+        artImageUrl: uploadedEvent.artImageUrl || '',
+        contractNotes: uploadedEvent.contractNotes || '',
+      })[0];
+      if (nextUploadedUrl) {
+        const mergedArtUrls = [...artImageUrls, nextUploadedUrl].filter(
+          (url, index, all) => url && all.indexOf(url) === index,
+        );
+        setArtImageUrlInput(mergedArtUrls.join('\n'));
+        setSelectedArtIndex(Math.max(0, mergedArtUrls.length - 1));
+        await persistArtImages(mergedArtUrls);
+      } else {
+        setArtStatus('Art image uploaded.');
+      }
     } catch (error) {
       setArtStatus('');
       setArtError(error instanceof Error ? error.message : 'Unable to upload art image.');
@@ -610,7 +680,7 @@ export default function EventGeneratorsFilesScreen() {
   }
 
   async function handleDownloadArtToDevice() {
-    if (!artImageUrl) {
+    if (!selectedArtImageUrl) {
       setArtError('No art image is available to download.');
       setArtStatus('');
       return;
@@ -621,7 +691,7 @@ export default function EventGeneratorsFilesScreen() {
     try {
       if (Platform.OS === 'web') {
         try {
-          const response = await fetch(artImageUrl);
+          const response = await fetch(selectedArtImageUrl);
           if (!response.ok) throw new Error(`Download failed (${response.status}).`);
           const blob = await response.blob();
           const browserApi = globalThis as unknown as {
@@ -632,7 +702,7 @@ export default function EventGeneratorsFilesScreen() {
           const anchor = browserApi.document?.createElement ? browserApi.document.createElement('a') : null;
           if (!objectUrl || !anchor) throw new Error('Browser download API unavailable.');
           anchor.href = objectUrl;
-          anchor.download = `event-art-${currentEvent.entryId || 'client'}.${extensionFromUrl(artImageUrl)}`;
+          anchor.download = `event-art-${currentEvent.entryId || 'client'}-${selectedArtIndex + 1}.${extensionFromUrl(selectedArtImageUrl)}`;
           browserApi.document?.body?.appendChild?.(anchor);
           anchor.click();
           anchor.remove();
@@ -640,16 +710,16 @@ export default function EventGeneratorsFilesScreen() {
           setArtStatus('Art download started.');
           return;
         } catch {
-          await Linking.openURL(artImageUrl);
+          await Linking.openURL(selectedArtImageUrl);
           setArtStatus('Opened art link. Use browser save/download.');
           return;
         }
       }
 
-      const ext = extensionFromUrl(artImageUrl);
+      const ext = extensionFromUrl(selectedArtImageUrl);
       const fileName = `event-art-${currentEvent.entryId || 'client'}-${Date.now()}.${ext}`;
       const targetFile = new File(Paths.cache, fileName);
-      const downloadedFile = await File.downloadFileAsync(artImageUrl, targetFile, { idempotent: true });
+      const downloadedFile = await File.downloadFileAsync(selectedArtImageUrl, targetFile, { idempotent: true });
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(downloadedFile.uri, {
@@ -865,18 +935,50 @@ export default function EventGeneratorsFilesScreen() {
           </Pressable>
         </View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, styles.multilineInput]}
           value={artImageUrlInput}
           onChangeText={(text) => {
             setArtImageUrlInput(text);
             if (artError) setArtError('');
             if (artStatus) setArtStatus('');
           }}
-          placeholder="Paste public image URL to store with this event"
+          placeholder="Paste one or more public image URLs (one per line)"
           placeholderTextColor="#6f849a"
           autoCapitalize="none"
           autoCorrect={false}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
         />
+        {artImageUrls.length > 0 ? (
+          <View style={styles.artSelectorWrap}>
+            <ThemedText style={styles.infoText}>
+              Loaded {artImageUrls.length} art link{artImageUrls.length === 1 ? '' : 's'}.
+            </ThemedText>
+            <View style={styles.buttonRow}>
+              {artImageUrls.map((_, index) => {
+                const isSelected = index === selectedArtIndex;
+                return (
+                  <Pressable
+                    key={`art-selector-${index}`}
+                    style={[
+                      styles.linkButton,
+                      isSelected ? styles.contractLinkButton : null,
+                      actionFeedbackKey === `select_art_${index}` ? styles.pressableGlow : null,
+                    ]}
+                    onPress={() => {
+                      showActionFeedback(`select_art_${index}`);
+                      setSelectedArtIndex(index);
+                    }}>
+                    <ThemedText style={[styles.linkText, isSelected ? styles.contractLinkText : null]}>
+                      Art {index + 1}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
         <View style={styles.buttonRow}>
           <Pressable
             style={[
@@ -890,9 +992,9 @@ export default function EventGeneratorsFilesScreen() {
             }}
             disabled={isSavingArt || isUploadingArt}>
             <MaterialIcons name="save" size={14} color="#dceafe" />
-            <ThemedText style={styles.actionButtonText}>{isSavingArt ? 'Saving Art...' : 'Save Art'}</ThemedText>
+            <ThemedText style={styles.actionButtonText}>{isSavingArt ? 'Saving Art...' : 'Save Art URLs'}</ThemedText>
           </Pressable>
-          {canUseAdvancedArtActions && artImageUrl ? (
+          {canUseAdvancedArtActions && artImageUrls.length > 0 ? (
             <Pressable
               style={[
                 styles.actionButton,
@@ -905,21 +1007,21 @@ export default function EventGeneratorsFilesScreen() {
               }}
               disabled={isSavingArt || isUploadingArt}>
               <MaterialIcons name="delete-outline" size={14} color="#dceafe" />
-              <ThemedText style={styles.actionButtonText}>Delete Saved Art</ThemedText>
+              <ThemedText style={styles.actionButtonText}>Delete All Saved Art</ThemedText>
             </Pressable>
           ) : null}
-          {canUseAdvancedArtActions && artImageUrl ? (
+          {canUseAdvancedArtActions && selectedArtImageUrl ? (
             <Pressable
               style={[styles.actionButton, actionFeedbackKey === 'open_art' ? styles.pressableGlow : null]}
               onPress={() => {
                 showActionFeedback('open_art');
-                void Linking.openURL(artImageUrl);
+                void Linking.openURL(selectedArtImageUrl);
               }}>
               <MaterialIcons name="open-in-new" size={14} color="#dceafe" />
-              <ThemedText style={styles.actionButtonText}>Open Art</ThemedText>
+              <ThemedText style={styles.actionButtonText}>Open Selected Art</ThemedText>
             </Pressable>
           ) : null}
-          {canUseAdvancedArtActions && artImageUrl ? (
+          {canUseAdvancedArtActions && artImageUrls.length > 0 ? (
             <Pressable
               style={[styles.actionButton, actionFeedbackKey === 'email_art' ? styles.pressableGlow : null]}
               onPress={() => {
@@ -927,10 +1029,10 @@ export default function EventGeneratorsFilesScreen() {
                 void handleEmailArtToClient();
               }}>
               <MaterialIcons name="mail-outline" size={14} color="#dceafe" />
-              <ThemedText style={styles.actionButtonText}>Email Art</ThemedText>
+              <ThemedText style={styles.actionButtonText}>Email Art Links</ThemedText>
             </Pressable>
           ) : null}
-          {canUseAdvancedArtActions && artImageUrl ? (
+          {canUseAdvancedArtActions && artImageUrls.length > 0 ? (
             <Pressable
               style={[styles.actionButton, actionFeedbackKey === 'share_art' ? styles.pressableGlow : null]}
               onPress={() => {
@@ -938,10 +1040,10 @@ export default function EventGeneratorsFilesScreen() {
                 void handleShareArtLink();
               }}>
               <MaterialIcons name="share" size={14} color="#dceafe" />
-              <ThemedText style={styles.actionButtonText}>Share Art</ThemedText>
+              <ThemedText style={styles.actionButtonText}>Share Art Links</ThemedText>
             </Pressable>
           ) : null}
-          {canUseAdvancedArtActions && artImageUrl ? (
+          {canUseAdvancedArtActions && selectedArtImageUrl ? (
             <Pressable
               style={[styles.actionButton, actionFeedbackKey === 'download_art' ? styles.pressableGlow : null]}
               onPress={() => {
@@ -949,12 +1051,17 @@ export default function EventGeneratorsFilesScreen() {
                 void handleDownloadArtToDevice();
               }}>
               <MaterialIcons name="download" size={14} color="#dceafe" />
-              <ThemedText style={styles.actionButtonText}>Download Art</ThemedText>
+              <ThemedText style={styles.actionButtonText}>Download Selected Art</ThemedText>
             </Pressable>
           ) : null}
         </View>
         {artStatus ? <ThemedText style={styles.infoText}>{artStatus}</ThemedText> : null}
         {artError ? <ThemedText style={styles.errorText}>{artError}</ThemedText> : null}
+        {artImagePreviewUrl && artImageUrls.length > 1 ? (
+          <ThemedText style={styles.infoText}>
+            Previewing Art {selectedArtIndex + 1} of {artImageUrls.length}
+          </ThemedText>
+        ) : null}
         {artImagePreviewUrl ? <Image source={{ uri: artImagePreviewUrl }} style={styles.artPreview} resizeMode="cover" /> : null}
       </View>
     </ScrollView>
@@ -1087,6 +1194,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
+  },
+  multilineInput: {
+    minHeight: 100,
+  },
+  artSelectorWrap: {
+    gap: 8,
   },
   errorText: {
     color: '#ff9aa7',
