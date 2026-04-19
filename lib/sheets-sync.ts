@@ -473,8 +473,11 @@ function parsePercent(value: string | undefined): number {
     if (!Number.isFinite(parsed)) return 0;
     return parsed / 100;
   }
-  const parsed = Number.parseFloat(normalized);
+  const parsed = Number.parseFloat(normalized.replace(/,/g, ''));
   if (!Number.isFinite(parsed)) return 0;
+  // Pricing sheets may store percentage cells as either decimal (0.15)
+  // or whole-number percent (15). Normalize both to decimal.
+  if (Math.abs(parsed) > 1) return parsed / 100;
   return parsed;
 }
 
