@@ -20,6 +20,7 @@ import {
 } from '@/lib/calendar-sync';
 import { computeEventTotals, formatCurrency } from '@/lib/event-math';
 import { readLatestCommunicationByEventIds, type EventActivityEntry } from '@/lib/event-activity-log';
+import { readManualUpcomingAppointments } from '@/lib/manual-appointments';
 import { pullEventsFromSheet } from '@/lib/sheets-sync';
 import type { EventRecord } from '@/types/events';
 
@@ -30,6 +31,7 @@ const DEPOSIT_PAID_OR_LATER_STATUSES = new Set([
   'deposit complete',
   'deposit completed',
   'temporary license submitted',
+  'temporary license recieved',
   'awaiting follow up',
   'needing changes',
   'balance invoice sent',
@@ -497,6 +499,7 @@ export default function EventsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingCalendarMatches, setIsLoadingCalendarMatches] = useState(true);
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
+  const [manualUpcomingByEventId, setManualUpcomingByEventId] = useState<Record<string, number>>({});
   const [latestCommunicationByEventId, setLatestCommunicationByEventId] = useState<Record<string, EventActivityEntry>>(
     {},
   );
@@ -521,6 +524,22 @@ export default function EventsScreen() {
     const depositCompletedEvents = openEvents.filter(isDepositCompleted).sort(sortByEventDate);
     const otherOpenEvents = openEvents.filter((event) => !isDepositCompleted(event)).sort(sortByEventDate);
     return [...depositCompletedEvents, ...otherOpenEvents];
+  }, [events]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadManualUpcomingMap() {
+      const ids = events.map((event) => event.id).filter(Boolean);
+      const map = await readManualUpcomingAppointments(ids);
+      if (!isMounted) return;
+      setManualUpcomingByEventId(map);
+    }
+
+    void loadManualUpcomingMap();
+    return () => {
+      isMounted = false;
+    };
   }, [events]);
   const visibleEventIdsKey = useMemo(
     () => visibleEvents.map((event) => event.id).filter(Boolean).join('|'),
@@ -764,12 +783,15 @@ export default function EventsScreen() {
         const typeVisual = getEventTypeVisual(event.eventType);
         const upcomingAppointment = calendarMatch?.upcomingEvent ?? null;
         const lastAppointment = calendarMatch?.lastPastEvent ?? null;
+        const manualUpcomingTs = manualUpcomingByEventId[event.id];
         const fallbackAppointments = fallbackAppointmentsByEventId[event.id] || {
           upcoming: null,
           last: null,
         };
         const upcomingAppointmentText = upcomingAppointment
           ? formatCalendarMatchDate(upcomingAppointment.start)
+          : Number.isFinite(manualUpcomingTs)
+            ? formatCalendarMatchDate(new Date(manualUpcomingTs))
           : fallbackAppointments.upcoming
             ? formatFallbackAppointmentValue(fallbackAppointments.upcoming)
             : 'No upcoming appointment found';

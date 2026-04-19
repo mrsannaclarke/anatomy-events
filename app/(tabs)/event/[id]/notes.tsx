@@ -25,6 +25,7 @@ import {
   type EventActivityEntry,
 } from '@/lib/event-activity-log';
 import { postDiscordWebhookMessage } from '@/lib/discord-sync';
+import { readManualUpcomingAppointment, setManualUpcomingAppointment } from '@/lib/manual-appointments';
 
 const EVENT_STATUS_OPTIONS = [
   'Inquiry Recieved',
@@ -37,6 +38,7 @@ const EVENT_STATUS_OPTIONS = [
   'Deposit Late',
   'Deposit Paid',
   'Temporary License Submitted',
+  'Temporary license recieved',
   'Awaiting Follow Up',
   'Needing Changes',
   'Balance Invoice Sent',
@@ -106,6 +108,26 @@ function normalizeStatusValue(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
+function parseManualAppointmentInput(value: string): number | null {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return null;
+  const parsed = Date.parse(trimmed);
+  if (Number.isNaN(parsed)) return null;
+  return parsed;
+}
+
+function formatManualAppointmentInput(ts: number): string {
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 export default function EventNotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -122,6 +144,11 @@ export default function EventNotesScreen() {
   const [entryStatus, setEntryStatus] = useState('');
   const [isSubmittingEntry, setIsSubmittingEntry] = useState(false);
   const [deletingEntryId, setDeletingEntryId] = useState('');
+  const [manualUpcomingInput, setManualUpcomingInput] = useState('');
+  const [manualUpcomingSavedTs, setManualUpcomingSavedTs] = useState<number | null>(null);
+  const [manualApptStatus, setManualApptStatus] = useState('');
+  const [manualApptError, setManualApptError] = useState('');
+  const [isSavingManualAppt, setIsSavingManualAppt] = useState(false);
 
   const event = events.find((item) => item.id === id);
   const eventId = event?.id || '';
@@ -145,6 +172,25 @@ export default function EventNotesScreen() {
     }
 
     void loadEntries();
+    return () => {
+      isMounted = false;
+    };
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    let isMounted = true;
+
+    async function loadManualUpcoming() {
+      const manualTs = await readManualUpcomingAppointment(eventId);
+      if (!isMounted) return;
+      setManualUpcomingSavedTs(manualTs);
+      setManualUpcomingInput(manualTs != null ? formatManualAppointmentInput(manualTs) : '');
+      setManualApptError('');
+      setManualApptStatus('');
+    }
+
+    void loadManualUpcoming();
     return () => {
       isMounted = false;
     };
@@ -189,6 +235,8 @@ export default function EventNotesScreen() {
 
         if (match?.upcomingEvent) {
           setUpcomingAppointmentText(formatCalendarMatchDate(match.upcomingEvent.start));
+        } else if (manualUpcomingSavedTs != null) {
+          setUpcomingAppointmentText(formatCalendarMatchDate(new Date(manualUpcomingSavedTs)));
         } else {
           setUpcomingAppointmentText(
             fallback.upcoming ? formatFallbackAppointmentPoint(fallback.upcoming) : 'No upcoming appointment found',
@@ -204,9 +252,13 @@ export default function EventNotesScreen() {
         }
       } catch {
         if (!isMounted) return;
-        setUpcomingAppointmentText(
-          fallback.upcoming ? formatFallbackAppointmentPoint(fallback.upcoming) : 'No upcoming appointment found',
-        );
+        if (manualUpcomingSavedTs != null) {
+          setUpcomingAppointmentText(formatCalendarMatchDate(new Date(manualUpcomingSavedTs)));
+        } else {
+          setUpcomingAppointmentText(
+            fallback.upcoming ? formatFallbackAppointmentPoint(fallback.upcoming) : 'No upcoming appointment found',
+          );
+        }
         setLastAppointmentText(
           fallback.last ? formatFallbackAppointmentPoint(fallback.last) : 'No previous appointment found',
         );
@@ -219,7 +271,7 @@ export default function EventNotesScreen() {
     return () => {
       isMounted = false;
     };
-  }, [event, events]);
+  }, [event, events, manualUpcomingSavedTs]);
 
   if (!event) {
     return (
@@ -370,6 +422,49 @@ export default function EventNotesScreen() {
     );
   }
 
+  async function saveManualUpcomingEntry() {
+    if (isSavingManualAppt) return;
+    const parsedTs = parseManualAppointmentInput(manualUpcomingInput);
+    if (parsedTs == null) {
+      setManualApptError('Enter a valid date/time (example: 9/12/2026 2:00 PM).');
+      setManualApptStatus('');
+      return;
+    }
+
+    setIsSavingManualAppt(true);
+    setManualApptError('');
+    setManualApptStatus('Saving manual upcoming appointment...');
+    try {
+      await setManualUpcomingAppointment(currentEvent.id, parsedTs);
+      setManualUpcomingSavedTs(parsedTs);
+      setManualUpcomingInput(formatManualAppointmentInput(parsedTs));
+      setManualApptStatus('Manual upcoming appointment saved.');
+    } catch {
+      setManualApptStatus('');
+      setManualApptError('Unable to save manual upcoming appointment.');
+    } finally {
+      setIsSavingManualAppt(false);
+    }
+  }
+
+  async function clearManualUpcomingEntry() {
+    if (isSavingManualAppt) return;
+    setIsSavingManualAppt(true);
+    setManualApptError('');
+    setManualApptStatus('Removing manual upcoming appointment...');
+    try {
+      await setManualUpcomingAppointment(currentEvent.id, null);
+      setManualUpcomingSavedTs(null);
+      setManualUpcomingInput('');
+      setManualApptStatus('Manual upcoming appointment removed.');
+    } catch {
+      setManualApptStatus('');
+      setManualApptError('Unable to remove manual upcoming appointment.');
+    } finally {
+      setIsSavingManualAppt(false);
+    }
+  }
+
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.topRow}>
@@ -424,6 +519,45 @@ export default function EventNotesScreen() {
         <ThemedText style={styles.infoLine}>
           Last Appointment: {isLoadingAppointments ? 'Loading...' : lastAppointmentText}
         </ThemedText>
+        <TextInput
+          style={styles.input}
+          value={manualUpcomingInput}
+          onChangeText={(text) => {
+            setManualUpcomingInput(text);
+            if (manualApptError) setManualApptError('');
+            if (manualApptStatus) setManualApptStatus('');
+          }}
+          placeholder="Manual upcoming appt (example: 9/12/2026 2:00 PM)"
+          placeholderTextColor="#6f849a"
+        />
+        <View style={styles.manualApptButtonRow}>
+          <Pressable
+            style={[styles.inlineButton, isSavingManualAppt ? styles.buttonDisabled : null]}
+            onPress={() => {
+              void saveManualUpcomingEntry();
+            }}
+            disabled={isSavingManualAppt}>
+            <MaterialIcons name="save" size={13} color="#dceafe" />
+            <ThemedText style={styles.inlineButtonText}>
+              {isSavingManualAppt ? 'Saving...' : 'Save Manual Upcoming'}
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.inlineButton,
+              styles.inlineDangerButton,
+              isSavingManualAppt || manualUpcomingSavedTs == null ? styles.buttonDisabled : null,
+            ]}
+            onPress={() => {
+              void clearManualUpcomingEntry();
+            }}
+            disabled={isSavingManualAppt || manualUpcomingSavedTs == null}>
+            <MaterialIcons name="delete-outline" size={13} color="#ffb8c0" />
+            <ThemedText style={styles.inlineDangerButtonText}>Delete Manual Entry</ThemedText>
+          </Pressable>
+        </View>
+        {manualApptStatus ? <ThemedText style={styles.helperText}>{manualApptStatus}</ThemedText> : null}
+        {manualApptError ? <ThemedText style={styles.errorText}>{manualApptError}</ThemedText> : null}
       </View>
 
       <View style={styles.section}>
@@ -643,6 +777,36 @@ const styles = StyleSheet.create({
   inputMultiline: {
     minHeight: 96,
     textAlignVertical: 'top',
+  },
+  manualApptButtonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  inlineButton: {
+    borderWidth: 1,
+    borderColor: '#2f4358',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: '#172230',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  inlineButtonText: {
+    color: '#dceafe',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  inlineDangerButton: {
+    borderColor: '#6a2d3a',
+    backgroundColor: '#2a1620',
+  },
+  inlineDangerButtonText: {
+    color: '#ffb8c0',
+    fontWeight: '700',
+    fontSize: 12,
   },
   readOnlyBlock: {
     borderWidth: 1,

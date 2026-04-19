@@ -48,6 +48,7 @@ const DEPOSIT_PAID_OR_LATER_STATUSES = new Set([
   'deposit complete',
   'deposit completed',
   'temporary license submitted',
+  'temporary license recieved',
   'awaiting follow up',
   'needing changes',
   'balance invoice sent',
