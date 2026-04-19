@@ -75,6 +75,17 @@ function parseIcsDate(value: string): Date | null {
     return Number.isNaN(dt.getTime()) ? null : dt;
   }
 
+  const utcDateTimeNoSeconds = trimmed.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})Z$/);
+  if (utcDateTimeNoSeconds) {
+    const y = Number.parseInt(utcDateTimeNoSeconds[1], 10);
+    const m = Number.parseInt(utcDateTimeNoSeconds[2], 10) - 1;
+    const d = Number.parseInt(utcDateTimeNoSeconds[3], 10);
+    const hh = Number.parseInt(utcDateTimeNoSeconds[4], 10);
+    const mm = Number.parseInt(utcDateTimeNoSeconds[5], 10);
+    const dt = new Date(Date.UTC(y, m, d, hh, mm, 0, 0));
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
   const localDateTime = trimmed.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
   if (localDateTime) {
     const y = Number.parseInt(localDateTime[1], 10);
@@ -84,6 +95,17 @@ function parseIcsDate(value: string): Date | null {
     const mm = Number.parseInt(localDateTime[5], 10);
     const ss = Number.parseInt(localDateTime[6], 10);
     const dt = new Date(y, m, d, hh, mm, ss, 0);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
+  const localDateTimeNoSeconds = trimmed.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})$/);
+  if (localDateTimeNoSeconds) {
+    const y = Number.parseInt(localDateTimeNoSeconds[1], 10);
+    const m = Number.parseInt(localDateTimeNoSeconds[2], 10) - 1;
+    const d = Number.parseInt(localDateTimeNoSeconds[3], 10);
+    const hh = Number.parseInt(localDateTimeNoSeconds[4], 10);
+    const mm = Number.parseInt(localDateTimeNoSeconds[5], 10);
+    const dt = new Date(y, m, d, hh, mm, 0, 0);
     return Number.isNaN(dt.getTime()) ? null : dt;
   }
 
@@ -445,6 +467,11 @@ function getMatchTypeForCalendarEvent(
     }
   }
 
+  // Avoid false positives: generic appointment-type text appears in many events.
+  // Only allow type-only matching when the ledger event has no usable identity keys.
+  const hasIdentityInput = Boolean(email) || phoneDigits.length >= 7 || nameCandidates.length > 0;
+  if (hasIdentityInput) return null;
+
   const hasAppointmentTypeMatch = appointmentTypeCandidates.some(
     (candidate) => candidate.length >= 4 && haystack.includes(candidate),
   );
@@ -549,6 +576,42 @@ async function fetchIcsDirectMany(icsUrls: string[]): Promise<string> {
   return combineIcsPayloads(successfulPayloads);
 }
 
+function buildJinaRelayUrl(icsUrl: string): string {
+  const trimmed = icsUrl.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) {
+    const downgraded = trimmed.replace(/^https:\/\//i, 'http://');
+    return `https://r.jina.ai/${downgraded}`;
+  }
+  return `https://r.jina.ai/http://${trimmed}`;
+}
+
+async function fetchIcsViaRelay(icsUrls: string[]): Promise<string> {
+  const relayUrls = normalizeCalendarUrlList(icsUrls)
+    .map((icsUrl) => buildJinaRelayUrl(icsUrl))
+    .filter(Boolean);
+  if (relayUrls.length === 0) {
+    throw new Error('No ICS URLs available for relay fallback.');
+  }
+
+  const settled = await Promise.allSettled(relayUrls.map((relayUrl) => fetchIcsDirect(relayUrl)));
+  const successfulPayloads = settled
+    .filter((entry): entry is PromiseFulfilledResult<string> => entry.status === 'fulfilled')
+    .map((entry) => entry.value);
+
+  if (successfulPayloads.length === 0) {
+    const firstFailure = settled.find(
+      (entry): entry is PromiseRejectedResult => entry.status === 'rejected',
+    );
+    if (firstFailure) {
+      throw new Error(String(firstFailure.reason || 'Calendar relay fetch failed.'));
+    }
+    throw new Error('Calendar relay fetch failed.');
+  }
+
+  return combineIcsPayloads(successfulPayloads);
+}
+
 function normalizeCalendarUrlList(value: string[] | null): string[] {
   if (!value || value.length === 0) return [];
   return value
@@ -617,7 +680,11 @@ export async function loadCalendarEvents(
       try {
         rawIcs = await fetchIcsViaProxy(directIcsUrls, sheetSyncConfig);
       } catch {
-        rawIcs = await fetchIcsViaProxy(null, sheetSyncConfig);
+        try {
+          rawIcs = await fetchIcsViaRelay(directIcsUrls);
+        } catch {
+          rawIcs = await fetchIcsViaProxy(null, sheetSyncConfig);
+        }
       }
     }
   } else {

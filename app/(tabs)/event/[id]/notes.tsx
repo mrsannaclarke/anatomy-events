@@ -134,6 +134,7 @@ export default function EventNotesScreen() {
   useEffect(() => {
     const targetEvent = event;
     if (!targetEvent) return;
+    const currentEvent = targetEvent;
     let isMounted = true;
 
     async function loadAppointments() {
@@ -141,14 +142,14 @@ export default function EventNotesScreen() {
       setUpcomingAppointmentText('Loading...');
       setLastAppointmentText('Loading...');
 
-      const fallback = lookupFallbackAppointments(events, targetEvent);
+      const fallback = lookupFallbackAppointments(events, currentEvent);
 
       try {
         const calendarEvents = await loadCalendarEvents(CALENDAR_SYNC_CONFIG, SHEET_SYNC_CONFIG);
         if (!isMounted) return;
 
-        const matchMap = buildCalendarMatchMap([targetEvent!], calendarEvents);
-        const match = matchMap[targetEvent!.id];
+        const matchMap = buildCalendarMatchMap([currentEvent], calendarEvents);
+        const match = matchMap[currentEvent.id];
 
         if (match?.upcomingEvent) {
           setUpcomingAppointmentText(formatCalendarMatchDate(match.upcomingEvent.start));

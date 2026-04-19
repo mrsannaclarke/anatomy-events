@@ -602,9 +602,6 @@ export default function ShopProfitScreen() {
       <View style={styles.card}>
         <ThemedText style={styles.sectionTitle}>Shop Profit</ThemedText>
         <ThemedText style={styles.helperText}>Completed-event shop totals and breakdown.</ThemedText>
-        {syncStatus === 'loading' ? (
-          <ThemedText style={styles.helperText}>Loading shop profit data...</ThemedText>
-        ) : null}
         {syncStatus === 'error' ? (
           <ThemedText style={styles.helperTextError}>Sheet sync issue. Showing schedule-derived fallback totals.</ThemedText>
         ) : null}

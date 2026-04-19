@@ -1,12 +1,14 @@
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { RainbowSparkleBackground } from '@/components/ui/rainbow-sparkle-background';
 
 export function AppLoadingScreen() {
   const logoSource = require('../../assets/images/anatomy-logo-circle.png');
 
   return (
     <View style={styles.page}>
+      <RainbowSparkleBackground overlayOnly sparkleStyle="stars" />
       <View style={styles.centerWrap}>
         <View style={styles.logoWrap}>
           <Image source={logoSource} style={styles.logoImage} />
@@ -29,6 +31,7 @@ const styles = StyleSheet.create({
   centerWrap: {
     alignItems: 'center',
     gap: 10,
+    zIndex: 2,
   },
   logoWrap: {
     width: 122,
