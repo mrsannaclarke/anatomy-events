@@ -51,8 +51,8 @@
       "sheetSyncWebAppUrl": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
       "sheetSyncApiToken": "",
       "calendarIcsUrl": "",
-      "calendarMonthsBack": 6,
-      "calendarMonthsAhead": 9
+      "calendarMonthsBack": 12,
+      "calendarMonthsAhead": 12
     }
   }
 }

@@ -46,8 +46,8 @@ export const CALENDAR_SYNC_CONFIG: CalendarSyncConfig = {
     ...parseCalendarUrlList(envIcsUrls),
     ...parseCalendarUrlList(envIcsUrl),
   ].filter((url, index, all) => all.indexOf(url) === index),
-  monthsBack: parsePositiveInt(extra.calendarMonthsBack ?? envMonthsBack, 6),
-  monthsAhead: parsePositiveInt(extra.calendarMonthsAhead ?? envMonthsAhead, 9),
+  monthsBack: parsePositiveInt(extra.calendarMonthsBack ?? envMonthsBack, 12),
+  monthsAhead: parsePositiveInt(extra.calendarMonthsAhead ?? envMonthsAhead, 12),
 };
 
 export function hasCalendarSyncConfig(config: CalendarSyncConfig = CALENDAR_SYNC_CONFIG): boolean {
