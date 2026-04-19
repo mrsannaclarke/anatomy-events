@@ -184,7 +184,7 @@ export default function AdminPromotionScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b1117',
   },
   content: {
     padding: 16,

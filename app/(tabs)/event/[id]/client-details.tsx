@@ -699,7 +699,7 @@ export default function EventClientDetailsScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b1117',
   },
   content: {
     padding: 16,
@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b1117',
   },
   topRow: {
     flexDirection: 'row',

@@ -212,7 +212,7 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   authContainer: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b1117',
     alignItems: 'flex-start',
     justifyContent: 'center',
     padding: 24,

@@ -19,7 +19,7 @@ import {
 } from '@/lib/calendar-sync';
 import { computeEventTotals, formatCurrency } from '@/lib/event-math';
 import { readLatestCommunicationByEventIds, type EventActivityEntry } from '@/lib/event-activity-log';
-import { pullEventsFromSheet, pullSheetSyncHealth } from '@/lib/sheets-sync';
+import { pullEventsFromSheet } from '@/lib/sheets-sync';
 import type { EventRecord } from '@/types/events';
 
 const CLOSED_AO_STATUSES = new Set(['cancelled', 'canceled', 'event complete', 'event complete balance late']);
@@ -371,10 +371,6 @@ export default function EventsScreen() {
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
   const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isHardRefreshing, setIsHardRefreshing] = useState(false);
-  const [sheetSyncStatus, setSheetSyncStatus] = useState('Loading events from sheet...');
-  const [sheetSyncError, setSheetSyncError] = useState('');
-  const [sheetSyncSource, setSheetSyncSource] = useState('Source sheet: checking...');
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
   const [latestCommunicationByEventId, setLatestCommunicationByEventId] = useState<Record<string, EventActivityEntry>>(
     {},
@@ -405,7 +401,6 @@ export default function EventsScreen() {
     () => visibleEvents.map((event) => event.id).filter(Boolean).join('|'),
     [visibleEvents],
   );
-  const hiddenClosedCount = Math.max(events.length - visibleEvents.length, 0);
   const fallbackLastAppointmentByEventId = useMemo(() => {
     const byClientKey: Record<string, number[]> = {};
 
@@ -475,26 +470,9 @@ export default function EventsScreen() {
   }
 
   const refreshFromSheet = useCallback(async () => {
-    setSheetSyncError('');
-    setSheetSyncStatus('Syncing with Event Details...');
     try {
-      const [pulledEvents, health] = await Promise.all([
-        pullEventsFromSheet(SHEET_SYNC_CONFIG),
-        pullSheetSyncHealth(SHEET_SYNC_CONFIG).catch(() => null),
-      ]);
+      const pulledEvents = await pullEventsFromSheet(SHEET_SYNC_CONFIG);
       replaceEvents(pulledEvents);
-      const hiddenCount = pulledEvents.filter((event) => isClosedProject(event)).length;
-      setSheetSyncStatus(
-        `Synced ${pulledEvents.length} events. Showing ${pulledEvents.length - hiddenCount} open event${pulledEvents.length - hiddenCount === 1 ? '' : 's'}.`,
-      );
-      if (health?.spreadsheetId) {
-        const versionLabel = health.version ? ` • ${health.version}` : '';
-        setSheetSyncSource(
-          `Source sheet: ${health.spreadsheetId} • Events rows: ${health.eventsRows}${versionLabel}`,
-        );
-      } else {
-        setSheetSyncSource(`Source web app: ${SHEET_SYNC_CONFIG.webAppUrl}`);
-      }
       fireAndForgetAuditLog({
         eventType: 'sheet_pull',
         status: 'success',
@@ -506,9 +484,6 @@ export default function EventsScreen() {
     } catch (error) {
       console.warn('Unable to pull events from sheet.', error);
       const message = error instanceof Error ? error.message : 'Unable to pull events from sheet.';
-      setSheetSyncError(message);
-      setSheetSyncStatus('Showing currently cached events.');
-      setSheetSyncSource(`Source web app: ${SHEET_SYNC_CONFIG.webAppUrl}`);
       fireAndForgetAuditLog({
         eventType: 'sheet_pull',
         status: 'error',
@@ -521,19 +496,6 @@ export default function EventsScreen() {
     setIsRefreshing(true);
     await refreshFromSheet();
     setIsRefreshing(false);
-  }
-
-  async function handleHardRefresh() {
-    setIsHardRefreshing(true);
-    setIsRefreshing(true);
-    setSheetSyncError('');
-    setSheetSyncStatus('Forcing fresh sheet pull...');
-    try {
-      await refreshFromSheet();
-    } finally {
-      setIsHardRefreshing(false);
-      setIsRefreshing(false);
-    }
   }
 
   useEffect(() => {
@@ -617,40 +579,6 @@ export default function EventsScreen() {
         <Pressable onPress={handleCreateEvent} style={styles.createButton}>
           <ThemedText style={styles.createButtonText}>+ New Event</ThemedText>
         </Pressable>
-      </View>
-      <View style={styles.syncCard}>
-        <View style={styles.syncHeaderRow}>
-          <ThemedText style={styles.syncLabel}>Sheet Sync</ThemedText>
-          <View style={styles.syncHeaderActions}>
-            <Pressable
-              style={styles.syncRefreshButton}
-              onPress={() => {
-                void handlePullToRefresh();
-              }}
-              disabled={isRefreshing || isHardRefreshing}>
-              <MaterialIcons name="sync" size={13} color="#cfe2ff" />
-              <ThemedText style={styles.syncRefreshButtonText}>Refresh</ThemedText>
-            </Pressable>
-            <Pressable
-              style={[styles.syncRefreshButton, styles.syncHardRefreshButton]}
-              onPress={() => {
-                void handleHardRefresh();
-              }}
-              disabled={isRefreshing || isHardRefreshing}>
-              <MaterialIcons name="cleaning-services" size={13} color="#ffd8dd" />
-              <ThemedText style={styles.syncHardRefreshButtonText}>
-                {isHardRefreshing ? 'Syncing...' : 'Force Pull'}
-              </ThemedText>
-            </Pressable>
-          </View>
-        </View>
-        <ThemedText style={styles.syncText}>{sheetSyncStatus}</ThemedText>
-        <ThemedText style={styles.syncHint}>
-          {events.length} loaded from sheet/local cache • {visibleEvents.length} visible • {hiddenClosedCount} hidden
-          (completed/cancelled)
-        </ThemedText>
-        <ThemedText style={styles.syncSourceText}>{sheetSyncSource}</ThemedText>
-        {sheetSyncError ? <ThemedText style={styles.syncErrorText}>{sheetSyncError}</ThemedText> : null}
       </View>
 
       {visibleEvents.map((event) => {
@@ -871,7 +799,7 @@ export default function EventsScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b1117',
   },
   content: {
     padding: 16,
@@ -883,73 +811,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 2,
-  },
-  syncCard: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#26415f',
-    backgroundColor: '#0f1721',
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    gap: 4,
-  },
-  syncHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  syncHeaderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  syncLabel: {
-    color: '#cbe0f8',
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  syncText: {
-    color: '#c8dbf0',
-    fontSize: 13,
-  },
-  syncHint: {
-    color: '#8da5bf',
-    fontSize: 12,
-  },
-  syncSourceText: {
-    color: '#7f97b2',
-    fontSize: 11,
-  },
-  syncErrorText: {
-    color: '#ffb2bf',
-    fontSize: 12,
-  },
-  syncRefreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#395d84',
-    backgroundColor: '#1a2d43',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  syncHardRefreshButton: {
-    borderColor: '#6d3f4a',
-    backgroundColor: '#2c1c22',
-  },
-  syncRefreshButtonText: {
-    color: '#cfe2ff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  syncHardRefreshButtonText: {
-    color: '#ffd8dd',
-    fontSize: 12,
-    fontWeight: '600',
   },
   createButton: {
     backgroundColor: '#2b74d9',
