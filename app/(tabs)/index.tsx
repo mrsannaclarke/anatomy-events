@@ -700,15 +700,6 @@ export default function EventsScreen() {
                 <ThemedText style={styles.postDepositValue}>+{formatCurrency(postDepositAdditions)}</ThemedText>
               </View>
             ) : null}
-            {lastAppointment ? (
-              <ThemedText style={styles.editHint}>
-                Last Appt: {formatCalendarMatchDate(lastAppointment.start)}
-              </ThemedText>
-            ) : fallbackLastAppointmentTs ? (
-              <ThemedText style={styles.editHint}>
-                Last Appt: {formatFallbackAppointmentDate(fallbackLastAppointmentTs)}
-              </ThemedText>
-            ) : null}
             {latestCommunication ? (
               <View style={styles.communicationPreviewBox}>
                 <ThemedText style={styles.communicationPreviewText}>
@@ -784,6 +775,15 @@ export default function EventsScreen() {
                 <View />
               )}
             </View>
+            {lastAppointment ? (
+              <ThemedText style={styles.editHint}>
+                Last Appt: {formatCalendarMatchDate(lastAppointment.start)}
+              </ThemedText>
+            ) : fallbackLastAppointmentTs ? (
+              <ThemedText style={styles.editHint}>
+                Last Appt: {formatFallbackAppointmentDate(fallbackLastAppointmentTs)}
+              </ThemedText>
+            ) : null}
           </View>
         );
       })}
