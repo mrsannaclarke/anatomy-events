@@ -19,6 +19,7 @@ import {
 } from '@/lib/calendar-sync';
 import {
   appendEventActivityLog,
+  removeEventActivityEntriesByActor,
   readEventActivityLog,
   type EventActivityEntry,
 } from '@/lib/event-activity-log';
@@ -105,7 +106,6 @@ function normalizeStatusValue(value: string): string {
 }
 
 function typeLabel(entry: EventActivityEntry): string {
-  if (entry.actor === 'Discord') return 'Discord Sync';
   if (
     entry.type === 'status_update' &&
     normalizeStatusValue(entry.statusTo || '').includes('event complete')
@@ -115,11 +115,6 @@ function typeLabel(entry: EventActivityEntry): string {
   if (entry.type === 'status_update') return 'Status Update';
   if (entry.type === 'staff_note') return 'Communication Entry';
   return 'Action';
-}
-
-function extractDiscordChannelUrl(message: string): string {
-  const match = String(message || '').match(/https:\/\/discord\.com\/channels\/\d+\/\d+/i);
-  return match ? match[0] : '';
 }
 
 export default function EventNotesScreen() {
@@ -150,8 +145,12 @@ export default function EventNotesScreen() {
     async function loadEntries() {
       setIsLoadingActivity(true);
       const entries = await readEventActivityLog(eventId);
+      if (entries.some((entry) => entry.actor === 'Discord')) {
+        await removeEventActivityEntriesByActor(eventId, 'Discord');
+      }
+      const refreshedEntries = await readEventActivityLog(eventId);
       if (!isMounted) return;
-      setActivityEntries(entries);
+      setActivityEntries(refreshedEntries.filter((entry) => entry.actor !== 'Discord'));
       setIsLoadingActivity(false);
     }
 
@@ -284,52 +283,43 @@ export default function EventNotesScreen() {
     setEntryStatus('Posting entry...');
 
     try {
-      await appendEventActivityLog({
-        eventId: currentEvent.id,
-        actor: actorName,
-        type: 'staff_note',
-        message: note,
-      });
-
+      let discordSyncInfo:
+        | {
+            channelUrl: string;
+            channelLabel: string;
+          }
+        | null = null;
       let discordStatusSuffix = '';
-      if (discordTarget) {
-        const discordMessageLines = [
-          '📝 New communication entry',
-          `Client: ${currentEvent.clientName || 'Unknown Client'}`,
-          `Entry ID: ${(currentEvent.entryId || currentEvent.id || '').trim() || 'N/A'}`,
-          `Posted by: ${actorName}`,
-          '',
-          note,
-        ];
-        const discordMessage = discordMessageLines.join('\n').trim();
 
+      if (discordTarget) {
+        const discordMessage = `${actorName}: ${note}`;
         try {
           await postDiscordWebhookMessage({
             webhookUrl: discordTarget.webhookUrl,
             content: discordMessage,
             username: 'Anatomy Event Log',
           });
-          await appendEventActivityLog({
-            eventId: currentEvent.id,
-            actor: 'Discord',
-            type: 'action',
-            message: `Posted to ${discordTarget.channelLabel}: ${discordTarget.channelUrl}`,
-          });
+          discordSyncInfo = {
+            channelUrl: discordTarget.channelUrl,
+            channelLabel: discordTarget.channelLabel,
+          };
           discordStatusSuffix = ' Discord synced.';
-        } catch (error) {
-          const reason = error instanceof Error ? error.message : 'Unknown Discord error.';
-          await appendEventActivityLog({
-            eventId: currentEvent.id,
-            actor: 'Discord',
-            type: 'action',
-            message: `Discord post failed for ${discordTarget.channelLabel}: ${reason}`,
-          });
+        } catch {
           discordStatusSuffix = ' Discord sync failed.';
         }
       }
 
+      await appendEventActivityLog({
+        eventId: currentEvent.id,
+        actor: actorName,
+        type: 'staff_note',
+        message: note,
+        discordChannelUrl: discordSyncInfo?.channelUrl,
+        discordChannelLabel: discordSyncInfo?.channelLabel,
+      });
+
       const nextEntries = await readEventActivityLog(currentEvent.id);
-      setActivityEntries(nextEntries);
+      setActivityEntries(nextEntries.filter((entry) => entry.actor !== 'Discord'));
       setNewNote('');
       setEntryStatus(`Communication entry posted.${discordStatusSuffix}`);
     } catch {
@@ -428,16 +418,16 @@ export default function EventNotesScreen() {
                 ) : (
                   <ThemedText style={styles.logMessage}>{entry.message}</ThemedText>
                 )}
-                {entry.actor === 'Discord' && extractDiscordChannelUrl(entry.message) ? (
+                {entry.discordChannelUrl ? (
                   <Pressable
                     style={styles.logLinkButton}
                     onPress={() => {
-                      const url = extractDiscordChannelUrl(entry.message);
-                      if (!url) return;
-                      void Linking.openURL(url);
+                      void Linking.openURL(entry.discordChannelUrl || '');
                     }}>
                     <MaterialIcons name="open-in-new" size={12} color="#bfe1ff" />
-                    <ThemedText style={styles.logLinkText}>Open Discord Channel</ThemedText>
+                    <ThemedText style={styles.logLinkText}>
+                      Posted to {entry.discordChannelLabel || 'Discord Channel'}
+                    </ThemedText>
                   </Pressable>
                 ) : null}
               </View>

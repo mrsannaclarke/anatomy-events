@@ -11,6 +11,8 @@ export type EventActivityEntry = {
   message: string;
   statusFrom?: string;
   statusTo?: string;
+  discordChannelUrl?: string;
+  discordChannelLabel?: string;
 };
 
 export type EventLatestCommunicationMap = Record<string, EventActivityEntry>;
@@ -91,6 +93,8 @@ export async function appendEventActivityLog(input: {
   message: string;
   statusFrom?: string;
   statusTo?: string;
+  discordChannelUrl?: string;
+  discordChannelLabel?: string;
 }): Promise<void> {
   const eventId = String(input.eventId || '').trim();
   if (!eventId) return;
@@ -99,6 +103,8 @@ export async function appendEventActivityLog(input: {
   if (!message) return;
 
   const actor = String(input.actor || '').trim() || 'Unknown Staff';
+  const discordChannelUrl = String(input.discordChannelUrl || '').trim();
+  const discordChannelLabel = String(input.discordChannelLabel || '').trim();
   const all = await readAllEventActivityEntries();
 
   const nextEntry: EventActivityEntry = {
@@ -110,6 +116,8 @@ export async function appendEventActivityLog(input: {
     message,
     statusFrom: input.statusFrom,
     statusTo: input.statusTo,
+    discordChannelUrl: discordChannelUrl || undefined,
+    discordChannelLabel: discordChannelLabel || undefined,
   };
 
   const next = [nextEntry, ...all].slice(0, EVENT_ACTIVITY_MAX_ENTRIES);
@@ -122,4 +130,21 @@ export async function appendEventActivityLog(input: {
 
 export function fireAndForgetEventActivityLog(input: Parameters<typeof appendEventActivityLog>[0]) {
   void appendEventActivityLog(input);
+}
+
+export async function removeEventActivityEntriesByActor(eventId: string, actor: string): Promise<number> {
+  const eventKey = String(eventId || '').trim();
+  const actorKey = String(actor || '').trim();
+  if (!eventKey || !actorKey) return 0;
+
+  const all = await readAllEventActivityEntries();
+  const next = all.filter((entry) => !(entry.eventId === eventKey && entry.actor === actorKey));
+  if (next.length === all.length) return 0;
+
+  try {
+    await AsyncStorage.setItem(EVENT_ACTIVITY_STORAGE_KEY, JSON.stringify(next.slice(0, EVENT_ACTIVITY_MAX_ENTRIES)));
+    return all.length - next.length;
+  } catch {
+    return 0;
+  }
 }
