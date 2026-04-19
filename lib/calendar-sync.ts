@@ -13,7 +13,7 @@ export interface CalendarEvent {
 
 export interface CalendarMatch {
   eventId: string;
-  matchedBy: 'email' | 'phone' | 'name';
+  matchedBy: 'email' | 'phone' | 'name' | 'appointment_type';
   upcomingEvent: CalendarEvent | null;
   lastPastEvent: CalendarEvent | null;
 }
@@ -173,6 +173,10 @@ function getCalendarSearchText(entry: CalendarEvent): string {
   return normalizeText(`${entry.summary} ${entry.description} ${entry.location}`);
 }
 
+function getCalendarSearchTextRaw(entry: CalendarEvent): string {
+  return `${entry.summary} ${entry.description} ${entry.location}`.toLowerCase();
+}
+
 function splitClientNameCandidates(rawClientName: string): string[] {
   const raw = rawClientName.trim();
   if (!raw) return [];
@@ -236,13 +240,26 @@ export function filterCalendarEventsByRange(
 function getMatchTypeForCalendarEvent(
   ledgerEvent: EventRecord,
   calendarEvent: CalendarEvent,
-): 'email' | 'phone' | 'name' | null {
+): 'email' | 'phone' | 'name' | 'appointment_type' | null {
   const email = ledgerEvent.email.trim().toLowerCase();
   const phoneDigits = normalizePhoneDigits(ledgerEvent.contactPhone);
   const nameCandidates = splitClientNameCandidates(ledgerEvent.clientName);
+  const appointmentTypeCandidates = [
+    normalizeNameText(ledgerEvent.eventType),
+    normalizeNameText(ledgerEvent.privateNotes),
+    normalizeNameText(ledgerEvent.contractNotes),
+  ]
+    .filter(Boolean)
+    .flatMap((candidate) => {
+      if (candidate.includes('consult') || candidate.includes('zoom')) {
+        return [candidate, 'event zoom consultation'];
+      }
+      return [candidate];
+    })
+    .filter((candidate, index, all) => all.indexOf(candidate) === index);
 
   const haystack = getCalendarSearchText(calendarEvent);
-  const haystackRaw = `${calendarEvent.summary} ${calendarEvent.description} ${calendarEvent.location}`.toLowerCase();
+  const haystackRaw = getCalendarSearchTextRaw(calendarEvent);
   const haystackDigits = normalizePhoneDigits(
     `${calendarEvent.summary} ${calendarEvent.description} ${calendarEvent.location}`,
   );
@@ -265,6 +282,13 @@ function getMatchTypeForCalendarEvent(
     }
   }
 
+  const hasAppointmentTypeMatch = appointmentTypeCandidates.some(
+    (candidate) => candidate.length >= 4 && haystack.includes(candidate),
+  );
+  if (hasAppointmentTypeMatch) {
+    return 'appointment_type';
+  }
+
   return null;
 }
 
@@ -273,7 +297,10 @@ function pickBestMatchForLedgerEvent(
   calendarEvents: CalendarEvent[],
   now = new Date(),
 ): CalendarMatch | null {
-  const matchedEvents: { calendarEvent: CalendarEvent; matchedBy: 'email' | 'phone' | 'name' }[] = [];
+  const matchedEvents: {
+    calendarEvent: CalendarEvent;
+    matchedBy: 'email' | 'phone' | 'name' | 'appointment_type';
+  }[] = [];
 
   for (const calendarEvent of calendarEvents) {
     const matchedBy = getMatchTypeForCalendarEvent(ledgerEvent, calendarEvent);
@@ -333,12 +360,47 @@ async function fetchIcsDirect(icsUrl: string): Promise<string> {
   return text;
 }
 
-async function fetchIcsViaProxy(icsUrl: string | null, sheetSyncConfig: SheetSyncConfig): Promise<string> {
+function combineIcsPayloads(payloads: string[]): string {
+  return payloads
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+async function fetchIcsDirectMany(icsUrls: string[]): Promise<string> {
+  const settled = await Promise.allSettled(icsUrls.map((icsUrl) => fetchIcsDirect(icsUrl)));
+  const successfulPayloads = settled
+    .filter((entry): entry is PromiseFulfilledResult<string> => entry.status === 'fulfilled')
+    .map((entry) => entry.value);
+
+  if (successfulPayloads.length === 0) {
+    const firstFailure = settled.find(
+      (entry): entry is PromiseRejectedResult => entry.status === 'rejected',
+    );
+    if (firstFailure) {
+      throw new Error(String(firstFailure.reason || 'Calendar fetch failed.'));
+    }
+    throw new Error('Calendar fetch failed.');
+  }
+
+  return combineIcsPayloads(successfulPayloads);
+}
+
+function normalizeCalendarUrlList(value: string[] | null): string[] {
+  if (!value || value.length === 0) return [];
+  return value
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item, index, all) => all.indexOf(item) === index);
+}
+
+async function fetchIcsViaProxy(icsUrls: string[] | null, sheetSyncConfig: SheetSyncConfig): Promise<string> {
   const url = new URL(sheetSyncConfig.webAppUrl);
   url.searchParams.set('action', 'calendarfeed');
-  const normalizedIcsUrl = (icsUrl || '').trim();
-  if (normalizedIcsUrl) {
-    url.searchParams.set('calendarIcsUrl', normalizedIcsUrl);
+  const normalizedIcsUrls = normalizeCalendarUrlList(icsUrls);
+  if (normalizedIcsUrls.length > 0) {
+    url.searchParams.set('calendarIcsUrls', normalizedIcsUrls.join('\n'));
+    url.searchParams.set('calendarIcsUrl', normalizedIcsUrls[0]);
   }
 
   const response = await fetch(url.toString(), {
@@ -356,25 +418,41 @@ async function fetchIcsViaProxy(icsUrl: string | null, sheetSyncConfig: SheetSyn
 
   if (!response.ok || !payload.ok || !payload.ics) {
     const baseMessage = payload.error || `Calendar proxy fetch failed (HTTP ${response.status}).`;
-    throw new Error(`${baseMessage} Set CALENDAR_ICS_URL in Apps Script properties or provide calendarIcsUrl in app config.`);
+    throw new Error(
+      `${baseMessage} Set CALENDAR_ICS_URLS/CALENDAR_ICS_URL in Apps Script properties or provide calendarIcsUrls/calendarIcsUrl in app config.`,
+    );
   }
 
   return payload.ics;
+}
+
+function dedupeCalendarEvents(events: CalendarEvent[]): CalendarEvent[] {
+  const seen = new Set<string>();
+  const deduped: CalendarEvent[] = [];
+
+  for (const event of events) {
+    const key = `${event.uid}::${event.start.getTime()}::${normalizeText(event.summary)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(event);
+  }
+
+  return deduped;
 }
 
 export async function loadCalendarEvents(
   calendarConfig: CalendarSyncConfig,
   sheetSyncConfig: SheetSyncConfig,
 ): Promise<CalendarEvent[]> {
-  const directIcsUrl = calendarConfig.icsUrl.trim();
+  const directIcsUrls = normalizeCalendarUrlList(calendarConfig.icsUrls);
   let rawIcs = '';
 
-  if (directIcsUrl) {
+  if (directIcsUrls.length > 0) {
     try {
-      rawIcs = await fetchIcsDirect(directIcsUrl);
+      rawIcs = await fetchIcsDirectMany(directIcsUrls);
     } catch {
       try {
-        rawIcs = await fetchIcsViaProxy(directIcsUrl, sheetSyncConfig);
+        rawIcs = await fetchIcsViaProxy(directIcsUrls, sheetSyncConfig);
       } catch {
         rawIcs = await fetchIcsViaProxy(null, sheetSyncConfig);
       }
@@ -387,7 +465,7 @@ export async function loadCalendarEvents(
   const now = new Date();
   const rangeStart = getRangeStart(calendarConfig.monthsBack, now);
   const rangeEnd = getRangeEnd(calendarConfig.monthsAhead, now);
-  return filterCalendarEventsByRange(parsed, rangeStart, rangeEnd);
+  return filterCalendarEventsByRange(dedupeCalendarEvents(parsed), rangeStart, rangeEnd);
 }
 
 export function formatCalendarMatchDate(date: Date): string {
