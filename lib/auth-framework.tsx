@@ -61,6 +61,11 @@ const ADMIN_PROMOTION_STORAGE_KEY = 'anatomy-events.admin-promotion-overrides.v1
 const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
 const VIEWER_OVERRIDE_STORAGE_KEY = 'anatomy-events.viewer-override-name.v1';
 const GOOGLE_SIGN_IN_TIMEOUT_MS = 20000;
+const PINNED_SUPER_ADMIN_EMAILS = new Set<string>([
+  'ladyshytattoos@gmail.com',
+  'events.anatomytattoo@gmail.com',
+  'event.anatomytattoo@gmail.com',
+]);
 
 function readWebStorage(key: string): string | null {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
@@ -91,6 +96,27 @@ function removeWebStorage(key: string): void {
 
 function normalizeKey(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function isPinnedSuperAdminEmail(email: string): boolean {
+  return PINNED_SUPER_ADMIN_EMAILS.has(normalizeKey(email));
+}
+
+function applyPinnedRoleOverrides(user: FrameworkUser): FrameworkUser {
+  if (!isPinnedSuperAdminEmail(user.email)) return user;
+  const normalized = new Set(user.matchNames.map((entry) => normalizeKey(entry)));
+  const matchNames = user.matchNames.length > 0 ? [...user.matchNames] : [];
+  if (!normalized.has('shy')) matchNames.unshift('Shy');
+  if (!normalized.has('lady shy')) matchNames.push('Lady Shy');
+  return {
+    ...user,
+    displayName: 'Lady Shy',
+    matchNames,
+    canViewInfo: true,
+    authType: 'super_admin',
+    disablePayoutAccess: false,
+    disableAdminPromotion: false,
+  };
 }
 
 function resolvePermissionsForNameInternal(name: string): StaffPermission | null {
@@ -267,16 +293,18 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
             return;
           }
           if (allowlisted) {
-            setUser({
-              email: allowlisted.email,
-              displayName: allowlisted.displayName,
-              matchNames: allowlisted.matchNames,
-              canViewInfo: allowlisted.canViewInfo,
-              authType: allowlisted.authType,
-              disablePayoutAccess: allowlisted.disablePayoutAccess,
-              disableAdminPromotion: allowlisted.disableAdminPromotion,
-              mode: 'google',
-            });
+            setUser(
+              applyPinnedRoleOverrides({
+                email: allowlisted.email,
+                displayName: allowlisted.displayName,
+                matchNames: allowlisted.matchNames,
+                canViewInfo: allowlisted.canViewInfo,
+                authType: allowlisted.authType,
+                disablePayoutAccess: allowlisted.disablePayoutAccess,
+                disableAdminPromotion: allowlisted.disableAdminPromotion,
+                mode: 'google',
+              }),
+            );
             return;
           }
         }
@@ -365,7 +393,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
               mode: 'google',
             };
 
-        setUser(nextUser);
+        setUser(applyPinnedRoleOverrides(nextUser));
         setErrorMessage(null);
       } catch (error) {
         setUser(null);
@@ -380,6 +408,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   }, [user]);
 
   function getEffectiveAuthTypeForEmail(email: string): AuthType | null {
+    if (isPinnedSuperAdminEmail(email)) return 'super_admin';
     const allowlistUser = resolveGoogleAllowlistUserInternal(email);
     if (!allowlistUser) return null;
     if (allowlistUser.authType === 'super_admin') return 'super_admin';
