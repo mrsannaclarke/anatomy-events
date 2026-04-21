@@ -78,6 +78,13 @@ export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
     canViewInfo: true,
     authType: 'super_admin',
   },
+  {
+    email: 'event.anatomytattoo@gmail.com',
+    displayName: 'Lady Shy',
+    matchNames: ['Lady Shy', 'Shy'],
+    canViewInfo: true,
+    authType: 'super_admin',
+  },
   { email: 'sketchu2@gmail.com', displayName: 'Summer', matchNames: ['Summer'], canViewInfo: false, authType: 'artist' },
   { email: 'sailorsisilia@gmail.com', displayName: 'Sisi', matchNames: ['Sisi'], canViewInfo: false, authType: 'artist' },
   { email: 'info@agneshamilton.com', displayName: 'Agnes', matchNames: ['Agnes'], canViewInfo: false, authType: 'artist' },
