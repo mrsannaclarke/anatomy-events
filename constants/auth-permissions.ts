@@ -39,7 +39,7 @@ export const GUEST_PASSWORD = 'Tomma3021!';
 // - Adds Veda
 export const STAFF_PERMISSIONS: StaffPermission[] = [
   { name: 'Tomma', authType: 'admin', roles: ['artist', 'counter', 'admin'] },
-  { name: 'Shy', authType: 'artist', roles: ['artist', 'counter'] },
+  { name: 'Shy', authType: 'super_admin', roles: ['artist', 'counter', 'admin'] },
   { name: 'Megan', authType: 'artist', roles: ['artist', 'counter'] },
   { name: 'Sisi', authType: 'artist', roles: ['artist', 'counter'] },
   { name: 'Drew', authType: 'artist', roles: ['artist', 'counter'] },
@@ -64,13 +64,19 @@ export const GUEST_ALLOWED_NAMES: string[] = STAFF_PERMISSIONS.map((entry) => en
 // This is a future-auth config only; login is not enforced right now.
 export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
   { email: 'tattoosbytomma@gmail.com', displayName: 'Tomma', matchNames: ['Tomma'], canViewInfo: true, authType: 'admin' },
-  { email: 'ladyshytattoos@gmail.com', displayName: 'Lady Shy', matchNames: ['Lady Shy', 'Shy'], canViewInfo: false, authType: 'artist' },
+  {
+    email: 'ladyshytattoos@gmail.com',
+    displayName: 'Lady Shy',
+    matchNames: ['Lady Shy', 'Shy'],
+    canViewInfo: true,
+    authType: 'super_admin',
+  },
   {
     email: 'events.anatomytattoo@gmail.com',
     displayName: 'Lady Shy',
     matchNames: ['Lady Shy', 'Shy'],
-    canViewInfo: false,
-    authType: 'artist',
+    canViewInfo: true,
+    authType: 'super_admin',
   },
   { email: 'sketchu2@gmail.com', displayName: 'Summer', matchNames: ['Summer'], canViewInfo: false, authType: 'artist' },
   { email: 'sailorsisilia@gmail.com', displayName: 'Sisi', matchNames: ['Sisi'], canViewInfo: false, authType: 'artist' },

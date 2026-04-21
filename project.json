@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "Anatomy Events",
-    "updated_at": "2026-04-18",
+    "updated_at": "2026-04-21",
     "owner": "Anna / Anatomy Tattoo"
   },
   "source_links": {
@@ -630,6 +630,7 @@
       "Tomma admin mapping update (2026-04-17): `anatomytattoo@gmail.com` now maps to Tomma (`admin`) and Tomma is configured as admin in both staff permissions and allowlist (`tattoosbytomma@gmail.com` + `anatomytattoo@gmail.com`); temporary forced non-admin override for `anatomytattoo@gmail.com` was removed.",
       "Admin promotion roster grouping (2026-04-17): Admin Promotion page now groups allowlisted rows by person display name, shows all login emails on the same row, and applies promote/remove actions across that person’s grouped login emails.",
       "Admin capability policy update (2026-04-17): admins can promote staff to admin but cannot remove admin promotions; only super admins can remove promotions. `anatomytattoo@gmail.com` remains admin for Admin/Audit access but is now blocked from payout surfaces (Pay tab + Payout Ledger) and from admin-promotion actions.",
+      "Shy super-admin lock (2026-04-21): elevated `Shy` to `super_admin` in both `STAFF_PERMISSIONS` and Google allowlist entries (`ladyshytattoos@gmail.com`, `events.anatomytattoo@gmail.com`) so role no longer reverts to staff after session/promotion state changes.",
       "UI polish + role lock pass (2026-04-17): added shared 3-second tap glow behavior to app buttons via `GlowPressable`, added a global rainbow sparkle dark-blue app background layer (with page canvases set transparent so cards/tables stay foreground), and locked Notes status editing to admin/super-admin while keeping status visible to staff.",
       "Staff assignment + ledger communication UX pass (2026-04-17): Staff Assignements now seeds artist chips immediately from local artist permissions (then merges live sheet artist list when it returns) to remove delayed artist chip load; Event Ledger cards now show latest staff `Communication Entry` preview at card bottom in a soft-highlight note format (`Staff • Date/Time • Message`) with display-only 300-character truncation.",
       "Rainbow sparkle visibility fix (2026-04-17): set tab navigator scene background to transparent so root sparkle layer is visible on all tab screens, restored dark-blue base in sparkle background, and increased orb/sparkle opacity for clearer effect.",
