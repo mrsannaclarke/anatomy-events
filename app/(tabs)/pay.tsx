@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
-import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
+import { hasFullPayoutAccessForUser } from '@/constants/admin-capabilities';
 import { getHistoricalArtistBreakdownOverride } from '@/constants/historical-payout-truth';
 import { SHEET_SYNC_CONFIG } from '@/constants/sheets-sync';
 import { normalizeNameKey } from '@/constants/pay-framework';
@@ -108,12 +108,10 @@ export default function PayScreen() {
     return resolvePermissionsForName(defaultViewerName);
   }, [defaultViewerName, resolvePermissionsForName]);
 
-  const payoutDisabledForCurrentLogin = isPayoutDisabledForUser(user);
-  const canViewAnyPayTable = !payoutDisabledForCurrentLogin && canAccessAdminToolsForViewer;
+  const canViewAnyPayTable = canAccessAdminToolsForViewer && hasFullPayoutAccessForUser(user);
 
   const canViewOwnPayTable = Boolean(
-    !payoutDisabledForCurrentLogin &&
-      (viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter')),
+    viewerPermission?.roles.includes('artist') || viewerPermission?.roles.includes('counter'),
   );
 
   const canViewPayFramework = canViewAnyPayTable || canViewOwnPayTable;
@@ -315,9 +313,7 @@ export default function PayScreen() {
         <View style={styles.card}>
           <ThemedText style={styles.sectionTitle}>Pay Schedule</ThemedText>
           <ThemedText style={styles.helperText}>
-            {payoutDisabledForCurrentLogin
-              ? 'Pay table is disabled for this login.'
-              : 'Pay table is visible to artists, counter staff, admins, and super admins only.'}
+            Pay table is visible to artists, counter staff, admins, and super admins only.
           </ThemedText>
         </View>
       </View>

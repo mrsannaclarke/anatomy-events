@@ -5,7 +5,7 @@ import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
-import { isPayoutDisabledForUser } from '@/constants/admin-capabilities';
+import { hasFullPayoutAccessForUser } from '@/constants/admin-capabilities';
 import { useAuthFramework } from '@/lib/auth-framework';
 
 const EVENT_DETAILS_SHEET_URL =
@@ -17,7 +17,7 @@ export default function AdminScreen() {
   const [adminStatus, setAdminStatus] = useState('');
 
   const canViewAdmin = canAccessAdminTools;
-  const canOpenPayoutLedger = !isPayoutDisabledForUser(user);
+  const canOpenPayoutLedger = hasFullPayoutAccessForUser(user);
 
   function openEventDetailsSheet() {
     setAdminStatus('');
