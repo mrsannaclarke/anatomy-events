@@ -178,13 +178,6 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="admin-promotion"
-          options={{
-            title: 'Admin Promotion',
-            href: null,
-          }}
-        />
-        <Tabs.Screen
           name="shop-profit"
           options={{
             title: 'Payout Ledger',

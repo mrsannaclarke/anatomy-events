@@ -25,7 +25,6 @@ export type FrameworkUser = {
   canViewInfo: boolean;
   authType: AuthType;
   disablePayoutAccess?: boolean;
-  disableAdminPromotion?: boolean;
   mode: 'google' | 'guest';
 };
 
@@ -43,11 +42,7 @@ type AuthFrameworkContextValue = {
   authTypes: typeof AUTH_TYPES;
   staffPermissions: StaffPermission[];
   allowedGoogleUsers: AllowedGoogleUser[];
-  promotedAdminEmails: string[];
   guestAllowedNames: string[];
-  getEffectiveAuthTypeForEmail: (email: string) => AuthType | null;
-  isEmailAdminEffective: (email: string) => boolean;
-  setAdminPromotion: (email: string, enabled: boolean) => Promise<void>;
   setViewerOverrideName: (name: string | null) => void;
   resolvePermissionsForName: (name: string) => StaffPermission | null;
   resolveGoogleAllowlistUser: (email: string) => AllowedGoogleUser | null;
@@ -57,7 +52,6 @@ type AuthFrameworkContextValue = {
 };
 
 const AuthFrameworkContext = createContext<AuthFrameworkContextValue | null>(null);
-const ADMIN_PROMOTION_STORAGE_KEY = 'anatomy-events.admin-promotion-overrides.v1';
 const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
 const VIEWER_OVERRIDE_STORAGE_KEY = 'anatomy-events.viewer-override-name.v1';
 const GOOGLE_SIGN_IN_TIMEOUT_MS = 20000;
@@ -115,7 +109,6 @@ function applyPinnedRoleOverrides(user: FrameworkUser): FrameworkUser {
     canViewInfo: true,
     authType: 'super_admin',
     disablePayoutAccess: false,
-    disableAdminPromotion: false,
   };
 }
 
@@ -129,10 +122,6 @@ function resolveGoogleAllowlistUserInternal(email: string): AllowedGoogleUser | 
   const key = normalizeKey(email);
   if (!key) return null;
   return ALLOWED_GOOGLE_USERS.find((entry) => normalizeKey(entry.email) === key) ?? null;
-}
-
-function normalizePromotionList(values: string[]): string[] {
-  return Array.from(new Set(values.map((entry) => normalizeKey(entry)).filter(Boolean)));
 }
 
 function inferMatchNames(email: string, googleName: string): string[] {
@@ -157,8 +146,6 @@ function isFrameworkUser(value: unknown): value is FrameworkUser {
   const candidate = value as Partial<FrameworkUser>;
   const payoutAccessTypeValid =
     candidate.disablePayoutAccess === undefined || typeof candidate.disablePayoutAccess === 'boolean';
-  const adminPromotionTypeValid =
-    candidate.disableAdminPromotion === undefined || typeof candidate.disableAdminPromotion === 'boolean';
   return (
     typeof candidate.email === 'string' &&
     typeof candidate.displayName === 'string' &&
@@ -166,7 +153,6 @@ function isFrameworkUser(value: unknown): value is FrameworkUser {
     typeof candidate.canViewInfo === 'boolean' &&
     typeof candidate.authType === 'string' &&
     payoutAccessTypeValid &&
-    adminPromotionTypeValid &&
     (candidate.mode === 'google' || candidate.mode === 'guest')
   );
 }
@@ -217,7 +203,6 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<FrameworkUser | null>(null);
   const [isHydrating, setIsHydrating] = useState<boolean>(AUTH_FRAMEWORK_CONFIG.requireAuth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [promotedAdminEmails, setPromotedAdminEmails] = useState<string[]>([]);
   const viewerOverrideName: string | null = null;
 
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
@@ -238,31 +223,6 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     if (Platform.OS === 'web') return Boolean(webClientId);
     return Boolean(iosClientId || androidClientId);
   }, [androidClientId, iosClientId, webClientId]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function hydratePromotions() {
-      try {
-        let raw = await AsyncStorage.getItem(ADMIN_PROMOTION_STORAGE_KEY);
-        if (!raw) raw = readWebStorage(ADMIN_PROMOTION_STORAGE_KEY);
-        if (!isMounted || !raw) return;
-        const parsed = JSON.parse(raw) as unknown;
-        const fromStorage = Array.isArray(parsed)
-          ? parsed.filter((entry): entry is string => typeof entry === 'string')
-          : [];
-        setPromotedAdminEmails(normalizePromotionList(fromStorage));
-      } catch {
-        if (!isMounted) return;
-        setPromotedAdminEmails([]);
-      }
-    }
-
-    void hydratePromotions();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     // View-As testing mode is retired; clear any previously persisted override.
@@ -301,7 +261,6 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
                 canViewInfo: allowlisted.canViewInfo,
                 authType: allowlisted.authType,
                 disablePayoutAccess: allowlisted.disablePayoutAccess,
-                disableAdminPromotion: allowlisted.disableAdminPromotion,
                 mode: 'google',
               }),
             );
@@ -379,7 +338,6 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
               canViewInfo: allowlisted.canViewInfo,
               authType: allowlisted.authType,
               disablePayoutAccess: allowlisted.disablePayoutAccess,
-              disableAdminPromotion: allowlisted.disableAdminPromotion,
               mode: 'google',
             }
           : {
@@ -389,7 +347,6 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
               canViewInfo: false,
               authType: 'artist',
               disablePayoutAccess: false,
-              disableAdminPromotion: false,
               mode: 'google',
             };
 
@@ -407,40 +364,10 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     return user ? 'signed_in' : 'signed_out';
   }, [user]);
 
-  function getEffectiveAuthTypeForEmail(email: string): AuthType | null {
-    if (isPinnedSuperAdminEmail(email)) return 'super_admin';
-    const allowlistUser = resolveGoogleAllowlistUserInternal(email);
-    if (!allowlistUser) return null;
-    if (allowlistUser.authType === 'super_admin') return 'super_admin';
-    if (allowlistUser.authType === 'admin') return 'admin';
-    return promotedAdminEmails.includes(normalizeKey(email)) ? 'admin' : allowlistUser.authType;
-  }
-
-  async function setAdminPromotion(email: string, enabled: boolean) {
-    const normalizedEmail = normalizeKey(email);
-    if (!normalizedEmail) return;
-
-    const baseUser = resolveGoogleAllowlistUserInternal(normalizedEmail);
-    if (!baseUser) return;
-    if (baseUser.authType === 'super_admin' || baseUser.authType === 'admin') return;
-
-    setPromotedAdminEmails((current) => {
-      const next = enabled
-        ? normalizePromotionList([...current, normalizedEmail])
-        : current.filter((entry) => entry !== normalizedEmail);
-      const serialized = JSON.stringify(next);
-      void AsyncStorage.setItem(ADMIN_PROMOTION_STORAGE_KEY, serialized);
-      writeWebStorage(ADMIN_PROMOTION_STORAGE_KEY, serialized);
-      return next;
-    });
-  }
-
   const effectiveAuthType = useMemo<AuthType | null>(() => {
     if (!user) return null;
-    if (user.authType === 'super_admin') return 'super_admin';
-    if (user.authType === 'admin') return 'admin';
-    return promotedAdminEmails.includes(normalizeKey(user.email)) ? 'admin' : user.authType;
-  }, [promotedAdminEmails, user]);
+    return user.authType;
+  }, [user]);
 
   const canAccessAdminTools = useMemo(() => {
     if (status === 'bypass') return true;
@@ -526,7 +453,6 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
       canViewInfo: false,
       authType: 'counter_guest',
       disablePayoutAccess: false,
-      disableAdminPromotion: false,
       mode: 'guest',
     });
     setErrorMessage(null);
@@ -551,14 +477,7 @@ export function AuthFrameworkProvider({ children }: PropsWithChildren) {
     authTypes: AUTH_TYPES,
     staffPermissions: STAFF_PERMISSIONS,
     allowedGoogleUsers: ALLOWED_GOOGLE_USERS,
-    promotedAdminEmails,
     guestAllowedNames: GUEST_ALLOWED_NAMES,
-    getEffectiveAuthTypeForEmail,
-    isEmailAdminEffective: (email: string) => {
-      const effective = getEffectiveAuthTypeForEmail(email);
-      return effective === 'super_admin' || effective === 'admin';
-    },
-    setAdminPromotion,
     setViewerOverrideName,
     resolvePermissionsForName: resolvePermissionsForNameInternal,
     resolveGoogleAllowlistUser: resolveGoogleAllowlistUserInternal,

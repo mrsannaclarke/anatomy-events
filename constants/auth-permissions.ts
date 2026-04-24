@@ -14,7 +14,6 @@ export type AllowedGoogleUser = {
   canViewInfo: boolean;
   authType: AuthType;
   disablePayoutAccess?: boolean;
-  disableAdminPromotion?: boolean;
 };
 
 export const AUTH_TYPES: ReadonlyArray<{ key: AuthType; label: string }> = [
@@ -33,11 +32,13 @@ export const AUTH_FRAMEWORK_CONFIG = {
 // Mirrors Pickles schedule guest password for future shared guest flow.
 export const GUEST_PASSWORD = 'Tomma3021!';
 
+const FULL_ACCESS_ROLES: StaffRole[] = ['artist', 'counter', 'admin'];
+
 // Staff permissions scaffold:
 // - Includes Pickles artist/counter names
 // - Excludes Sienna per request
 // - Adds Veda
-export const STAFF_PERMISSIONS: StaffPermission[] = [
+const STAFF_PERMISSION_BASE: StaffPermission[] = [
   { name: 'Tomma', authType: 'admin', roles: ['artist', 'counter', 'admin'] },
   { name: 'Shy', authType: 'super_admin', roles: ['artist', 'counter', 'admin'] },
   { name: 'Megan', authType: 'artist', roles: ['artist', 'counter'] },
@@ -58,11 +59,17 @@ export const STAFF_PERMISSIONS: StaffPermission[] = [
   { name: 'Veda', authType: 'counter_guest', roles: ['counter'] },
 ];
 
+export const STAFF_PERMISSIONS: StaffPermission[] = STAFF_PERMISSION_BASE.map((entry) => ({
+  ...entry,
+  authType: 'super_admin',
+  roles: [...FULL_ACCESS_ROLES],
+}));
+
 export const GUEST_ALLOWED_NAMES: string[] = STAFF_PERMISSIONS.map((entry) => entry.name);
 
 // Google allowlist scaffold mirrored from Pickles (Sienna removed).
 // This is a future-auth config only; login is not enforced right now.
-export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
+const ALLOWED_GOOGLE_USER_BASE: AllowedGoogleUser[] = [
   { email: 'tattoosbytomma@gmail.com', displayName: 'Tomma', matchNames: ['Tomma'], canViewInfo: true, authType: 'admin' },
   {
     email: 'ladyshytattoos@gmail.com',
@@ -115,12 +122,17 @@ export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = [
     matchNames: ['Tomma'],
     canViewInfo: true,
     authType: 'admin',
-    disablePayoutAccess: true,
-    disableAdminPromotion: true,
   },
   { email: 'mrs.annaclarke@gmail.com', displayName: 'Anna', matchNames: ['Anna'], canViewInfo: true, authType: 'super_admin' },
   { email: 'admin@anatomytattoo.com', displayName: 'Anna', matchNames: ['Anna'], canViewInfo: true, authType: 'super_admin' },
 ];
+
+export const ALLOWED_GOOGLE_USERS: AllowedGoogleUser[] = ALLOWED_GOOGLE_USER_BASE.map((entry) => ({
+  ...entry,
+  canViewInfo: true,
+  authType: 'super_admin',
+  disablePayoutAccess: false,
+}));
 
 export const ALLOWED_GOOGLE_EMAILS_BY_AUTH_TYPE: Readonly<Record<AuthType, string[]>> = {
   super_admin: ALLOWED_GOOGLE_USERS.filter((entry) => entry.authType === 'super_admin').map((entry) => entry.email),

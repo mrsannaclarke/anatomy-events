@@ -29,11 +29,6 @@ export default function AdminScreen() {
     router.push('/audit-log');
   }
 
-  function openAdminPromotionPage() {
-    setAdminStatus('');
-    router.push('/admin-promotion');
-  }
-
   function openPayoutLedgerPage() {
     setAdminStatus('');
     router.push('/shop-profit');
@@ -67,13 +62,6 @@ export default function AdminScreen() {
             <View style={styles.buttonContent}>
               <MaterialIcons name="history" size={16} color="#c7d8eb" />
               <ThemedText style={styles.secondaryButtonText}>Open Audit Log</ThemedText>
-            </View>
-          </Pressable>
-
-          <Pressable style={styles.secondaryButton} onPress={openAdminPromotionPage}>
-            <View style={styles.buttonContent}>
-              <MaterialIcons name="manage-accounts" size={16} color="#c7d8eb" />
-              <ThemedText style={styles.secondaryButtonText}>Open Admin Promotion</ThemedText>
             </View>
           </Pressable>
 
