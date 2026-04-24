@@ -89,6 +89,13 @@ const PAY_VIEW_DELEGATION_MAP: Readonly<Record<string, readonly string[]>> = {
   shy: ['jason'],
 };
 
+const PRIMARY_PAYOUT_PERSON_BY_EMAIL: Readonly<Record<string, string>> = {
+  'events.anatomytattoo@gmail.com': 'Shy',
+  'tattoosbytomma@gmail.com': 'Tomma',
+  'admin@anatomytattoo.com': 'Anna',
+  'mrs.annaclarke@gmail.com': 'Anna',
+};
+
 function getEventTypeVisual(eventType: string): EventTypeVisual {
   const normalized = eventType.trim().toLowerCase();
   if (normalized.includes('private')) return { icon: 'celebration', color: '#b58bff' };
@@ -102,7 +109,10 @@ export default function PayScreen() {
   const { events } = useEvents();
   const { user, viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
 
-  const defaultViewerName = viewerName;
+  const primaryPayoutPersonName = user?.email
+    ? PRIMARY_PAYOUT_PERSON_BY_EMAIL[user.email.trim().toLowerCase()] || viewerName
+    : viewerName;
+  const defaultViewerName = primaryPayoutPersonName;
   const viewerPermission = useMemo(() => {
     if (!defaultViewerName) return null;
     return resolvePermissionsForName(defaultViewerName);
