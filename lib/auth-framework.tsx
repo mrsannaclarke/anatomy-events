@@ -52,7 +52,7 @@ type AuthFrameworkContextValue = {
 };
 
 const AuthFrameworkContext = createContext<AuthFrameworkContextValue | null>(null);
-const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v1';
+const AUTH_USER_STORAGE_KEY = 'anatomy-events.auth-user.v2';
 const VIEWER_OVERRIDE_STORAGE_KEY = 'anatomy-events.viewer-override-name.v1';
 const GOOGLE_SIGN_IN_TIMEOUT_MS = 20000;
 const PINNED_SUPER_ADMIN_EMAILS = new Set<string>([
