@@ -280,20 +280,16 @@ export default function EventGeneratorsFilesScreen() {
         }
         if (!isMounted) return;
 
-        if (contractUrl) {
-          setGeneratedContractUrl(contractUrl);
-          if (contractUrl !== (targetEvent!.contractUrl || '').trim()) {
-            setSelectedEventId(targetEvent!.id);
-            updateEvent(targetEvent!.id, { contractUrl });
-          }
+        setGeneratedContractUrl(contractUrl);
+        if (contractUrl !== (targetEvent!.contractUrl || '').trim()) {
+          setSelectedEventId(targetEvent!.id);
+          updateEvent(targetEvent!.id, { contractUrl });
         }
 
-        if (tflUrl) {
-          setGeneratedTflUrl(tflUrl);
-          if (tflUrl !== (targetEvent!.tflUrl || '').trim()) {
-            setSelectedEventId(targetEvent!.id);
-            updateEvent(targetEvent!.id, { tflUrl });
-          }
+        setGeneratedTflUrl(tflUrl);
+        if (tflUrl !== (targetEvent!.tflUrl || '').trim()) {
+          setSelectedEventId(targetEvent!.id);
+          updateEvent(targetEvent!.id, { tflUrl });
         }
 
         if (savedArtImageUrls.length > 0) {
