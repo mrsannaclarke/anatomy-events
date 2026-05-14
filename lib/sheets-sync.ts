@@ -1441,6 +1441,12 @@ export async function upsertEventToSheet(
   assertConfigured(config);
 
   const totals = computeEventTotals(event);
+  const parsePositiveNumber = (value: string): number => {
+    const parsed = Number.parseFloat(String(value || '').trim().replace(/,/g, ''));
+    if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+    return parsed;
+  };
+  const bookedHours = 5 + parsePositiveNumber(event.extraHours);
   const formatSheetMoney = (value: number): string => {
     if (!Number.isFinite(value) || Math.abs(value) < 0.000001) return '';
     return `${Number(value.toFixed(2))}`;
@@ -1461,6 +1467,8 @@ export async function upsertEventToSheet(
     payStatus: normalizeUnifiedStatus(event.status, event.payStatus),
   };
   const eventForSheet = { ...eventToSave } as Record<string, unknown>;
+  eventForSheet.bookedHours = bookedHours;
+  eventForSheet.extraHours = bookedHours > 5 ? `${Number((bookedHours - 5).toFixed(2))}` : '0';
   eventForSheet.totalCharge = formatSheetMoney(totals.computedTotal);
   eventForSheet.balanceDue = formatSheetMoney(totals.balanceAfterDeposit);
   delete eventForSheet.eventCompletedAt;
