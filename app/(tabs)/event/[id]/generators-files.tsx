@@ -404,21 +404,23 @@ export default function EventGeneratorsFilesScreen() {
 
       setLoadStatus(`Generating ${kind === 'contract' ? 'contract' : 'TFL'}...`);
       const generated = await triggerEventDocumentGeneration(SHEET_SYNC_CONFIG, { entryId, kind });
-      const contractUrl = asUrl(generated.contractUrl);
-      const tflUrl = asUrl(generated.tflUrl);
+      let contractUrl = asUrl(generated.contractUrl);
+      let tflUrl = asUrl(generated.tflUrl);
       const refreshedEvent = await pullEventByEntryId(SHEET_SYNC_CONFIG, entryId).catch(() => null);
 
       if (refreshedEvent) {
         upsertEventFromRemote(refreshedEvent);
+        contractUrl = asUrl(refreshedEvent.contractUrl || contractUrl);
+        tflUrl = asUrl(refreshedEvent.tflUrl || tflUrl);
       }
 
-      if (contractUrl) {
-        setGeneratedContractUrl(contractUrl);
+      setGeneratedContractUrl(contractUrl);
+      if (contractUrl !== asUrl(currentEvent.contractUrl || '')) {
         setSelectedEventId(currentEvent.id);
         updateEvent(currentEvent.id, { contractUrl });
       }
-      if (tflUrl) {
-        setGeneratedTflUrl(tflUrl);
+      setGeneratedTflUrl(tflUrl);
+      if (tflUrl !== asUrl(currentEvent.tflUrl || '')) {
         setSelectedEventId(currentEvent.id);
         updateEvent(currentEvent.id, { tflUrl });
       }
