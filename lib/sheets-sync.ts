@@ -1440,9 +1440,19 @@ export async function upsertEventToSheet(
 ): Promise<EventRecord> {
   assertConfigured(config);
 
+  const totals = computeEventTotals(event);
+  const formatSheetMoney = (value: number): string => {
+    if (!Number.isFinite(value) || Math.abs(value) < 0.000001) return '';
+    return `${Number(value.toFixed(2))}`;
+  };
+
   const eventToSave: EventRecord = {
     ...event,
     optionalFee: event.staffPriceAdjustment.trim() || event.optionalFee,
+    customFlashFee: formatSheetMoney(totals.effectiveFees.customFlashFee),
+    temporaryTattooFee: formatSheetMoney(totals.effectiveFees.temporaryTattooFee),
+    tempFacilityLicenseFee: formatSheetMoney(totals.effectiveFees.tempFacilityLicenseFee),
+    radiusFee: formatSheetMoney(totals.effectiveFees.radiusFee),
     setupTime: normalizeImportedTime(event.setupTime),
     eventStartTime: normalizeImportedTime(event.eventStartTime),
     eventEndTime: normalizeImportedTime(event.eventEndTime),
@@ -1451,9 +1461,9 @@ export async function upsertEventToSheet(
     payStatus: normalizeUnifiedStatus(event.status, event.payStatus),
   };
   const eventForSheet = { ...eventToSave } as Record<string, unknown>;
+  eventForSheet.totalCharge = formatSheetMoney(totals.computedTotal);
+  eventForSheet.balanceDue = formatSheetMoney(totals.balanceAfterDeposit);
   delete eventForSheet.eventCompletedAt;
-
-  const totals = computeEventTotals(event);
 
   const payload = {
     action: 'upsertEvent',

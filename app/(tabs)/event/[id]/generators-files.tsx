@@ -374,19 +374,47 @@ export default function EventGeneratorsFilesScreen() {
   const currentEvent = event;
   const typeVisual = getEventTypeVisual(currentEvent.eventType);
 
-  async function handleGenerate(kind: DocumentKind) {
-    const entryId = currentEvent.entryId.trim();
-    if (!entryId) {
-      setErrorMessage('Save this event to sheet first so generation can target a valid Entry ID.');
-      return;
+  async function saveCurrentEventForGeneration() {
+    setLoadStatus('Saving event before generation...');
+    const latestLocalEvent = events.find((item) => item.id === currentEvent.id) || currentEvent;
+    const saved = await upsertEventToSheet(SHEET_SYNC_CONFIG, latestLocalEvent);
+
+    let latestRemoteEvent = saved;
+    const savedEntryId = String(saved.entryId || '').trim();
+    if (savedEntryId) {
+      try {
+        const pulled = await pullEventByEntryId(SHEET_SYNC_CONFIG, savedEntryId);
+        if (pulled) {
+          latestRemoteEvent = pulled;
+        }
+      } catch {
+        // Keep the saved payload if the follow-up pull fails.
+      }
     }
 
+    upsertEventFromRemote(latestRemoteEvent);
+    return latestRemoteEvent;
+  }
+
+  async function handleGenerate(kind: DocumentKind) {
     setIsGenerating(kind);
     setErrorMessage('');
     try {
+      const savedEvent = await saveCurrentEventForGeneration();
+      const entryId = String(savedEvent.entryId || '').trim();
+      if (!entryId) {
+        throw new Error('Unable to generate because this event could not be saved with an Entry ID.');
+      }
+
+      setLoadStatus(`Generating ${kind === 'contract' ? 'contract' : 'TFL'}...`);
       const generated = await triggerEventDocumentGeneration(SHEET_SYNC_CONFIG, { entryId, kind });
       const contractUrl = asUrl(generated.contractUrl);
       const tflUrl = asUrl(generated.tflUrl);
+      const refreshedEvent = await pullEventByEntryId(SHEET_SYNC_CONFIG, entryId).catch(() => null);
+
+      if (refreshedEvent) {
+        upsertEventFromRemote(refreshedEvent);
+      }
 
       if (contractUrl) {
         setGeneratedContractUrl(contractUrl);
@@ -406,6 +434,7 @@ export default function EventGeneratorsFilesScreen() {
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to generate file.');
     } finally {
+      setLoadStatus('');
       setIsGenerating(null);
     }
   }
