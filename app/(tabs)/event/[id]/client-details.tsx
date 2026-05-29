@@ -121,12 +121,15 @@ function getEventTypeVisual(eventType: string): EventTypeVisual {
 }
 
 export default function EventClientDetailsScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, edit } = useLocalSearchParams<{ id: string; edit?: string | string[] }>();
   const router = useRouter();
   const { events, setSelectedEventId, updateEvent, upsertEventFromRemote, removeEvent } = useEvents();
   const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
 
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable, setIsEditable] = useState(() => {
+    const editParam = Array.isArray(edit) ? edit[0] : edit;
+    return editParam === '1' || editParam === 'true';
+  });
   const [isSavingToSheet, setIsSavingToSheet] = useState(false);
   const [isDeletingFromSheet, setIsDeletingFromSheet] = useState(false);
   const [sheetSyncStatus, setSheetSyncStatus] = useState('');

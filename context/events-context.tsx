@@ -201,6 +201,13 @@ export function EventsProvider({ children }: PropsWithChildren) {
     }
 
     function upsertEventFromRemote(remoteEvent: EventRecord): void {
+      const existingById = events.find((event) => event.id === remoteEvent.id);
+      const existingByEntry =
+        !existingById && remoteEvent.entryId
+          ? events.find((event) => event.entryId && event.entryId === remoteEvent.entryId)
+          : undefined;
+      const selectedIdAfterUpsert = existingByEntry?.id || remoteEvent.id;
+
       setEvents((current) => {
         const byIdIndex = current.findIndex((event) => event.id === remoteEvent.id);
         if (byIdIndex >= 0) {
@@ -214,19 +221,20 @@ export function EventsProvider({ children }: PropsWithChildren) {
         );
         if (byEntryIndex >= 0) {
           const copy = [...current];
-          copy[byEntryIndex] = { ...copy[byEntryIndex], ...remoteEvent };
+          copy[byEntryIndex] = { ...copy[byEntryIndex], ...remoteEvent, id: copy[byEntryIndex].id };
           return copy;
         }
 
         return [remoteEvent, ...current];
       });
-      setSelectedEventId(remoteEvent.id);
+      setSelectedEventId(selectedIdAfterUpsert);
       fireAndForgetAuditLog({
         eventType: 'event_upsert_remote',
         status: 'success',
         message: 'Synced event from remote.',
         details: {
-          id: remoteEvent.id,
+          id: selectedIdAfterUpsert,
+          remoteId: remoteEvent.id,
           entryId: remoteEvent.entryId,
           sourceRow: remoteEvent.sourceRow,
         },

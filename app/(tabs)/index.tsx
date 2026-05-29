@@ -4,7 +4,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { GlowPressable as Pressable } from '@/components/ui/glow-pressable';
 import { CALENDAR_SYNC_CONFIG } from '@/constants/calendar-sync';
 import { getStaffColor } from '@/constants/staff-colors';
@@ -497,7 +496,7 @@ export default function EventsScreen() {
   const { events, createEvent, setSelectedEventId, replaceEvents } = useEvents();
   const { viewerName, canAccessAdminToolsForViewer, resolvePermissionsForName } = useAuthFramework();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoadingCalendarMatches, setIsLoadingCalendarMatches] = useState(true);
+  const [, setIsLoadingCalendarMatches] = useState(true);
   const [calendarMatches, setCalendarMatches] = useState<Record<string, CalendarMatch>>({});
   const [manualUpcomingByEventId, setManualUpcomingByEventId] = useState<Record<string, number>>({});
   const [latestCommunicationByEventId, setLatestCommunicationByEventId] = useState<Record<string, EventActivityEntry>>(
@@ -602,7 +601,7 @@ export default function EventsScreen() {
     page?: 'client' | 'notes' | 'generators_files',
   ) {
     setSelectedEventId(id);
-    if (page === 'client') return router.push(`/event/${id}/client-details`);
+    if (page === 'client') return router.push(`/event/${id}/client-details?edit=1`);
     if (page === 'notes') return router.push(`/event/${id}/notes`);
     if (page === 'generators_files') return router.push(`/event/${id}/generators-files`);
     router.push(`/event/${id}`);
@@ -743,10 +742,6 @@ export default function EventsScreen() {
     },
     [],
   );
-
-  if (isLoadingCalendarMatches && events.length > 0) {
-    return <AppLoadingScreen />;
-  }
 
   return (
     <ScrollView
