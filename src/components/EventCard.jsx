@@ -1,7 +1,6 @@
 import { BriefcaseBusiness, CalendarPlus, Heart, MapPin, PartyPopper, ScrollText, Users } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
-import { computePricing, formFromEvent, formatMoney } from '../pricingMath.js';
 import { formatAppointment, getLatestCommunication } from '../activity.js';
 import { getStaffColor } from '../staffColors.js';
 
@@ -10,11 +9,6 @@ const STAFF_NAME_ALIASES = {
   'Lady Shy': 'Shy',
   'Tomma Mueller': 'Tomma',
 };
-
-function isOpenStatus(event) {
-  const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
-  return !status || status === 'open';
-}
 
 export function isHiddenLedgerStatus(event) {
   const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
@@ -98,9 +92,7 @@ function buildCalendarUrl(event) {
   return url.toString();
 }
 
-export function EventCard({ event, onAction, showAdminMoney = false }) {
-  const showMoney = showAdminMoney && !isOpenStatus(event);
-  const totals = computePricing(formFromEvent(event));
+export function EventCard({ event, onAction }) {
   const raw = event.raw || {};
   const location = raw.eventAddress || raw.venueName || '';
   const latestCommunication = getLatestCommunication(raw);
@@ -152,19 +144,6 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
           <strong>{raw.numberOfArtists || '0'}</strong>
         )}
       </div>
-
-      {showMoney ? (
-        <div className="amount-row">
-          <div>
-            <span>Computed Total</span>
-            <strong>{formatMoney(totals.totalCharge)}</strong>
-          </div>
-          <div>
-            <span>Balance</span>
-            <strong>{event.balanceDue || formatMoney(totals.balanceDue)}</strong>
-          </div>
-        </div>
-      ) : null}
 
       {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
 

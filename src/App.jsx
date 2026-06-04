@@ -277,7 +277,6 @@ export function App() {
                   <EventCard
                     key={event.id || event.clientName}
                     event={event}
-                    showAdminMoney={viewer.canAccessAdminTools}
                     onAction={(mode, selectedEvent) => setDetail({ mode, event: selectedEvent })}
                   />
                 ))
