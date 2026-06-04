@@ -3,12 +3,13 @@ import { Pencil, Route, Save, Trash2 } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { fireAudit } from '../auditLog.js';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
 import { buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, parseMoney, PLAN_YEARS } from '../pricingMath.js';
 
-export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
+export function ClientDetailsPanel({ event, viewer, onSaved, onDeleted }) {
   const [isEditable, setIsEditable] = useState(true);
   const [form, setForm] = useState(() => {
     const raw = event.raw || {};
@@ -94,6 +95,14 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       });
       const refreshed = entryId ? await pullEventByEntryId(entryId) : null;
       if (refreshed) onSaved(refreshed);
+      fireAudit(viewer, {
+        actionName: 'client_details_save',
+        entryId,
+        details: {
+          clientName: form.clientName,
+          fields: ['client details', 'event timing', 'pricing totals'],
+        },
+      });
       setStatus('Saved to Sheet.');
       setIsEditable(false);
     } catch (error) {
@@ -108,6 +117,11 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
     setStatus('Deleting event from Sheet...');
     try {
       await deleteEventFromSheet(event.raw);
+      fireAudit(viewer, {
+        actionName: 'event_delete',
+        entryId: event.entryId || event.raw?.entryId,
+        details: { clientName: event.clientName },
+      });
       onDeleted(event);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to delete event.');

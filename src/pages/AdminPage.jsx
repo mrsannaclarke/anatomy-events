@@ -39,6 +39,11 @@ export function AdminPage({ viewer, onOpenPage, onRefresh }) {
           <strong>Refresh Sheet Data</strong>
           <span>Pull current Event rows into the app cache.</span>
         </button>
+        <button type="button" className="admin-action" onClick={() => onOpenPage('auditLog')}>
+          <ClipboardList size={20} />
+          <strong>Open Audit Log</strong>
+          <span>Review recent Sheet-backed app writes.</span>
+        </button>
         {canOpenPayoutLedger ? (
           <button type="button" className="admin-action" onClick={() => onOpenPage('payoutLedger')}>
             <ClipboardList size={20} />

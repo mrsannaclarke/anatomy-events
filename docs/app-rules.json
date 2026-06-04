@@ -494,7 +494,7 @@
     ]
   },
   "audit_and_activity": {
-    "audit_log": "Records create/edit/pull/save/remove/sync events and is accessible from Admin Tools.",
+    "audit_log": "Records create/edit/pull/save/remove/sync events in the Sheet-backed Audit Log tab and is accessible from Admin Tools. 2.0 reads the live Audit Log tab; explicit viewer-stamped app audit rows require the Apps Script GET appendaudit deployment to be published by the script owner/domain account.",
     "event_update_audit_throttle_ms": 2000,
     "activity_log": "Notes communication entries are shown on Notes and summarized on Event Ledger cards."
   },

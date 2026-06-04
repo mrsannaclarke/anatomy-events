@@ -206,3 +206,19 @@ export async function pullSheetTabRows(tabName) {
   const data = await requestSheetJson({ action: 'sheettabrows', tabName });
   return data.rows || [];
 }
+
+export async function appendAuditToSheet({ actionName, entryId, targetSheet = 'Events', payload = {} }) {
+  return requestSheetJson({
+    action: 'appendaudit',
+    actionName,
+    entryId: entryId || '',
+    targetSheet,
+    payloadJson: JSON.stringify(payload),
+  });
+}
+
+export async function pullAuditRows(limit = 150) {
+  const data = await requestSheetJson({ action: 'sheettabrows', tabName: 'Audit Log', startRow: '2', limit: String(limit) });
+  const rows = data.rows || [];
+  return rows.slice(-limit).reverse();
+}

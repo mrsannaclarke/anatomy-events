@@ -6,6 +6,7 @@ import { cacheViewer, clearCachedViewer, getCachedViewer, GOOGLE_WEB_CLIENT_ID, 
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
+import { AuditLogPage } from './pages/AuditLogPage.jsx';
 import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
@@ -217,6 +218,7 @@ export function App() {
         {detail ? (
           <DetailPanel
             detail={detail}
+            viewer={viewer}
             onBack={() => setDetail(null)}
             onSaved={replaceSavedEvent}
             onDeleted={removeDeletedEvent}
@@ -224,11 +226,13 @@ export function App() {
             onChangeMode={(mode) => setDetail((current) => (current ? { ...current, mode } : current))}
           />
         ) : activePage === 'pricing' ? (
-          <PricingPage events={events} onSaved={replaceSavedEvent} />
+          <PricingPage events={events} viewer={viewer} onSaved={replaceSavedEvent} />
         ) : activePage === 'payout' ? (
           <PayoutPage events={events} viewer={viewer} />
         ) : activePage === 'admin' ? (
           <AdminPage viewer={viewer} onOpenPage={setActivePage} onRefresh={loadEvents} />
+        ) : activePage === 'auditLog' ? (
+          <AuditLogPage onBack={() => setActivePage('admin')} />
         ) : activePage === 'payoutLedger' ? (
           <PayoutLedgerPage events={events} viewer={viewer} onBack={() => setActivePage('admin')} />
         ) : activePage === 'events' ? (

@@ -3,11 +3,12 @@ import { Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { fireAudit } from '../auditLog.js';
 import { STATUS_OPTIONS } from '../constants.js';
 import { saveManualAppointment } from '../activity.js';
 import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 
-export function NotesPanel({ event, onSaved, onManualAppointmentsChanged }) {
+export function NotesPanel({ event, viewer, onSaved, onManualAppointmentsChanged }) {
   const raw = event.raw || {};
   const [statusValue, setStatusValue] = useState(raw.status || raw.payStatus || '');
   const [privateNotes, setPrivateNotes] = useState(raw.privateNotes || '');
@@ -40,6 +41,16 @@ export function NotesPanel({ event, onSaved, onManualAppointmentsChanged }) {
       onManualAppointmentsChanged?.(nextAppointments);
       const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
       onSaved(refreshed);
+      fireAudit(viewer, {
+        actionName: 'notes_status_save',
+        entryId: saved.entryId || raw.entryId,
+        details: {
+          clientName: event.clientName,
+          status: statusValue,
+          manualAppointment: manualAppointment || '',
+          communicationEntryAdded: Boolean(communicationEntry.trim()),
+        },
+      });
       setPrivateNotes(saved.raw.privateNotes || `${privateNotes || ''}${communicationBlock}`.trim());
       setCommunicationEntry('');
       setStatus('Saved notes.');

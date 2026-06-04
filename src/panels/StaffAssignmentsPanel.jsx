@@ -3,6 +3,7 @@ import { Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { fireAudit } from '../auditLog.js';
 import { COUNTER_OPTIONS, STAFF_OPTIONS } from '../constants.js';
 import { ARTIST_COUNTS } from '../pricingMath.js';
 import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
@@ -19,7 +20,7 @@ function staffChipStyle(name, selected) {
   };
 }
 
-export function StaffAssignmentsPanel({ event, onSaved }) {
+export function StaffAssignmentsPanel({ event, viewer, onSaved }) {
   const raw = event.raw || {};
   const [artistCount, setArtistCount] = useState(raw.numberOfArtists || '1');
   const [artists, setArtists] = useState(() => splitNames(raw.artistNames).map(normalizeStaffName).slice(0, Number(raw.numberOfArtists) || 1));
@@ -45,6 +46,16 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
         counterNames: joinNames(counters),
       });
       onSaved(saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved);
+      fireAudit(viewer, {
+        actionName: 'staff_assignments_save',
+        entryId: saved.entryId || raw.entryId,
+        details: {
+          clientName: event.clientName,
+          artistCount,
+          artists,
+          counters,
+        },
+      });
       setStatus('Saved staff assignments.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to save staff assignments.');

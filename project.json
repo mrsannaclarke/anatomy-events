@@ -1223,9 +1223,9 @@
         },
         {
           "id": "audit_activity_log",
-          "status": "pending",
+          "status": "partial",
           "title": "Audit/activity log",
-          "detail": "Admin audit log and full event activity-log behavior are not rebuilt. Notes can append communication blocks, but not the full Expo activity system."
+          "detail": "Admin Audit Log page is rebuilt against the Sheet-backed Audit Log tab, and the current Apps Script source already writes internal audit rows for event upserts/deletes/generator link updates. 2.0 also includes explicit viewer-stamped audit calls for saves/deletes/generates, but the GET appendaudit Apps Script handler must be deployed by the script owner/domain account before those extra viewer payload rows work on the live /exec URL. Notes can append communication blocks, but full Expo activity-log delete/Discord behavior is not rebuilt."
         },
         {
           "id": "staff_assignment_live_artist_source",

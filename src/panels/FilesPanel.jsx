@@ -3,9 +3,10 @@ import { Copy, ExternalLink, Mail, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { fireAudit } from '../auditLog.js';
 import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 
-export function FilesPanel({ event, onSaved }) {
+export function FilesPanel({ event, viewer, onSaved }) {
   const raw = event.raw || {};
   const [artUrl, setArtUrl] = useState(raw.artImageUrl || '');
   const [status, setStatus] = useState('');
@@ -43,6 +44,17 @@ export function FilesPanel({ event, onSaved }) {
       });
       const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
       onSaved(refreshed);
+      fireAudit(viewer, {
+        actionName: kind === 'tfl' ? 'temporary_license_generate' : 'contract_generate',
+        entryId: saved.entryId || raw.entryId,
+        targetSheet: 'Generated Files',
+        details: {
+          clientName: event.clientName,
+          kind,
+          contractUrl: result.contractUrl || '',
+          tflUrl: result.tflUrl || '',
+        },
+      });
       setStatus('Generated file link saved.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to generate file.');
@@ -62,6 +74,14 @@ export function FilesPanel({ event, onSaved }) {
       });
       const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
       onSaved(refreshed);
+      fireAudit(viewer, {
+        actionName: 'uploaded_art_url_save',
+        entryId: saved.entryId || raw.entryId,
+        details: {
+          clientName: event.clientName,
+          artUrl,
+        },
+      });
       setStatus('Uploaded art URL saved.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to save art URL.');
