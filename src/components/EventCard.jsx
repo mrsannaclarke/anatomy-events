@@ -55,14 +55,14 @@ function formatDate(value) {
 function formatTime(value) {
   const text = String(value || '').trim();
   if (!text) return '';
-  const clock = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?/);
-  const simple = text.match(/^(\d{1,2}):(\d{2})/);
+  const clock = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?/i);
+  const simple = text.match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
   const match = clock || simple;
   if (!match) return '';
   const hour24 = Number(match[1]);
   const minutes = match[2];
-  const hour12 = hour24 % 12 || 12;
-  const suffix = hour24 >= 12 ? 'PM' : 'AM';
+  const suffix = match[3]?.toUpperCase() || (hour24 >= 12 ? 'PM' : 'AM');
+  const hour12 = match[3] ? hour24 : hour24 % 12 || 12;
   return `${hour12}:${minutes} ${suffix}`;
 }
 
