@@ -14,8 +14,8 @@
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
     "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
     "script_id": "1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK",
-    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
+    "web_app_deployment_id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec",
     "weekly_sheet_url": "https://docs.google.com/spreadsheets/d/1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw/edit?gid=1568490049#gid=1568490049",
     "weekly_sheet_id": "1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw",
     "master_sheet_url": "https://docs.google.com/spreadsheets/d/1SqOSuyRKrsgJP4bBdt_Lz9ILa_xXG8o9JuasG6IQ-qk/edit?gid=168785747#gid=168785747",
@@ -32,7 +32,7 @@
     "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
     "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec",
     "local_workspace_path": "/Users/Anna/Documents/Project Files/Event Details Project/clean-source-v2",
     "script_bootstrap": {
       "created": true,
@@ -153,7 +153,7 @@
         "note": "Date values differ in API representation format (MM/DD/YYYY vs ISO timestamp) but refer to same sheet dates."
       }
     },
-    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
+    "web_app_deployment_id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
     "web_app_deployment_version": 37,
     "local_weekly_project_json_path": "/Users/Anna/Documents/Project Files/Event Details Project/weekly sheets project.json",
     "last_link_parity_check": {
@@ -266,7 +266,7 @@
     "credit_ledger_reconciliation": {
       "date": "2026-04-18",
       "deployment_used": {
-        "id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
+        "id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
         "version": 37
       },
       "issue": "Older staging deployments accepted duplicate legacy-import ledger writes; Tomma carryover doubled.",
@@ -1205,9 +1205,9 @@
         },
         {
           "id": "external_calendar_feed_appointment_matching",
-          "status": "pending",
+          "status": "partial",
           "title": "External calendar-feed appointment matching",
-          "detail": "Event cards have the footer and manual appointment fallback, but they do not yet pull next/last appointment from the configured calendar feeds."
+          "detail": "2.0 now pulls action=calendarfeed, parses ICS events, matches calendar entries to Sheet events, sorts by calendar next appointment before manual/date fallback, and shows calendar-derived Next/Last appointment footer values. Remaining blocker: Apps Script must be authorized for UrlFetchApp/script.external_request by running authorizeUrlFetchAccess from the script owner editor before the live endpoint can fetch private ICS feeds."
         },
         {
           "id": "live_payout_override_source",

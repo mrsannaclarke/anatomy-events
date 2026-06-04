@@ -2,7 +2,7 @@ import { BriefcaseBusiness, CalendarPlus, Heart, MapPin, PartyPopper, ScrollText
 
 import { cardActions } from '../constants.js';
 import { computePricing, formFromEvent, formatMoney } from '../pricingMath.js';
-import { getLatestCommunication } from '../activity.js';
+import { formatAppointment, getLatestCommunication } from '../activity.js';
 import { getStaffColor } from '../staffColors.js';
 
 const STAFF_NAME_ALIASES = {
@@ -112,6 +112,12 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
   const dateLine = [eventDate, eventTime ? `Event ${eventTime}` : ''].filter(Boolean).join(' • ');
   const addressLines = getAddressLines(raw);
   const artistNames = splitNames(raw.artistNames);
+  const nextAppointment =
+    formatAppointment(event.calendarAppointment?.next) ||
+    (raw.manualUpcomingAppointment
+      ? new Date(raw.manualUpcomingAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+      : '');
+  const lastAppointment = formatAppointment(event.calendarAppointment?.last);
 
   return (
     <article className="event-card">
@@ -182,8 +188,8 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
       </div>
 
       <div className="appointment-footer">
-        <span>Next Appt: {raw.manualUpcomingAppointment ? new Date(raw.manualUpcomingAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No upcoming appointment found'}</span>
-        <span>Last Appt: No previous appointment found</span>
+        <span>Next Appt: {nextAppointment || 'No upcoming appointment found'}</span>
+        <span>Last Appt: {lastAppointment || 'No previous appointment found'}</span>
       </div>
     </article>
   );

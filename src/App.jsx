@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import project from '../project.json';
-import { loadManualAppointments, sortLedgerEvents } from './activity.js';
+import { buildCalendarAppointmentMap, loadManualAppointments, parseCalendarFeed, sortLedgerEvents } from './activity.js';
 import { cacheViewer, clearCachedViewer, getCachedViewer, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
@@ -11,7 +11,7 @@ import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
 import { DetailPanel } from './panels/DetailPanel.jsx';
-import { pullEventsFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
+import { pullCalendarFeed, pullEventsFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
 
 function getProjectTitle() {
   return project?.project?.name || project?.name || 'Events App 2.0';
@@ -107,6 +107,7 @@ export function App() {
   const [detail, setDetail] = useState(null);
   const [viewer, setViewer] = useState(() => getCachedViewer());
   const [manualAppointments, setManualAppointments] = useState(() => loadManualAppointments());
+  const [calendarAppointments, setCalendarAppointments] = useState({});
 
   async function loadEvents() {
     setSyncStatus((current) => (events.length > 0 && current === 'connected' ? 'refreshing' : 'loading'));
@@ -125,6 +126,31 @@ export function App() {
   useEffect(() => {
     if (viewer?.isAllowlisted) void loadEvents();
   }, [viewer?.isAllowlisted]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadCalendarAppointments() {
+      if (!viewer?.isAllowlisted || events.length === 0) {
+        setCalendarAppointments({});
+        return;
+      }
+
+      try {
+        const ics = await pullCalendarFeed();
+        if (!mounted) return;
+        const entries = parseCalendarFeed(ics);
+        setCalendarAppointments(buildCalendarAppointmentMap(events, entries));
+      } catch {
+        if (mounted) setCalendarAppointments({});
+      }
+    }
+
+    void loadCalendarAppointments();
+    return () => {
+      mounted = false;
+    };
+  }, [events, viewer?.isAllowlisted]);
 
   function replaceSavedEvent(savedEvent) {
     setEvents((current) => {
@@ -152,9 +178,17 @@ export function App() {
     if (!viewer?.isAllowlisted) return navItems.filter((item) => item.id === 'events');
     return navItems;
   }, [viewer?.isAllowlisted]);
+  const eventsWithAppointments = useMemo(
+    () =>
+      events.map((event) => ({
+        ...event,
+        calendarAppointment: calendarAppointments[event.entryId || event.id] || null,
+      })),
+    [calendarAppointments, events],
+  );
   const visibleLedgerEvents = useMemo(
-    () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event)), manualAppointments),
-    [events, manualAppointments],
+    () => sortLedgerEvents(eventsWithAppointments.filter((event) => !isHiddenLedgerStatus(event)), manualAppointments),
+    [eventsWithAppointments, manualAppointments],
   );
 
   function signOut() {

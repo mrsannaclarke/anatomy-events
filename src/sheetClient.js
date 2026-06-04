@@ -2,7 +2,7 @@ const viteEnv = import.meta.env || {};
 
 export const SHEET_WEB_APP_URL =
   viteEnv.VITE_SHEET_WEB_APP_URL ||
-  'https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec';
+  'https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec';
 
 export const SHEET_API_TOKEN = viteEnv.VITE_SHEET_API_TOKEN || '';
 
@@ -195,6 +195,11 @@ export async function generateEventFile(entryId, kind) {
 export async function pullPricingRulesFromSheet() {
   const data = await requestSheetJson({ action: 'pricing' });
   return data.pricing || [];
+}
+
+export async function pullCalendarFeed() {
+  const data = await requestSheetJson({ action: 'calendarfeed' });
+  return data.ics || '';
 }
 
 export async function pullSheetTabs() {
