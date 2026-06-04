@@ -148,9 +148,9 @@ export function App() {
   }
 
   const visibleNavItems = useMemo(() => {
-    if (!viewer.isAllowlisted) return navItems.filter((item) => item.id === 'events');
+    if (!viewer?.isAllowlisted) return navItems.filter((item) => item.id === 'events');
     return navItems;
-  }, [viewer.isAllowlisted]);
+  }, [viewer?.isAllowlisted]);
   const visibleLedgerEvents = useMemo(
     () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event)), manualAppointments),
     [events, manualAppointments],
