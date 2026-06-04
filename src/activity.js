@@ -37,21 +37,19 @@ export function getAppointmentTimestamp(event, manualAppointments = {}) {
   return Number.isNaN(parsed.getTime()) ? Number.POSITIVE_INFINITY : parsed.getTime();
 }
 
-export function sortLedgerEvents(events, manualAppointments = {}) {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayTs = todayStart.getTime();
+export function getEventDateTimestamp(event) {
+  const raw = event.raw || event;
+  const date = raw.eventDate || event.eventDate || '';
+  const time = raw.eventStartTime || raw.setupTime || '';
+  const parsed = new Date(time ? `${date} ${time}` : date);
+  return Number.isNaN(parsed.getTime()) ? Number.POSITIVE_INFINITY : parsed.getTime();
+}
 
+export function sortLedgerEvents(events) {
   return [...events].sort((a, b) => {
-    const aTs = getAppointmentTimestamp(a, manualAppointments);
-    const bTs = getAppointmentTimestamp(b, manualAppointments);
-    const aUpcoming = aTs !== Number.POSITIVE_INFINITY && aTs >= todayTs;
-    const bUpcoming = bTs !== Number.POSITIVE_INFINITY && bTs >= todayTs;
-
-    if (aUpcoming && bUpcoming) return aTs - bTs || a.clientName.localeCompare(b.clientName);
-    if (aUpcoming) return -1;
-    if (bUpcoming) return 1;
-    if (aTs !== Number.POSITIVE_INFINITY && bTs !== Number.POSITIVE_INFINITY) return bTs - aTs || a.clientName.localeCompare(b.clientName);
+    const aTs = getEventDateTimestamp(a);
+    const bTs = getEventDateTimestamp(b);
+    if (aTs !== Number.POSITIVE_INFINITY && bTs !== Number.POSITIVE_INFINITY) return aTs - bTs || a.clientName.localeCompare(b.clientName);
     if (aTs !== Number.POSITIVE_INFINITY) return -1;
     if (bTs !== Number.POSITIVE_INFINITY) return 1;
     return a.clientName.localeCompare(b.clientName);

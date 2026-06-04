@@ -310,11 +310,8 @@
   "current_rules": {
     "home_page": {
       "show": "all projects except complete/Event Complete/Event Complete Balance Late statuses",
-      "sort": "upcoming appointments first by soonest timestamp; past dated cards follow newest first; undated cards last by client name",
+      "sort": "Sheet event date/start time first, soonest first; undated cards last by client name",
       "sort_source_priority": [
-        "calendar upcoming match",
-        "manual upcoming appointment",
-        "fallback upcoming appointment",
         "event date/start time"
       ],
       "ao_dropdown_values": [
@@ -829,7 +826,7 @@
         "Current Apps Script source exposes Events and Pricing Rules, but not legacy staff payout tabs, so payout rows label schedule fallback instead of live staff-tab override truth.",
         "Apps Script version 73 was pushed and versioned for Oregon TFL defaulting, but active deployment AKfycbywkj... remains on version 72 until redeployed by an account in the script owner's Google Workspace domain.",
         "Production write actions are wired but still need deliberate row-level mutation tests before marking save/delete/generate parity as pass.",
-        "Calendar/manual appointment sorting, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
+        "Calendar/manual appointment display, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
       ],
       "mobile_requirement": "Pages remain mobile responsive; nav, action grids, summaries, and forms collapse to single-column controls on narrow screens.",
       "parity_audit": "docs/frontend-parity-audit.md"
@@ -873,14 +870,14 @@
           "implemented": [
             "Sheet-backed event list",
             "complete/event complete/event complete balance late hidden; cancelled remains visible",
-            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, money row, compact icon actions, calendar button, and appointment footer",
+            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, compact icon actions, calendar button, and appointment footer; computed total and balance are intentionally hidden from the card face",
             "Sheet ISO dates are displayed without timezone day rollback",
             "Sheet serial-style time values are displayed as normal clock times",
-            "manual-appointment-aware sort with event date fallback",
+            "soonest Sheet event date/start time sort",
             "Google Calendar link",
             "Map link for usable address/venue values",
             "latest communication preview from activity entries",
-            "local allowlist/admin viewer gate for computed total and balance display"
+            "computed total and balance removed from the event ledger card face"
           ],
           "missing": [
             "external calendar feed matching",
@@ -931,7 +928,7 @@
             "Client Notes section read-only",
             "Communication Entry section",
             "Feed section from communication blocks",
-            "manual appointment used by ledger sorting",
+            "manual appointment can display in appointment footer when no calendar match is available",
             "save to upsertEvent wired with post-save refresh by Entry ID when possible"
           ],
           "missing": [
@@ -1207,7 +1204,7 @@
           "id": "external_calendar_feed_appointment_matching",
           "status": "partial",
           "title": "External calendar-feed appointment matching",
-          "detail": "2.0 now pulls action=calendarfeed, parses ICS events, matches calendar entries to Sheet events, sorts by calendar next appointment before manual/date fallback, and shows calendar-derived Next/Last appointment footer values. Remaining blocker: Apps Script must be authorized for UrlFetchApp/script.external_request by running authorizeUrlFetchAccess from the script owner editor before the live endpoint can fetch private ICS feeds."
+          "detail": "2.0 now pulls action=calendarfeed, parses ICS events, matches calendar entries to Sheet events, and shows calendar-derived Next/Last appointment footer values. Event ledger card order is intentionally driven by Sheet event date/start time, not calendar appointment date."
         },
         {
           "id": "live_payout_override_source",

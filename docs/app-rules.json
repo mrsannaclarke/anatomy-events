@@ -135,12 +135,10 @@
     ],
     "cancelled_visibility": "Cancelled rows are not currently hidden by the event ledger completion filter.",
     "sort_order": [
-      "Open/non-complete cards with upcoming appointment timestamps first, soonest first.",
-      "Appointment timestamp priority: calendar upcoming match, manual upcoming appointment, fallback upcoming appointment, event date/start time.",
-      "Past dated cards follow upcoming cards, newest first.",
+      "Open/non-complete cards sort by Sheet event date/start time, soonest first.",
       "Undated cards sort last by client name."
     ],
-    "card_money_visibility": "Computed Total and Balance are visible only to admin-money viewers and only when status/pay status is not Open/blank.",
+    "card_money_visibility": "Computed Total and Balance are not shown on the event ledger client card face.",
     "post_deposit_additions": "When status is deposit paid or later and a numeric deposit exists, Added After Deposit Paid is max(0, computed total - deposit/0.30).",
     "appointment_footer": "Shows Next Appt and Last Appt from calendar/manual/fallback sources.",
     "google_calendar_button": "Built as all-day event from event date, client/type title, venue/address, phone, and email.",
@@ -287,7 +285,7 @@
     ],
     "status_edit_access": "Only admin and super_admin effective auth types can edit status.",
     "activity_log": "Staff communication entries store actor, timestamp, and message; Discord actor entries are removed from visible local log.",
-    "manual_upcoming_appointment": "Notes can save a manual upcoming appointment timestamp used by event ledger sorting and display.",
+    "manual_upcoming_appointment": "Notes can save a manual upcoming appointment timestamp used by event ledger appointment footer display.",
     "discord": "Specific Entry IDs can post to configured Discord event channels."
   },
   "pricing": {
@@ -543,7 +541,7 @@
         "Google OAuth is connected in 2.0 through Google Identity Services; stale local viewer fixtures are ignored unless created by Google sign-in.",
         "Current Apps Script source exposes Events and Pricing Rules, but not legacy staff payout tabs, so payout rows label schedule fallback instead of live staff-tab override truth.",
         "Production write actions are wired but still need deliberate row-level mutation tests before marking save/delete/generate parity as pass.",
-        "Calendar/manual appointment sorting, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
+        "Calendar/manual appointment display, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
       ],
       "mobile_requirement": "Pages remain mobile responsive; nav, action grids, summaries, and forms collapse to single-column controls on narrow screens.",
       "parity_audit": "docs/frontend-parity-audit.md"
@@ -587,14 +585,14 @@
           "implemented": [
             "Sheet-backed event list",
             "complete/event complete/event complete balance late hidden; cancelled remains visible",
-            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, money row, compact icon actions, calendar button, and appointment footer",
+            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, compact icon actions, calendar button, and appointment footer; computed total and balance are intentionally hidden from the card face",
             "Sheet ISO dates are displayed without timezone day rollback",
             "Sheet serial-style time values are displayed as normal clock times",
-            "manual-appointment-aware sort with event date fallback",
+            "soonest Sheet event date/start time sort",
             "Google Calendar link",
             "Map link for usable address/venue values",
             "latest communication preview from activity entries",
-            "local allowlist/admin viewer gate for computed total and balance display"
+            "computed total and balance removed from the event ledger card face"
           ],
           "missing": [
             "external calendar feed matching",
@@ -645,7 +643,7 @@
             "Client Notes section read-only",
             "Communication Entry section",
             "Feed section from communication blocks",
-            "manual appointment used by ledger sorting",
+            "manual appointment can display in appointment footer when no calendar match is available",
             "save to upsertEvent wired with post-save refresh by Entry ID when possible"
           ],
           "missing": [
