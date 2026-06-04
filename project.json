@@ -1,8 +1,9 @@
 {
   "project": {
     "name": "Anatomy Events",
-    "updated_at": "2026-04-21",
-    "owner": "Anna / Anatomy Tattoo"
+    "updated_at": "2026-06-04",
+    "owner": "Anna / Anatomy Tattoo",
+    "canonical_rules_file": "docs/app-rules.json"
   },
   "source_links": {
     "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455",
@@ -308,10 +309,14 @@
   },
   "current_rules": {
     "home_page": {
-      "show": "all projects except AO Cancelled/Event Complete",
-      "sort": "two groups, both sorted by event date ascending",
-      "group_1_top": "AO is Deposit Paid (also accepts Deposit Complete alias)",
-      "group_2_below": "all remaining open AO statuses",
+      "show": "all projects except complete/Event Complete/Event Complete Balance Late statuses",
+      "sort": "upcoming appointments first by soonest timestamp; past dated cards follow newest first; undated cards last by client name",
+      "sort_source_priority": [
+        "calendar upcoming match",
+        "manual upcoming appointment",
+        "fallback upcoming appointment",
+        "event date/start time"
+      ],
       "ao_dropdown_values": [
         "Reply Sent",
         "Consult Booked",
@@ -324,12 +329,27 @@
         "Balance Late",
         "Event Complete"
       ],
-      "hidden_ao_values": [
+      "event_status_options": [
+        "Post Consult Decision",
+        "Need To Send Contract/Deposit Invoice",
+        "Contract Signed",
+        "Deposit Sent",
+        "Deposit Late",
+        "Deposit Paid",
+        "Temporary License Submitted",
+        "Temporary license recieved",
+        "Awaiting Follow Up",
+        "Needing Changes",
+        "Balance Invoice Sent",
         "Cancelled",
-        "Event Complete"
+        "Not Likely to Continue",
+        "Event Complete",
+        "Event Complete Balance Late"
       ],
-      "priority_ao_values": [
-        "Deposit Paid"
+      "hidden_ao_values": [
+        "Event Complete",
+        "Event Complete Balance Late",
+        "Complete"
       ]
     },
     "client_details_page": {
@@ -443,6 +463,7 @@
   "sync_architecture": {
     "implemented": [
       "Apps Script doGet/doPost sync endpoints in Code.js",
+      "Apps Script source version 73 adds Oregon Temporary Facility License defaulting: blank Temporary Facility License Fee becomes 200 when Event Address contains OR or Oregon.",
       "Drive folder references are now recorded in project metadata: generated contracts folder + templates folder IDs/URLs.",
       "Apps Script web app deployment `AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA` was redeployed to version 38, and `action=sheettabs` + `action=sheettabrows` are now live on /exec.",
       "Step-2 payout verification pass (2026-04-15) succeeded for Entry IDs 1, 2, 820, 1671, and 1065 across Tomma/Shy/Sisi/Megan/Drew combinations; live staff-tab totals matched expected artist/counter splits with zero check failures.",
@@ -504,6 +525,7 @@
       "Pay card layout update (2026-04-15): completed date now renders under event date, payout total is left-aligned while base/modifier/counter breakdown is right-aligned, and artist modifier subtotal labeling is removed in favor of per-modifier amount lines.",
       "Pay card header polish (2026-04-15): client name now uses event-type color coding and role label is positioned in the middle of the same top row between client name and date/completed timestamp.",
       "Pay card amount placement update (2026-04-15): total payout now renders directly under client name in the header; lower section remains breakdown-only and is hidden for counter-only rows.",
+      "Events App 2.0 payout-card parity update (2026-06-04): Pay Schedule cards now follow the Expo information architecture again: event-type icon/color client header, total directly under client name, event date with completed timestamp on the right, Role chip below the header, and ordered itemized lines for Artist Base, Counter, Custom Flash Bonus, Radius Share, Extra Hourly Share, Temporary Tattoos, and Licensing Split (Historical) when nonzero. Generic `Artist Modifiers` and per-card source/debug labels are not part of staff payout cards.",
       "Payout person matching fix (2026-04-15): pay dropdown source and payout role matching now parse artist/counter name fields with multi-delimiter support (comma, newline, semicolon, slash, ampersand), preventing counter names like `Jason / Kevin` from being dropped.",
       "Payout picker hygiene update (2026-04-15): placeholder tokens (`-`, `N/A`, `none`) are now ignored in name parsing so only valid staff names appear/match in payout dropdown and role assignment.",
       "Completed-assignment fallback (2026-04-15): payout calculation now also reads `Event Complete` tab staff names by Entry ID and uses them when `Event Details` artist/counter name fields are blank/placeholders, so historical completed rows like Rebekah Leone (Entry 1229) still resolve Kevin correctly.",
@@ -782,6 +804,442 @@
     "Staff can override customer inputs and pricing outputs before saving.",
     "When status becomes Event Complete/Cancelled, it should disappear from first page.",
     "Persistent local storage key moved to anatomy_events_v2 to clear old seeded records.",
-    "Authentication is Google sign-in enforced; access is restricted to allowlisted emails with role mapping in constants/auth-permissions.ts."
-  ]
+    "Authentication is Google sign-in enforced; access is restricted to allowlisted emails with role mapping in constants/auth-permissions.ts.",
+    "Events App 2.0 rebuild uses docs/frontend-parity-audit.md as the front-end acceptance checklist; visible UI is not considered complete until each matching JSON rule is marked pass."
+  ],
+  "events_app_2_0": {
+    "client_card_pages": {
+      "date": "2026-06-04",
+      "summary": "Events App 2.0 client-card button panels rebuilt as lightweight Vite/React panels. Client Details, Staff Assignments, Notes, and Generators & Files now open from event cards and use Sheet-backed helpers for save/delete/generate actions. Work remains partial until auth gating, live production mutation testing, exact routing semantics, manual appointments, art upload, and email/copy actions are completed.",
+      "mobile_requirement": "Events App 2.0 pages must remain mobile-first/responsive; action rows stack, forms collapse to one column, and chip/link controls must remain reachable on narrow screens.",
+      "parity_audit": "docs/frontend-parity-audit.md"
+    },
+    "frontend_rebuild": {
+      "date": "2026-06-04",
+      "summary": "Events App 2.0 was refactored into focused Vite/React modules and rebuilt with Events, Pricing, Payout, Admin Tools, Payout Ledger, and client-card button panels. The app keeps the Google Sheet / Apps Script source of truth and avoids Expo runtime dependencies.",
+      "structure": [
+        "src/App.jsx shell and routing state",
+        "src/auth.js allowlist and payout visibility rules",
+        "src/payoutMath.js compact payout framework fallback math",
+        "src/pages/PricingPage.jsx, PayoutPage.jsx, AdminPage.jsx, PayoutLedgerPage.jsx",
+        "src/panels/* client-card button pages"
+      ],
+      "remaining_partial_items": [
+        "Google OAuth is connected in 2.0 through Google Identity Services; stale local viewer fixtures are ignored unless created by Google sign-in.",
+        "Current Apps Script source exposes Events and Pricing Rules, but not legacy staff payout tabs, so payout rows label schedule fallback instead of live staff-tab override truth.",
+        "Apps Script version 73 was pushed and versioned for Oregon TFL defaulting, but active deployment AKfycbywkj... remains on version 72 until redeployed by an account in the script owner's Google Workspace domain.",
+        "Production write actions are wired but still need deliberate row-level mutation tests before marking save/delete/generate parity as pass.",
+        "Calendar/manual appointment sorting, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
+      ],
+      "mobile_requirement": "Pages remain mobile responsive; nav, action grids, summaries, and forms collapse to single-column controls on narrow screens.",
+      "parity_audit": "docs/frontend-parity-audit.md"
+    },
+    "current_state": {
+      "date": "2026-06-04",
+      "update_policy": "Keep this section current whenever Events App 2.0 functionality changes. If implementation differs from the rule map, mark it partial/blocked and do not leave the mismatch implicit.",
+      "app_path": "/Users/Anna/Documents/Project Files/01 Active Projects/Events App 2.0",
+      "local_url": "http://127.0.0.1:5173/",
+      "build_status": "npm run build passes with Vite; last verified 2026-06-04 after page parity pass.",
+      "source_of_truth": {
+        "events": "Google Sheet via Apps Script action=events, action=event, action=upsertEvent, action=deleteEvent.",
+        "pricing_rules": "Apps Script action=pricing is readable and used for payout percentage fallback rules.",
+        "payout_overrides": "Blocked/partial: current 2.0 Apps Script source exposes Events/Pricing Rules but not legacy staff payout tabs, so payout pages use schedule fallback until live override rows are restored or replaced."
+      },
+      "frontend_structure": {
+        "shell": "src/App.jsx",
+        "auth_permissions": "src/auth.js",
+        "sheet_client": "src/sheetClient.js",
+        "pricing_math": "src/pricingMath.js",
+        "payout_math": "src/payoutMath.js",
+        "pages": [
+          "src/pages/PricingPage.jsx",
+          "src/pages/PayoutPage.jsx",
+          "src/pages/AdminPage.jsx",
+          "src/pages/PayoutLedgerPage.jsx"
+        ],
+        "client_card_panels": [
+          "src/panels/ClientDetailsPanel.jsx",
+          "src/panels/StaffAssignmentsPanel.jsx",
+          "src/panels/NotesPanel.jsx",
+          "src/panels/FilesPanel.jsx"
+        ],
+        "supporting_modules": [
+          "src/activity.js"
+        ]
+      },
+      "page_status": {
+        "event_ledger": {
+          "status": "partial",
+          "implemented": [
+            "Sheet-backed event list",
+            "complete/event complete/event complete balance late hidden; cancelled remains visible",
+            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, money row, compact icon actions, calendar button, and appointment footer",
+            "Sheet ISO dates are displayed without timezone day rollback",
+            "Sheet serial-style time values are displayed as normal clock times",
+            "manual-appointment-aware sort with event date fallback",
+            "Google Calendar link",
+            "Map link for usable address/venue values",
+            "latest communication preview from activity entries",
+            "local allowlist/admin viewer gate for computed total and balance display"
+          ],
+          "missing": [
+            "external calendar feed matching",
+            "real OAuth admin-money gate"
+          ]
+        },
+        "client_details": {
+          "status": "partial",
+          "implemented": [
+            "editable client fields in bottom Client Information section",
+            "Event Timing & Hours section imports Sheet time cells as editable plain times, shows read-only Total Event Hours from Event Start Time to Event End Time, saves edits back to Sheet time columns, and feeds Total Event Hours into pricing prorate math",
+            "YES/NO/TBD Options section for Custom Flash and Temporary Tattoos",
+            "Event Pricing summary",
+            "Staff Price Adjustment section",
+            "Calculate Mileage button on Event Address writes Travel Distance",
+            "save to upsertEvent wired",
+            "post-save refresh by Entry ID when possible",
+            "deleteEvent wired"
+          ],
+          "missing": [
+            "live production mutation test",
+            "OAuth role gate",
+            "exact route/query parity"
+          ]
+        },
+        "staff_assignments": {
+          "status": "partial",
+          "implemented": [
+            "artist count 1-4",
+            "original Expo staff-colored artist chip picker capped by count",
+            "basic alias normalization for common staff aliases",
+            "original Expo staff-colored counter picker capped at two with None exclusive",
+            "save to upsertEvent wired",
+            "post-save refresh by Entry ID when possible"
+          ],
+          "missing": [
+            "live artist endpoint merge",
+            "full ED-entry alias source from sheet",
+            "OAuth role gate",
+            "production mutation test"
+          ]
+        },
+        "notes": {
+          "status": "partial",
+          "implemented": [
+            "Status section with full status chip list",
+            "Appointments section with manual upcoming appointment input",
+            "Client Notes section read-only",
+            "Communication Entry section",
+            "Feed section from communication blocks",
+            "manual appointment used by ledger sorting",
+            "save to upsertEvent wired with post-save refresh by Entry ID when possible"
+          ],
+          "missing": [
+            "full Expo local activity-log delete behavior",
+            "Discord posting",
+            "OAuth status edit gate"
+          ]
+        },
+        "generators_files": {
+          "status": "partial",
+          "implemented": [
+            "contract/TFL generate actions wired",
+            "generated/uploaded links display",
+            "uploaded art URL save to Sheet",
+            "copy link controls",
+            "email shortcuts for contract/TFL/art links"
+          ],
+          "missing": [
+            "actual Drive file upload",
+            "role-specific advanced controls",
+            "production generation test"
+          ]
+        },
+        "pricing": {
+          "status": "partial",
+          "implemented": [
+            "Sheet event import",
+            "2025/2026 schedule math",
+            "explicit New Client Entry / Import Existing / Overwrite Existing modes",
+            "pricing sheet share/open actions",
+            "Expo page order: Price Plan, Plan table, Pricing Calculator inputs, pricing breakdown, then save/import/overwrite workflow",
+            "blank/new calculator starts with no artist count selected and Booked Hours visually blank with 5-hour fallback math",
+            "compact copy-pricing-table action",
+            "Expo-style pricing summary row order with Base Price (5 hours), Counter Staff (5 hours), conditional under-5-hour prorated rows, modifiers, Total, Deposit, and Balance",
+            "prorate/hour-scaling displays only in dedicated prorated pricing rows; legacy hour-scaling reason text can restore Booked Hours but Staff Adjustment is reserved for explicit non-zero manual staffPriceAdjustment and is not seeded from optionalFee",
+            "address mileage lookup from Anatomy Tattoo, Portland, OR to Event Address with manual travel distance fallback",
+            "custom flash and temporary tattoo toggles write into pricing payload",
+            "overwrite selected event wired",
+            "new event creation wired through upsertEvent",
+            "staff adjustment reason check uses money parsing",
+            "post-save refresh by Entry ID when possible"
+          ],
+          "missing": [
+            "production new/overwrite mutation test"
+          ]
+        },
+        "payout": {
+          "status": "partial",
+          "implemented": [
+            "allowlist viewer model",
+            "full-access email dropdown rule",
+            "primary default person rule",
+            "own/delegated-only restriction for other users",
+            "completed-only payout rows",
+            "year filter",
+            "Expo-style payout card face with total under client name and itemized artist/counter lines",
+            "artist payout math excludes temporary tattoo artist share, matching Expo framework behavior",
+            "documented fallback historical exceptions for entries 1, 2, and 1513"
+          ],
+          "missing": [
+            "live staff-tab payout override truth",
+            "live staff-tab payout override truth"
+          ]
+        },
+        "admin_tools": {
+          "status": "partial",
+          "implemented": [
+            "action hub",
+            "open Sheet",
+            "open Apps Script",
+            "refresh data",
+            "no Admin Promotion system",
+            "Payout Ledger button only for full payout access emails"
+          ],
+          "missing": [
+            "audit log page",
+            "OAuth gate"
+          ]
+        },
+        "payout_ledger": {
+          "status": "partial",
+          "implemented": [
+            "completed-event ledger",
+            "year filter sorted All + descending years",
+            "gross/staff/shop/remainder summary",
+            "staff payout lines",
+            "Tomma captured-to-shop display"
+          ],
+          "missing": [
+            "live staff-tab override truth",
+            "Event Complete financial column source parity",
+            "full expanded allocation parity"
+          ]
+        }
+      },
+      "permission_rules_implemented": {
+        "full_payout_access_emails": [
+          "events.anatomytattoo@gmail.com",
+          "tattoosbytomma@gmail.com",
+          "admin@anatomytattoo.com",
+          "mrs.annaclarke@gmail.com"
+        ],
+        "payout_default_person_by_email": {
+          "events.anatomytattoo@gmail.com": "Shy",
+          "tattoosbytomma@gmail.com": "Tomma",
+          "admin@anatomytattoo.com": "Anna",
+          "mrs.annaclarke@gmail.com": "Anna"
+        },
+        "delegated_pay_view": {
+          "Megan": [
+            "Jacob"
+          ],
+          "Tomma": [
+            "Kevin",
+            "Jayden",
+            "Veda"
+          ],
+          "Shy": [
+            "Jason"
+          ]
+        }
+      },
+      "regression_checks": [
+        "npm run build",
+        "manual ledger sort smoke test",
+        "Entry 1513 payout fallback smoke test",
+        "curl http://127.0.0.1:5173/",
+        "curl /api/sheet?action=events&limit=3"
+      ],
+      "next_required_work": [
+        "Keep Google OAuth client origins aligned with the deployed URL before release updates.",
+        "Restore/replace live staff payout override source before marking payout parity pass.",
+        "Add external calendar-feed appointment matching.",
+        "Add actual Drive file upload for uploaded art.",
+        "Add Admin audit log page and persisted audit trail.",
+        "Add Pricing explicit New / Import / Overwrite modes.",
+        "Run deliberate production write tests on a chosen row."
+      ]
+    },
+    "last_full_functionality_audit": {
+      "date": "2026-06-04",
+      "report": "docs/functionality-audit-2026-06-04.md",
+      "build_passed": true,
+      "adjusted_frontend_without_backend_changes": true,
+      "client_card_face_updated": true
+    },
+    "client_card_face": {
+      "date": "2026-06-04",
+      "status": "restored_to_original_expo_face_structure",
+      "files": [
+        "src/components/EventCard.jsx",
+        "src/styles.css",
+        "src/sheetClient.js"
+      ],
+      "notes": [
+        "2.0 no longer exposes raw Sheet time values like 1899-12-30T18:00:00.000Z on the card face.",
+        "2.0 date display uses the Sheet date parts so ISO midnight UTC values do not display as the previous day in local time.",
+        "External calendar feed next/last appointment parity remains partial; the footer face is present and manual appointment data can populate next appointment."
+      ]
+    },
+    "page_parity_pass": {
+      "date": "2026-06-04",
+      "reason": "User requested that existing project/rules JSON fine-tuning be applied across pages instead of handled one page at a time.",
+      "source_checked": [
+        "docs/app-rules.json",
+        "project.json",
+        "Expo app/(tabs)/pricing.tsx",
+        "Expo client-details.tsx",
+        "Expo event/[id].tsx",
+        "Expo notes.tsx"
+      ],
+      "frontend_adjustments": {
+        "event_ledger": [
+          "Client card face restored to original Expo layout and raw Sheet date/time display fixed.",
+          "Client card face now uses event-type-specific icon/color before the client name and original staff colors on each artist name."
+        ],
+        "pricing": [
+          "Added New Client Entry / Import Existing / Overwrite Existing mode tabs.",
+          "Added pricing sheet Share and View actions.",
+          "Reordered Pricing Calculator to match Expo: Price Plan, Plan table, Pricing Calculator inputs, pricing breakdown, then New Client Entry / Import / Overwrite workflow.",
+          "Added compact copy-pricing-table control.",
+          "Added new-client fields for new entry mode.",
+          "Restored Expo pricing table order and copy text: 5-hour base/counter rows, conditional prorated under-5-hour rows, modifier rows, Total, Deposit, Balance.",
+          "Added address-based mileage lookup using the Expo Nominatim/OSRM approach and Anatomy Tattoo, Portland, OR base address."
+        ],
+        "client_details": [
+          "Added Event Timing & Hours section.",
+          "Added YES/NO/TBD Options section for Custom Flash and Temporary Tattoos.",
+          "Added Staff Price Adjustment section.",
+          "Client-card button pages now start with a filled bordered client menu directly under the primary app menu. The client menu includes the slightly longer large top-left back-arrow button, the active event/client name, and the four shared client-card navigation buttons in the same order used on event cards: Client Details, Staff Assignments, Notes, Generators & Files. Client Details uses a contact-style icon, follows the Expo section order, and includes Calculate Mileage from Event Address.",
+          "Sheet-writing save/generate actions now dim the active page section and show a waiting spinner/message until the Sheet response resolves.",
+          "Client Details save now uses Apps Script upsertEventPartialJson with V2 Sheet field names so edits write only owned fields instead of silently missing legacy UI keys."
+        ],
+        "responsive_layout": [
+          "Collapsed mobile top primary nav keeps a fixed 120px sidebar/header row, fixed nav button height, and consistent workspace top gap across Events, Pricing, Payout, Admin, and client-card detail pages. Payout/Admin page headings render as filled bordered blocks instead of transparent header space; mobile headings stay compact by hiding helper copy and preventing status-pill wrapping."
+        ],
+        "staff_assignments": [
+          "Added original Expo staff color map and selected-chip contrast behavior.",
+          "Kept alias normalization and exclusive None behavior."
+        ],
+        "notes": [
+          "Reorganized into Status, Appointments, Client Notes, Communication Entry, and Feed sections.",
+          "Client Notes remain read-only and communication entries append rather than overwrite."
+        ]
+      },
+      "remaining_limits": [
+        "2.0 uses Google OAuth sign-in and allowlist gating; stale local viewer fixtures are ignored unless created by Google sign-in.",
+        "Live staff-tab payout override source remains blocked by current Apps Script source shape.",
+        "Notes feed is derived from Sheet/privateNotes communication blocks; full Expo local activity-log/delete/Discord behavior is not rebuilt.",
+        "Pricing address radius lookup is rebuilt with a browser-side Nominatim/OSRM helper; production behavior depends on public lookup service availability.",
+        "Actual Drive binary upload is not rebuilt; uploaded art URL save is available."
+      ],
+      "verification": "npm run build passed after page parity adjustments."
+    },
+    "staff_color_parity": {
+      "date": "2026-06-04",
+      "status": "matched_to_original_expo_staff_colors",
+      "source_file": "/Users/Anna/Documents/Project Files/01 Active Projects/Anatomy Events Mobile App (Expo)/constants/staff-colors.ts",
+      "target_file": "src/staffColors.js",
+      "notes": [
+        "2.0 now uses the original Expo staff color map, including Tomma #c72c67, Shy #1e6bff, Lindsay #ffd54f, Kevin/Veda #8e1d4a.",
+        "Staff assignment chips use the original muted background, selected solid color, and contrast text behavior."
+      ]
+    },
+    "payout_artist_card_parity": {
+      "date": "2026-06-04",
+      "status": "expo_card_information_architecture_restored_for_schedule_fallback",
+      "files": [
+        "src/payoutMath.js",
+        "src/pages/PayoutPage.jsx",
+        "src/styles.css"
+      ],
+      "page_sections": [
+        "Pay Schedule controls",
+        "Completed Totals",
+        "Completed Totals by Year",
+        "Assigned Events"
+      ],
+      "card_contract": [
+        "event-type icon/color beside client name",
+        "total payout directly under client name",
+        "event date and completed timestamp grouped on the right",
+        "Role chip below the header",
+        "ordered itemized payout breakdown lines instead of modifier subtotal buckets",
+        "no per-card source/debug labels in staff view"
+      ],
+      "sample": {
+        "client": "Rebekah Leone",
+        "artist": "Tomma",
+        "total": "$1,294.38",
+        "artist_base": "$1,200.00",
+        "custom_flash_bonus": "$62.50",
+        "radius_share": "$31.88",
+        "temporary_tattoos_artist_payout": "$0.00"
+      },
+      "notes": [
+        "2.0 previously included Temporary Tattoos artist share, causing Rebekah/Tomma to show $1,331.88 instead of the Expo $1,294.38.",
+        "2.0 payout card now renders itemized Artist Base, Counter, Custom Flash Bonus, Radius Share, Extra Hourly Share, Temporary Tattoos, and historical licensing split lines only when nonzero.",
+        "Live staff-tab payout override source remains blocked by the current 2.0 Apps Script endpoint shape, so this pass restores the front-end card contract and framework fallback math but does not mark payout source-truth parity complete."
+      ]
+    },
+    "remaining_overlooked_specifics": {
+      "date": "2026-06-04",
+      "purpose": "Structured queue for remaining Events App 2.0 parity gaps to work through one at a time.",
+      "items": [
+        {
+          "id": "oauth_real_role_gates",
+          "status": "implemented",
+          "title": "OAuth / real role gates",
+          "detail": "2.0 now uses Google Identity Services sign-in, ignores stale local viewer fixtures, enforces the allowlist, gives all allowlisted users shared app/admin/client controls, and keeps full payout dropdown / payout ledger access limited to the configured full-payout email set. Deployed URL origins must still match the Google OAuth web client."
+        },
+        {
+          "id": "external_calendar_feed_appointment_matching",
+          "status": "pending",
+          "title": "External calendar-feed appointment matching",
+          "detail": "Event cards have the footer and manual appointment fallback, but they do not yet pull next/last appointment from the configured calendar feeds."
+        },
+        {
+          "id": "live_payout_override_source",
+          "status": "pending",
+          "title": "Live payout override source",
+          "detail": "Payouts still use schedule fallback because the current 2.0 Apps Script source does not expose the legacy staff payout tabs. This is the biggest accounting/source-of-truth gap."
+        },
+        {
+          "id": "actual_drive_art_upload",
+          "status": "pending",
+          "title": "Actual Drive art upload",
+          "detail": "2.0 can save an uploaded art URL, but it does not yet upload a file to Drive like the Expo app did."
+        },
+        {
+          "id": "audit_activity_log",
+          "status": "pending",
+          "title": "Audit/activity log",
+          "detail": "Admin audit log and full event activity-log behavior are not rebuilt. Notes can append communication blocks, but not the full Expo activity system."
+        },
+        {
+          "id": "staff_assignment_live_artist_source",
+          "status": "pending",
+          "title": "Staff assignment live artist source",
+          "detail": "2.0 uses local staff options and some aliases. It does not yet merge the live sheet artist list / ED-entry alias source."
+        },
+        {
+          "id": "production_mutation_testing",
+          "status": "pending",
+          "title": "Production mutation testing",
+          "detail": "Save/delete/generate/new/overwrite are wired, but we have not deliberately tested them on a safe production row. Until then, those should stay partial."
+        }
+      ]
+    }
+  }
 }
