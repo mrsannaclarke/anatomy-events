@@ -16,6 +16,8 @@ function getProjectTitle() {
   return project?.project?.name || project?.name || 'Events App 2.0';
 }
 
+const logoSrc = `${import.meta.env.BASE_URL}assets/images/anatomy-logo-circle.png`;
+
 function GoogleSignInGate({ onSignedIn }) {
   const [authStatus, setAuthStatus] = useState('');
 
@@ -64,7 +66,7 @@ function GoogleSignInGate({ onSignedIn }) {
   return (
     <main className="auth-screen">
       <section className="auth-card">
-        <img src="/assets/images/anatomy-logo-circle.png" alt="" />
+        <img src={logoSrc} alt="" />
         <h1>Events App 2.0</h1>
         <p>Sign in with your allowlisted Google account.</p>
         <div id="google-signin-button" className="google-signin-button" />
@@ -78,7 +80,7 @@ function AccessDenied({ viewer, onSignOut }) {
   return (
     <main className="auth-screen">
       <section className="auth-card">
-        <img src="/assets/images/anatomy-logo-circle.png" alt="" />
+        <img src={logoSrc} alt="" />
         <h1>Access Not Allowed</h1>
         <p>{viewer.email} is not on the Events App allowlist.</p>
         <button type="button" className="secondary-button" onClick={onSignOut}>
@@ -173,7 +175,7 @@ export function App() {
     <main className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/assets/images/anatomy-logo-circle.png" alt="" />
+          <img src={logoSrc} alt="" />
           <div>
             <strong>Events App 2.0</strong>
             <span>{getProjectTitle()}</span>
