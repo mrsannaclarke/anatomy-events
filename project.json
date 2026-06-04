@@ -1204,7 +1204,7 @@
           "id": "external_calendar_feed_appointment_matching",
           "status": "partial",
           "title": "External calendar-feed appointment matching",
-          "detail": "2.0 now pulls action=calendarfeed, parses ICS events, matches calendar entries to Sheet events, and shows calendar-derived Next/Last appointment footer values. Event ledger card order is intentionally driven by Sheet event date/start time, not calendar appointment date."
+          "detail": "2.0 now pulls action=calendarfeed, parses ICS events, matches calendar entries to Sheet events only by exact normalized full client name phrase or Entry ID, and shows calendar-derived Next/Last appointment footer values. Event ledger card order is intentionally driven by Sheet event date/start time, not calendar appointment date."
         },
         {
           "id": "live_payout_override_source",

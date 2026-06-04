@@ -96,28 +96,15 @@ function normalizeMatchText(value) {
     .trim();
 }
 
-function clientNameTokens(event) {
+function clientMatchCandidates(event) {
   const raw = event.raw || event;
-  return normalizeMatchText(event.clientName || raw.clientName)
-    .split(' ')
-    .filter((token) => token.length >= 3);
+  return [normalizeMatchText(event.clientName || raw.clientName), normalizeMatchText(raw.entryId || event.entryId)]
+    .filter((candidate) => candidate.length >= 6);
 }
 
 function calendarEntryMatchesEvent(entry, event) {
-  const tokens = clientNameTokens(event);
-  if (!tokens.length) return false;
-
-  const clientPhrase = tokens.join(' ');
-  if (clientPhrase.length >= 6 && entry.searchText.includes(clientPhrase)) return true;
-
-  if (tokens.length === 1) {
-    const [onlyToken] = tokens;
-    return onlyToken.length >= 6 && entry.searchText.split(' ').includes(onlyToken);
-  }
-
-  const first = tokens[0];
-  const last = tokens[tokens.length - 1];
-  return first.length >= 3 && last.length >= 3 && entry.searchText.includes(first) && entry.searchText.includes(last);
+  const candidates = clientMatchCandidates(event);
+  return candidates.some((candidate) => entry.searchText.includes(candidate));
 }
 
 export function parseCalendarFeed(ics) {
