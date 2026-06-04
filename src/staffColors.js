@@ -21,6 +21,7 @@ const STAFF_COLOR_MAP = {
 };
 
 const FALLBACK_STAFF_COLOR = '#8AA4BF';
+let liveStaffColorMap = {};
 
 function normalizeName(name) {
   return String(name || '')
@@ -31,7 +32,19 @@ function normalizeName(name) {
 }
 
 export function getStaffColor(name) {
-  return STAFF_COLOR_MAP[normalizeName(name)] || FALLBACK_STAFF_COLOR;
+  return liveStaffColorMap[normalizeName(name)] || STAFF_COLOR_MAP[normalizeName(name)] || FALLBACK_STAFF_COLOR;
+}
+
+export function setLiveStaffColors(staffRows = []) {
+  liveStaffColorMap = staffRows.reduce((acc, row) => {
+    const color = String(row?.['Color Hex'] || '').trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) return acc;
+    const names = [row.Name, row['ED Entry'], ...(String(row['Alias Names'] || '').split(','))].map((name) => normalizeName(name)).filter(Boolean);
+    names.forEach((name) => {
+      acc[name] = color;
+    });
+    return acc;
+  }, {});
 }
 
 export function hexToRgba(hex, alpha) {

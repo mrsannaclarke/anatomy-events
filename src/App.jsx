@@ -11,7 +11,9 @@ import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
 import { DetailPanel } from './panels/DetailPanel.jsx';
-import { pullCalendarFeed, pullEventsFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
+import { pullCalendarFeed, pullEventsFromSheet, pullStaffDirectoryFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
+import { buildStaffDirectory } from './staffDirectory.js';
+import { setLiveStaffColors } from './staffColors.js';
 
 function getProjectTitle() {
   return project?.project?.name || project?.name || 'Events App 2.0';
@@ -108,6 +110,7 @@ export function App() {
   const [viewer, setViewer] = useState(() => getCachedViewer());
   const [manualAppointments, setManualAppointments] = useState(() => loadManualAppointments());
   const [calendarAppointments, setCalendarAppointments] = useState({});
+  const [staffDirectory, setStaffDirectory] = useState(() => buildStaffDirectory([]));
 
   async function loadEvents() {
     setSyncStatus((current) => (events.length > 0 && current === 'connected' ? 'refreshing' : 'loading'));
@@ -125,6 +128,27 @@ export function App() {
 
   useEffect(() => {
     if (viewer?.isAllowlisted) void loadEvents();
+  }, [viewer?.isAllowlisted]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadStaffDirectory() {
+      if (!viewer?.isAllowlisted) return;
+      try {
+        const rows = await pullStaffDirectoryFromSheet();
+        if (!mounted) return;
+        setLiveStaffColors(rows);
+        setStaffDirectory(buildStaffDirectory(rows));
+      } catch {
+        if (mounted) setStaffDirectory(buildStaffDirectory([]));
+      }
+    }
+
+    void loadStaffDirectory();
+    return () => {
+      mounted = false;
+    };
   }, [viewer?.isAllowlisted]);
 
   useEffect(() => {
@@ -253,6 +277,7 @@ export function App() {
           <DetailPanel
             detail={detail}
             viewer={viewer}
+            staffDirectory={staffDirectory}
             onBack={() => setDetail(null)}
             onSaved={replaceSavedEvent}
             onDeleted={removeDeletedEvent}

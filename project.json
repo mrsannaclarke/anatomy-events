@@ -1226,9 +1226,9 @@
         },
         {
           "id": "staff_assignment_live_artist_source",
-          "status": "pending",
+          "status": "implemented",
           "title": "Staff assignment live artist source",
-          "detail": "2.0 uses local staff options and some aliases. It does not yet merge the live sheet artist list / ED-entry alias source."
+          "detail": "2.0 now pulls the live Staff Directory from Apps Script, uses active Sheet rows for Staff Assignment artist/counter chip options, applies ED Entry / alias normalization, and uses live Color Hex values for staff chip/card colors. Local constants remain as fallback if the endpoint is unavailable."
         },
         {
           "id": "production_mutation_testing",

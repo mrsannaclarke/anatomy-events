@@ -197,6 +197,11 @@ export async function pullPricingRulesFromSheet() {
   return data.pricing || [];
 }
 
+export async function pullStaffDirectoryFromSheet() {
+  const data = await requestSheetJson({ action: 'staff' });
+  return data.staff || [];
+}
+
 export async function pullCalendarFeed() {
   const data = await requestSheetJson({ action: 'calendarfeed' });
   return data.ics || '';
