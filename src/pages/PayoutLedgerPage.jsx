@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 
+import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
 import { formatPayout, getCompletedYear, getPeopleFromEvents, getPersonPayRow, isCompletedForPay, isCancelledForPay } from '../payoutMath.js';
 import { parseMoney } from '../pricingMath.js';
 
-export function PayoutLedgerPage({ events, onBack }) {
+export function PayoutLedgerPage({ events, viewer, onBack }) {
   const [selectedYear, setSelectedYear] = useState('All');
+  const canViewLedger = FULL_PAYOUT_ACCESS_EMAILS.has(normalizeKey(viewer?.email));
   const people = useMemo(() => getPeopleFromEvents(events), [events]);
   const cards = useMemo(
     () =>
@@ -29,6 +31,18 @@ export function PayoutLedgerPage({ events, onBack }) {
     return ['All', ...years];
   }, [cards]);
   const visibleCards = selectedYear === 'All' ? cards : cards.filter((card) => getCompletedYear(card.event) === selectedYear);
+
+  if (!canViewLedger) {
+    return (
+      <section className="empty-state">
+        <strong>Payout Ledger</strong>
+        <span>This ledger is limited to Anna, Tomma, and Shy payout-admin logins.</span>
+        <button type="button" className="secondary-button" onClick={onBack}>
+          Back to Admin
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="page-stack">

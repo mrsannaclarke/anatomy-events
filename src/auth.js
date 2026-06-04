@@ -19,12 +19,6 @@ export const PRIMARY_PAYOUT_PERSON_BY_EMAIL = {
   'mrs.annaclarke@gmail.com': 'Anna',
 };
 
-export const STAFF_DELEGATES = {
-  Megan: ['Jacob'],
-  Tomma: ['Kevin', 'Jayden', 'Veda'],
-  Shy: ['Jason'],
-};
-
 export const ALLOWED_USERS = [
   { email: 'tattoosbytomma@gmail.com', name: 'Tomma' },
   { email: 'ladyshytattoos@gmail.com', name: 'Shy' },
@@ -131,7 +125,5 @@ function decodeJwtPayload(token) {
 export function getPayoutPeopleForViewer(viewer, allPeople = STAFF_OPTIONS) {
   if (!viewer?.canUsePayoutFramework) return [];
   if (viewer.canViewFullPayout) return allPeople;
-  const ownName = viewer.name;
-  const delegates = STAFF_DELEGATES[ownName] || [];
-  return [ownName, ...delegates].filter(Boolean);
+  return [viewer.name].filter(Boolean);
 }
