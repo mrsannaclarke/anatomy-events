@@ -140,7 +140,7 @@
     ],
     "card_money_visibility": "Computed Total and Balance are not shown on the event ledger client card face.",
     "post_deposit_additions": "When status is deposit paid or later and a numeric deposit exists, Added After Deposit Paid is max(0, computed total - deposit/0.30).",
-    "appointment_footer": "Shows Next Appt and Last Appt from calendar/manual/fallback sources.",
+    "appointment_footer": "Shows Next Appt and Last Appt. Manual upcoming appointment from Notes overrides calendar next appointment on the card face; calendar next/last are fallback/display sources.",
     "google_calendar_button": "Built as all-day event from event date, client/type title, venue/address, phone, and email.",
     "map_button": "Shown when venue/address is not TBD and has a usable query.",
     "latest_communication_preview": "Shows most recent staff activity entry for visible event IDs."

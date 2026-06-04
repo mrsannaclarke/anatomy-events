@@ -928,7 +928,7 @@
             "Client Notes section read-only",
             "Communication Entry section",
             "Feed section from communication blocks",
-            "manual appointment can display in appointment footer when no calendar match is available",
+            "manual appointment from Notes overrides calendar next appointment on the card face",
             "save to upsertEvent wired with post-save refresh by Entry ID when possible"
           ],
           "missing": [

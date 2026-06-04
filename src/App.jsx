@@ -277,6 +277,7 @@ export function App() {
                   <EventCard
                     key={event.id || event.clientName}
                     event={event}
+                    manualAppointment={manualAppointments[event.entryId || event.raw?.entryId]}
                     onAction={(mode, selectedEvent) => setDetail({ mode, event: selectedEvent })}
                   />
                 ))

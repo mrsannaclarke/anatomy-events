@@ -37,13 +37,14 @@ export function NotesPanel({ event, viewer, onSaved, onManualAppointmentsChanged
         contractNotes: raw.contractNotes || '',
         manualUpcomingAppointment: manualAppointment,
       });
-      const nextAppointments = saveManualAppointment(raw.entryId, manualAppointment);
+      const entryId = raw.entryId || event.entryId;
+      const nextAppointments = saveManualAppointment(entryId, manualAppointment);
       onManualAppointmentsChanged?.(nextAppointments);
       const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
       onSaved(refreshed);
       fireAudit(viewer, {
         actionName: 'notes_status_save',
-        entryId: saved.entryId || raw.entryId,
+        entryId: saved.entryId || entryId,
         details: {
           clientName: event.clientName,
           status: statusValue,

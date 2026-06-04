@@ -92,7 +92,7 @@ function buildCalendarUrl(event) {
   return url.toString();
 }
 
-export function EventCard({ event, onAction }) {
+export function EventCard({ event, manualAppointment, onAction }) {
   const raw = event.raw || {};
   const location = raw.eventAddress || raw.venueName || '';
   const latestCommunication = getLatestCommunication(raw);
@@ -104,11 +104,10 @@ export function EventCard({ event, onAction }) {
   const dateLine = [eventDate, eventTime ? `Event ${eventTime}` : ''].filter(Boolean).join(' • ');
   const addressLines = getAddressLines(raw);
   const artistNames = splitNames(raw.artistNames);
-  const nextAppointment =
-    formatAppointment(event.calendarAppointment?.next) ||
-    (raw.manualUpcomingAppointment
-      ? new Date(raw.manualUpcomingAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
-      : '');
+  const manualNextAppointment = manualAppointment || raw.manualUpcomingAppointment || '';
+  const nextAppointment = manualNextAppointment
+    ? new Date(manualNextAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : formatAppointment(event.calendarAppointment?.next);
   const lastAppointment = formatAppointment(event.calendarAppointment?.last);
 
   return (
