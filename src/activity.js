@@ -96,11 +96,28 @@ function normalizeMatchText(value) {
     .trim();
 }
 
-function eventMatchTokens(event) {
+function clientNameTokens(event) {
   const raw = event.raw || event;
-  const clientTokens = normalizeMatchText(event.clientName || raw.clientName).split(' ').filter((token) => token.length >= 3);
-  const eventTypeTokens = normalizeMatchText(raw.eventType).split(' ').filter((token) => token.length >= 5);
-  return [...clientTokens, ...eventTypeTokens];
+  return normalizeMatchText(event.clientName || raw.clientName)
+    .split(' ')
+    .filter((token) => token.length >= 3);
+}
+
+function calendarEntryMatchesEvent(entry, event) {
+  const tokens = clientNameTokens(event);
+  if (!tokens.length) return false;
+
+  const clientPhrase = tokens.join(' ');
+  if (clientPhrase.length >= 6 && entry.searchText.includes(clientPhrase)) return true;
+
+  if (tokens.length === 1) {
+    const [onlyToken] = tokens;
+    return onlyToken.length >= 6 && entry.searchText.split(' ').includes(onlyToken);
+  }
+
+  const first = tokens[0];
+  const last = tokens[tokens.length - 1];
+  return first.length >= 3 && last.length >= 3 && entry.searchText.includes(first) && entry.searchText.includes(last);
 }
 
 export function parseCalendarFeed(ics) {
@@ -130,9 +147,7 @@ export function parseCalendarFeed(ics) {
 export function buildCalendarAppointmentMap(events, calendarEntries) {
   const now = Date.now();
   return events.reduce((acc, event) => {
-    const tokens = eventMatchTokens(event);
-    if (!tokens.length) return acc;
-    const matches = calendarEntries.filter((entry) => tokens.some((token) => entry.searchText.includes(token)));
+    const matches = calendarEntries.filter((entry) => calendarEntryMatchesEvent(entry, event));
     if (!matches.length) return acc;
     const next = matches.find((entry) => entry.timestamp >= now) || null;
     const last = [...matches].reverse().find((entry) => entry.timestamp < now) || null;
