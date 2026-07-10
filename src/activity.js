@@ -75,8 +75,16 @@ export function getEventDateTimestamp(event) {
   return getDateTimeTimestamp(date, time);
 }
 
+function getLedgerStatusRank(event) {
+  const raw = event.raw || event;
+  const status = String(raw.status || raw.payStatus || event.status || '').trim().toLowerCase();
+  return status === 'no consult scheduled' ? 1 : 0;
+}
+
 export function sortLedgerEvents(events) {
   return [...events].sort((a, b) => {
+    const statusRank = getLedgerStatusRank(a) - getLedgerStatusRank(b);
+    if (statusRank) return statusRank;
     const aTs = getEventDateTimestamp(a);
     const bTs = getEventDateTimestamp(b);
     if (aTs !== Number.POSITIVE_INFINITY && bTs !== Number.POSITIVE_INFINITY) return aTs - bTs || a.clientName.localeCompare(b.clientName);

@@ -26,6 +26,7 @@ export const cardActions = [
 ];
 
 export const STATUS_OPTIONS = [
+  'No Consult Scheduled',
   'Post Consult Decision',
   'Need To Send Contract/Deposit Invoice',
   'Contract Signed',

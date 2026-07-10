@@ -310,7 +310,7 @@
   "current_rules": {
     "home_page": {
       "show": "all projects except complete/Event Complete/Event Complete Balance Late statuses",
-      "sort": "Sheet event date/start time first, soonest first; undated cards last by client name",
+      "sort": "confirmed/active visible cards first by Sheet event date/start time, soonest first; No Consult Scheduled cards remain visible but sort to the bottom; undated cards last by client name within their status group",
       "sort_source_priority": [
         "event date/start time"
       ],
@@ -327,6 +327,7 @@
         "Event Complete"
       ],
       "event_status_options": [
+        "No Consult Scheduled",
         "Post Consult Decision",
         "Need To Send Contract/Deposit Invoice",
         "Contract Signed",

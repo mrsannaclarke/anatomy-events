@@ -138,8 +138,10 @@
     ],
     "cancelled_visibility": "Cancelled/canceled and Not Likely to Continue rows are hidden from the event ledger cards.",
     "sort_order": [
+      "Confirmed/active cards sort above No Consult Scheduled cards.",
       "Open/non-complete cards sort by Sheet event date/start time, soonest first.",
-      "Undated cards sort last by client name."
+      "No Consult Scheduled cards remain visible but sort at the bottom of the event ledger.",
+      "Undated cards sort last by client name within their status group."
     ],
     "card_money_visibility": "Computed Total and Balance are not shown on the event ledger client card face.",
     "post_deposit_additions": "When status is deposit paid or later and a numeric deposit exists, Added After Deposit Paid is max(0, computed total - deposit/0.30).",
@@ -272,6 +274,7 @@
   },
   "notes": {
     "status_options": [
+      "No Consult Scheduled",
       "Post Consult Decision",
       "Need To Send Contract/Deposit Invoice",
       "Contract Signed",
