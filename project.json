@@ -869,7 +869,7 @@
           "status": "partial",
           "implemented": [
             "Sheet-backed event list",
-            "complete/event complete/event complete balance late/cancelled/canceled hidden",
+            "complete/event complete/event complete balance late/cancelled/canceled/not likely to continue hidden",
             "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, compact icon actions, calendar button, and appointment footer; computed total and balance are intentionally hidden from the card face",
             "Sheet ISO dates are displayed without timezone day rollback",
             "Sheet serial-style time values are displayed as normal clock times",
