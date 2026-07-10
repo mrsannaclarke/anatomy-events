@@ -211,8 +211,8 @@ export function App() {
     [calendarAppointments, events],
   );
   const visibleLedgerEvents = useMemo(
-    () => sortLedgerEvents(eventsWithAppointments.filter((event) => !isHiddenLedgerStatus(event)), manualAppointments),
-    [eventsWithAppointments, manualAppointments],
+    () => sortLedgerEvents(eventsWithAppointments.filter((event) => !isHiddenLedgerStatus(event))),
+    [eventsWithAppointments],
   );
 
   function signOut() {

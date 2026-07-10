@@ -37,12 +37,42 @@ export function getAppointmentTimestamp(event, manualAppointments = {}) {
   return Number.isNaN(parsed.getTime()) ? Number.POSITIVE_INFINITY : parsed.getTime();
 }
 
+function parseDateParts(value) {
+  const text = String(value || '').trim();
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+  if (iso) return { year: Number(iso[1]), month: Number(iso[2]) - 1, day: Number(iso[3]) };
+  const slash = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (slash) return { year: Number(slash[3].length === 2 ? `20${slash[3]}` : slash[3]), month: Number(slash[1]) - 1, day: Number(slash[2]) };
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return { year: parsed.getFullYear(), month: parsed.getMonth(), day: parsed.getDate() };
+}
+
+function parseTimeParts(value) {
+  const text = String(value || '').trim();
+  if (!text) return { hour: 0, minute: 0 };
+  const match = text.match(/(?:T|\s|^)(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?/i);
+  if (!match) return { hour: 0, minute: 0 };
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const suffix = match[3]?.toUpperCase();
+  if (suffix === 'PM' && hour < 12) hour += 12;
+  if (suffix === 'AM' && hour === 12) hour = 0;
+  return { hour, minute };
+}
+
+function getDateTimeTimestamp(dateValue, timeValue) {
+  const date = parseDateParts(dateValue);
+  if (!date) return Number.POSITIVE_INFINITY;
+  const time = parseTimeParts(timeValue);
+  return new Date(date.year, date.month, date.day, time.hour, time.minute).getTime();
+}
+
 export function getEventDateTimestamp(event) {
   const raw = event.raw || event;
   const date = raw.eventDate || event.eventDate || '';
   const time = raw.eventStartTime || raw.setupTime || '';
-  const parsed = new Date(time ? `${date} ${time}` : date);
-  return Number.isNaN(parsed.getTime()) ? Number.POSITIVE_INFINITY : parsed.getTime();
+  return getDateTimeTimestamp(date, time);
 }
 
 export function sortLedgerEvents(events) {
