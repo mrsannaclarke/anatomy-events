@@ -60,6 +60,8 @@ export const STAFF_OPTIONS = [
   'Jazz',
 ];
 
+export const GUEST_ARTIST_OPTION = 'Guest Artist';
+
 export const COUNTER_OPTIONS = [...STAFF_OPTIONS, 'Jacob', 'Jason', 'Kevin', 'Veda', 'None', 'Other'];
 
 export const CLIENT_FIELD_CONFIG = [

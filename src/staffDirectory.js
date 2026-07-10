@@ -1,4 +1,4 @@
-import { COUNTER_OPTIONS, STAFF_OPTIONS } from './constants.js';
+import { COUNTER_OPTIONS, GUEST_ARTIST_OPTION, STAFF_OPTIONS } from './constants.js';
 
 const BASE_ALIASES = {
   Lindsey: 'Lindsay',
@@ -7,6 +7,8 @@ const BASE_ALIASES = {
   meg: 'Megan',
   'Baby J': 'Jayden',
   babyj: 'Jayden',
+  Guest: GUEST_ARTIST_OPTION,
+  'Guest Artist': GUEST_ARTIST_OPTION,
 };
 
 function cleanName(value) {
@@ -45,6 +47,7 @@ function uniqueNames(names) {
 export function buildStaffDirectory(staffRows = []) {
   const activeRows = staffRows.filter(isActive);
   const artists = uniqueNames(activeRows.filter((row) => hasRole(row, 'artist')).map(displayName)).sort((a, b) => a.localeCompare(b));
+  const artistOptions = uniqueNames([...(artists.length ? artists : STAFF_OPTIONS), GUEST_ARTIST_OPTION]);
   const counterNames = uniqueNames(activeRows.filter((row) => hasRole(row, 'counter')).map(displayName)).sort((a, b) => a.localeCompare(b));
   const counters = [...counterNames, 'None', 'Other'];
   const aliases = activeRows.reduce((acc, row) => {
@@ -57,7 +60,7 @@ export function buildStaffDirectory(staffRows = []) {
   }, { ...Object.fromEntries(Object.entries(BASE_ALIASES).map(([alias, canonical]) => [alias.toLowerCase(), canonical])) });
 
   return {
-    artists: artists.length ? artists : STAFF_OPTIONS,
+    artists: artistOptions,
     counters: counters.length > 2 ? counters : COUNTER_OPTIONS,
     aliases,
     rows: staffRows,

@@ -3,6 +3,7 @@ const STAFF_COLOR_MAP = {
   anne: '#8b5cf6',
   agnes: '#fa8072',
   drew: '#ff4fa8',
+  'guest artist': '#f1b56f',
   jacob: '#8f5ab8',
   jake: '#ff8c00',
   jason: '#1f4ea8',

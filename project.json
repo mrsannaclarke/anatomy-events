@@ -434,9 +434,9 @@
         "TFL"
       ],
       "client_detail_artist_picker": {
-        "source": "active artists from Artist License Source",
+        "source": "active artists from Artist License Source plus synthetic Guest Artist option",
         "selection_limit": "capped to Number of Artists",
-        "fallback_behavior": "if artists endpoint is unauthorized/unavailable, app falls back to latest endpoint and then to a built-in artist list"
+        "fallback_behavior": "if artists endpoint is unauthorized/unavailable, app falls back to latest endpoint and then to a built-in artist list; Guest Artist remains available in both live and fallback modes"
       },
       "client_detail_counter_staff_picker": {
         "source": "fixed options in app",
@@ -908,6 +908,7 @@
           "implemented": [
             "artist count 1-4",
             "original Expo staff-colored artist chip picker capped by count",
+            "synthetic Guest Artist option remains available alongside live Staff Directory artists",
             "basic alias normalization for common staff aliases",
             "original Expo staff-colored counter picker capped at two with None exclusive",
             "save to upsertEvent wired",
@@ -1228,7 +1229,7 @@
           "id": "staff_assignment_live_artist_source",
           "status": "implemented",
           "title": "Staff assignment live artist source",
-          "detail": "2.0 now pulls the live Staff Directory from Apps Script, uses active Sheet rows for Staff Assignment artist/counter chip options, applies ED Entry / alias normalization, and uses live Color Hex values for staff chip/card colors. Local constants remain as fallback if the endpoint is unavailable."
+          "detail": "2.0 now pulls the live Staff Directory from Apps Script, uses active Sheet rows for Staff Assignment artist/counter chip options, applies ED Entry / alias normalization, and uses live Color Hex values for staff chip/card colors. Local constants remain as fallback if the endpoint is unavailable. Guest Artist is always available as a synthetic artist option for one-off guest assignments."
         },
         {
           "id": "production_mutation_testing",

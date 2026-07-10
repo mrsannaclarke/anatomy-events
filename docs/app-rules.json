@@ -222,9 +222,11 @@
       "source_priority": [
         "Apps Script active artists",
         "endpoint fallback",
-        "built-in STAFF_PERMISSIONS artist list"
+        "built-in STAFF_PERMISSIONS artist list",
+        "synthetic Guest Artist option"
       ],
       "alias_normalization": "Artist aliases such as Lady Shy, Tomma Mueller, Baby J, Meg, etc. are normalized to canonical names.",
+      "guest_artist": "Guest Artist is always available as a synthetic artist assignment option even when it is not present in Staff Directory.",
       "selection_limit": "Capped to Number of Artists."
     },
     "counter_picker": {
@@ -626,6 +628,7 @@
           "implemented": [
             "artist count 1-4",
             "original Expo staff-colored artist chip picker capped by count",
+            "synthetic Guest Artist option remains available alongside live Staff Directory artists",
             "basic alias normalization for common staff aliases",
             "original Expo staff-colored counter picker capped at two with None exclusive",
             "save to upsertEvent wired",
