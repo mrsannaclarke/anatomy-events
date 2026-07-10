@@ -131,9 +131,11 @@
     "hidden_statuses": [
       "complete",
       "event complete",
-      "event complete balance late"
+      "event complete balance late",
+      "cancelled",
+      "canceled"
     ],
-    "cancelled_visibility": "Cancelled rows are not currently hidden by the event ledger completion filter.",
+    "cancelled_visibility": "Cancelled/canceled rows are hidden from the event ledger cards.",
     "sort_order": [
       "Open/non-complete cards sort by Sheet event date/start time, soonest first.",
       "Undated cards sort last by client name."
@@ -584,7 +586,7 @@
           "status": "partial",
           "implemented": [
             "Sheet-backed event list",
-            "complete/event complete/event complete balance late hidden; cancelled remains visible",
+            "complete/event complete/event complete balance late/cancelled/canceled hidden",
             "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, compact icon actions, calendar button, and appointment footer; computed total and balance are intentionally hidden from the card face",
             "Sheet ISO dates are displayed without timezone day rollback",
             "Sheet serial-style time values are displayed as normal clock times",

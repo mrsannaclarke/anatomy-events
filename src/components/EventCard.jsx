@@ -12,7 +12,7 @@ const STAFF_NAME_ALIASES = {
 
 export function isHiddenLedgerStatus(event) {
   const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
-  return status === 'complete' || status === 'event complete' || status === 'event complete balance late';
+  return ['complete', 'event complete', 'event complete balance late', 'cancelled', 'canceled'].includes(status);
 }
 
 function isUsableLocation(value) {
