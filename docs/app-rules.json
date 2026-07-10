@@ -465,7 +465,8 @@
     "document_generation": [
       "Contract generation action=generatecontract.",
       "Temporary facility license generation action=generatetfl.",
-      "Existing generated links lock generation controls and shift workflow to link/email/copy actions."
+      "Existing generated links lock generation controls and shift workflow to link/email/copy actions.",
+      "Contract, TFL, and Uploaded Art actions must open the actual Google Drive/Docs URL stored as the spreadsheet link target. Plain display text must not be opened as a relative GitHub Pages URL."
     ],
     "email_actions": {
       "contract_subject": "{{client}} {{event type}} {{event date}} Contract",

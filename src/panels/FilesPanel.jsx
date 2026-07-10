@@ -6,6 +6,14 @@ import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { fireAudit } from '../auditLog.js';
 import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 
+function normalizeFileUrl(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (/^https?:\/\//i.test(text)) return text;
+  if (/^(docs|drive)\.google\.com\//i.test(text)) return `https://${text}`;
+  return '';
+}
+
 export function FilesPanel({ event, viewer, onSaved }) {
   const raw = event.raw || {};
   const [artUrl, setArtUrl] = useState(raw.artImageUrl || '');
@@ -91,9 +99,9 @@ export function FilesPanel({ event, viewer, onSaved }) {
   }
 
   const links = [
-    ['Contract', raw.contractUrl],
-    ['Temporary License', raw.tflUrl],
-    ['Uploaded Art', raw.artImageUrl],
+    ['Contract', raw.contractUrl, normalizeFileUrl(raw.contractUrl)],
+    ['Temporary License', raw.tflUrl, normalizeFileUrl(raw.tflUrl)],
+    ['Uploaded Art', raw.artImageUrl, normalizeFileUrl(raw.artImageUrl)],
   ];
 
   return (
@@ -108,7 +116,7 @@ export function FilesPanel({ event, viewer, onSaved }) {
         </button>
       </div>
       <div className="link-list">
-        {links.map(([label, url]) => (
+        {links.map(([label, sourceValue, url]) => (
           <div key={label} className="link-row">
             <span>{label}</span>
             {url ? (
@@ -126,6 +134,8 @@ export function FilesPanel({ event, viewer, onSaved }) {
                   Email
                 </a>
               </div>
+            ) : sourceValue ? (
+              <strong>Sheet link unavailable</strong>
             ) : (
               <strong>Not generated</strong>
             )}
