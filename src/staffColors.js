@@ -3,7 +3,6 @@ const STAFF_COLOR_MAP = {
   anne: '#8b5cf6',
   agnes: '#fa8072',
   drew: '#ff4fa8',
-  'guest artist': '#f1b56f',
   jacob: '#8f5ab8',
   jake: '#ff8c00',
   jason: '#1f4ea8',
@@ -22,7 +21,6 @@ const STAFF_COLOR_MAP = {
 };
 
 const FALLBACK_STAFF_COLOR = '#8AA4BF';
-let liveStaffColorMap = {};
 
 function normalizeName(name) {
   return String(name || '')
@@ -33,19 +31,7 @@ function normalizeName(name) {
 }
 
 export function getStaffColor(name) {
-  return liveStaffColorMap[normalizeName(name)] || STAFF_COLOR_MAP[normalizeName(name)] || FALLBACK_STAFF_COLOR;
-}
-
-export function setLiveStaffColors(staffRows = []) {
-  liveStaffColorMap = staffRows.reduce((acc, row) => {
-    const color = String(row?.['Color Hex'] || '').trim();
-    if (!/^#[0-9a-fA-F]{6}$/.test(color)) return acc;
-    const names = [row.Name, row['ED Entry'], ...(String(row['Alias Names'] || '').split(','))].map((name) => normalizeName(name)).filter(Boolean);
-    names.forEach((name) => {
-      acc[name] = color;
-    });
-    return acc;
-  }, {});
+  return STAFF_COLOR_MAP[normalizeName(name)] || FALLBACK_STAFF_COLOR;
 }
 
 export function hexToRgba(hex, alpha) {

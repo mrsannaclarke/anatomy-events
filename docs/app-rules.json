@@ -48,7 +48,7 @@
       "event_details_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455"
     },
     "apps_script": {
-      "exec_url": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec",
+      "exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
       "configured_in": "app.json expo.extra.sheetSyncWebAppUrl and constants/sheets-sync.ts",
       "legacy_blocked_url": "https://script.google.com/macros/s/AKfycbzENbuqqAeEB6s3foq95axE-cSm8UdLb1SWrII-BHD8D8fVNRrt5M3Z2dFPmV6z_mjEPA/exec"
     },
@@ -131,21 +131,18 @@
     "hidden_statuses": [
       "complete",
       "event complete",
-      "event complete balance late",
-      "cancelled",
-      "canceled",
-      "not likely to continue"
+      "event complete balance late"
     ],
-    "cancelled_visibility": "Cancelled/canceled and Not Likely to Continue rows are hidden from the event ledger cards.",
+    "cancelled_visibility": "Cancelled rows are not currently hidden by the event ledger completion filter.",
     "sort_order": [
-      "Confirmed/active cards sort above No Consult Scheduled cards.",
-      "Open/non-complete cards sort by Sheet event date/start time, soonest first.",
-      "No Consult Scheduled cards remain visible but sort at the bottom of the event ledger.",
-      "Undated cards sort last by client name within their status group."
+      "Open/non-complete cards with upcoming appointment timestamps first, soonest first.",
+      "Appointment timestamp priority: calendar upcoming match, manual upcoming appointment, fallback upcoming appointment, event date/start time.",
+      "Past dated cards follow upcoming cards, newest first.",
+      "Undated cards sort last by client name."
     ],
-    "card_money_visibility": "Computed Total and Balance are not shown on the event ledger client card face.",
+    "card_money_visibility": "Computed Total and Balance are visible only to admin-money viewers and only when status/pay status is not Open/blank.",
     "post_deposit_additions": "When status is deposit paid or later and a numeric deposit exists, Added After Deposit Paid is max(0, computed total - deposit/0.30).",
-    "appointment_footer": "Shows Next Appt and Last Appt. Manual upcoming appointment from Notes overrides calendar next appointment on the card face; calendar next/last are fallback/display sources.",
+    "appointment_footer": "Shows Next Appt and Last Appt from calendar/manual/fallback sources.",
     "google_calendar_button": "Built as all-day event from event date, client/type title, venue/address, phone, and email.",
     "map_button": "Shown when venue/address is not TBD and has a usable query.",
     "latest_communication_preview": "Shows most recent staff activity entry for visible event IDs."
@@ -224,11 +221,9 @@
       "source_priority": [
         "Apps Script active artists",
         "endpoint fallback",
-        "built-in STAFF_PERMISSIONS artist list",
-        "synthetic Guest Artist option"
+        "built-in STAFF_PERMISSIONS artist list"
       ],
       "alias_normalization": "Artist aliases such as Lady Shy, Tomma Mueller, Baby J, Meg, etc. are normalized to canonical names.",
-      "guest_artist": "Guest Artist is always available as a synthetic artist assignment option even when it is not present in Staff Directory.",
       "selection_limit": "Capped to Number of Artists."
     },
     "counter_picker": {
@@ -274,7 +269,6 @@
   },
   "notes": {
     "status_options": [
-      "No Consult Scheduled",
       "Post Consult Decision",
       "Need To Send Contract/Deposit Invoice",
       "Contract Signed",
@@ -293,7 +287,7 @@
     ],
     "status_edit_access": "Only admin and super_admin effective auth types can edit status.",
     "activity_log": "Staff communication entries store actor, timestamp, and message; Discord actor entries are removed from visible local log.",
-    "manual_upcoming_appointment": "Notes can save a manual upcoming appointment timestamp used by event ledger appointment footer display.",
+    "manual_upcoming_appointment": "Notes can save a manual upcoming appointment timestamp used by event ledger sorting and display.",
     "discord": "Specific Entry IDs can post to configured Discord event channels."
   },
   "pricing": {
@@ -465,8 +459,7 @@
     "document_generation": [
       "Contract generation action=generatecontract.",
       "Temporary facility license generation action=generatetfl.",
-      "Existing generated links lock generation controls and shift workflow to link/email/copy actions.",
-      "Contract, TFL, and Uploaded Art actions must open the actual Google Drive/Docs URL stored as the spreadsheet link target. Plain display text must not be opened as a relative GitHub Pages URL."
+      "Existing generated links lock generation controls and shift workflow to link/email/copy actions."
     ],
     "email_actions": {
       "contract_subject": "{{client}} {{event type}} {{event date}} Contract",
@@ -501,7 +494,7 @@
     ]
   },
   "audit_and_activity": {
-    "audit_log": "Records create/edit/pull/save/remove/sync events in the Sheet-backed Audit Log tab and is accessible from Admin Tools. 2.0 reads the live Audit Log tab; explicit viewer-stamped app audit rows require the Apps Script GET appendaudit deployment to be published by the script owner/domain account.",
+    "audit_log": "Records create/edit/pull/save/remove/sync events and is accessible from Admin Tools.",
     "event_update_audit_throttle_ms": 2000,
     "activity_log": "Notes communication entries are shown on Notes and summarized on Event Ledger cards."
   },
@@ -550,7 +543,7 @@
         "Google OAuth is connected in 2.0 through Google Identity Services; stale local viewer fixtures are ignored unless created by Google sign-in.",
         "Current Apps Script source exposes Events and Pricing Rules, but not legacy staff payout tabs, so payout rows label schedule fallback instead of live staff-tab override truth.",
         "Production write actions are wired but still need deliberate row-level mutation tests before marking save/delete/generate parity as pass.",
-        "Calendar/manual appointment display, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
+        "Calendar/manual appointment sorting, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
       ],
       "mobile_requirement": "Pages remain mobile responsive; nav, action grids, summaries, and forms collapse to single-column controls on narrow screens.",
       "parity_audit": "docs/frontend-parity-audit.md"
@@ -593,15 +586,15 @@
           "status": "partial",
           "implemented": [
             "Sheet-backed event list",
-            "complete/event complete/event complete balance late/cancelled/canceled/not likely to continue hidden",
-            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, compact icon actions, calendar button, and appointment footer; computed total and balance are intentionally hidden from the card face",
+            "complete/event complete/event complete balance late hidden; cancelled remains visible",
+            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, money row, compact icon actions, calendar button, and appointment footer",
             "Sheet ISO dates are displayed without timezone day rollback",
             "Sheet serial-style time values are displayed as normal clock times",
-            "soonest Sheet event date/start time sort",
+            "manual-appointment-aware sort with event date fallback",
             "Google Calendar link",
             "Map link for usable address/venue values",
             "latest communication preview from activity entries",
-            "computed total and balance removed from the event ledger card face"
+            "local allowlist/admin viewer gate for computed total and balance display"
           ],
           "missing": [
             "external calendar feed matching",
@@ -632,7 +625,6 @@
           "implemented": [
             "artist count 1-4",
             "original Expo staff-colored artist chip picker capped by count",
-            "synthetic Guest Artist option remains available alongside live Staff Directory artists",
             "basic alias normalization for common staff aliases",
             "original Expo staff-colored counter picker capped at two with None exclusive",
             "save to upsertEvent wired",
@@ -653,7 +645,7 @@
             "Client Notes section read-only",
             "Communication Entry section",
             "Feed section from communication blocks",
-            "manual appointment can display in appointment footer when no calendar match is available",
+            "manual appointment used by ledger sorting",
             "save to upsertEvent wired with post-save refresh by Entry ID when possible"
           ],
           "missing": [

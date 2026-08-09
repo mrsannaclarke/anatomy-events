@@ -3,18 +3,9 @@ import { Copy, ExternalLink, Mail, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { fireAudit } from '../auditLog.js';
 import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 
-function normalizeFileUrl(value) {
-  const text = String(value || '').trim();
-  if (!text) return '';
-  if (/^https?:\/\//i.test(text)) return text;
-  if (/^(docs|drive)\.google\.com\//i.test(text)) return `https://${text}`;
-  return '';
-}
-
-export function FilesPanel({ event, viewer, onSaved }) {
+export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
   const [artUrl, setArtUrl] = useState(raw.artImageUrl || '');
   const [status, setStatus] = useState('');
@@ -52,17 +43,6 @@ export function FilesPanel({ event, viewer, onSaved }) {
       });
       const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
       onSaved(refreshed);
-      fireAudit(viewer, {
-        actionName: kind === 'tfl' ? 'temporary_license_generate' : 'contract_generate',
-        entryId: saved.entryId || raw.entryId,
-        targetSheet: 'Generated Files',
-        details: {
-          clientName: event.clientName,
-          kind,
-          contractUrl: result.contractUrl || '',
-          tflUrl: result.tflUrl || '',
-        },
-      });
       setStatus('Generated file link saved.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to generate file.');
@@ -82,14 +62,6 @@ export function FilesPanel({ event, viewer, onSaved }) {
       });
       const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
       onSaved(refreshed);
-      fireAudit(viewer, {
-        actionName: 'uploaded_art_url_save',
-        entryId: saved.entryId || raw.entryId,
-        details: {
-          clientName: event.clientName,
-          artUrl,
-        },
-      });
       setStatus('Uploaded art URL saved.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to save art URL.');
@@ -99,9 +71,9 @@ export function FilesPanel({ event, viewer, onSaved }) {
   }
 
   const links = [
-    ['Contract', raw.contractUrl, normalizeFileUrl(raw.contractUrl)],
-    ['Temporary License', raw.tflUrl, normalizeFileUrl(raw.tflUrl)],
-    ['Uploaded Art', raw.artImageUrl, normalizeFileUrl(raw.artImageUrl)],
+    ['Contract', raw.contractUrl],
+    ['Temporary License', raw.tflUrl],
+    ['Uploaded Art', raw.artImageUrl],
   ];
 
   return (
@@ -116,7 +88,7 @@ export function FilesPanel({ event, viewer, onSaved }) {
         </button>
       </div>
       <div className="link-list">
-        {links.map(([label, sourceValue, url]) => (
+        {links.map(([label, url]) => (
           <div key={label} className="link-row">
             <span>{label}</span>
             {url ? (
@@ -134,8 +106,6 @@ export function FilesPanel({ event, viewer, onSaved }) {
                   Email
                 </a>
               </div>
-            ) : sourceValue ? (
-              <strong>Sheet link unavailable</strong>
             ) : (
               <strong>Not generated</strong>
             )}

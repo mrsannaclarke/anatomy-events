@@ -1,7 +1,8 @@
 import { BriefcaseBusiness, CalendarPlus, Heart, MapPin, PartyPopper, ScrollText, Users } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
-import { formatAppointment, getLatestCommunication } from '../activity.js';
+import { computePricing, formFromEvent, formatMoney } from '../pricingMath.js';
+import { getLatestCommunication } from '../activity.js';
 import { getStaffColor } from '../staffColors.js';
 
 const STAFF_NAME_ALIASES = {
@@ -10,9 +11,14 @@ const STAFF_NAME_ALIASES = {
   'Tomma Mueller': 'Tomma',
 };
 
+function isOpenStatus(event) {
+  const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
+  return !status || status === 'open';
+}
+
 export function isHiddenLedgerStatus(event) {
   const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
-  return ['complete', 'event complete', 'event complete balance late', 'cancelled', 'canceled', 'not likely to continue'].includes(status);
+  return status === 'complete' || status === 'event complete' || status === 'event complete balance late';
 }
 
 function isUsableLocation(value) {
@@ -55,14 +61,14 @@ function formatDate(value) {
 function formatTime(value) {
   const text = String(value || '').trim();
   if (!text) return '';
-  const clock = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?/i);
-  const simple = text.match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
+  const clock = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?/);
+  const simple = text.match(/^(\d{1,2}):(\d{2})/);
   const match = clock || simple;
   if (!match) return '';
   const hour24 = Number(match[1]);
   const minutes = match[2];
-  const suffix = match[3]?.toUpperCase() || (hour24 >= 12 ? 'PM' : 'AM');
-  const hour12 = match[3] ? hour24 : hour24 % 12 || 12;
+  const hour12 = hour24 % 12 || 12;
+  const suffix = hour24 >= 12 ? 'PM' : 'AM';
   return `${hour12}:${minutes} ${suffix}`;
 }
 
@@ -92,7 +98,9 @@ function buildCalendarUrl(event) {
   return url.toString();
 }
 
-export function EventCard({ event, manualAppointment, onAction }) {
+export function EventCard({ event, onAction, showAdminMoney = false }) {
+  const showMoney = showAdminMoney && !isOpenStatus(event);
+  const totals = computePricing(formFromEvent(event));
   const raw = event.raw || {};
   const location = raw.eventAddress || raw.venueName || '';
   const latestCommunication = getLatestCommunication(raw);
@@ -104,11 +112,6 @@ export function EventCard({ event, manualAppointment, onAction }) {
   const dateLine = [eventDate, eventTime ? `Event ${eventTime}` : ''].filter(Boolean).join(' • ');
   const addressLines = getAddressLines(raw);
   const artistNames = splitNames(raw.artistNames);
-  const manualNextAppointment = manualAppointment || raw.manualUpcomingAppointment || '';
-  const nextAppointment = manualNextAppointment
-    ? new Date(manualNextAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
-    : formatAppointment(event.calendarAppointment?.next);
-  const lastAppointment = formatAppointment(event.calendarAppointment?.last);
 
   return (
     <article className="event-card">
@@ -144,6 +147,19 @@ export function EventCard({ event, manualAppointment, onAction }) {
         )}
       </div>
 
+      {showMoney ? (
+        <div className="amount-row">
+          <div>
+            <span>Computed Total</span>
+            <strong>{formatMoney(totals.totalCharge)}</strong>
+          </div>
+          <div>
+            <span>Balance</span>
+            <strong>{event.balanceDue || formatMoney(totals.balanceDue)}</strong>
+          </div>
+        </div>
+      ) : null}
+
       {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
 
       <div className="event-card__bottom-row">
@@ -166,8 +182,8 @@ export function EventCard({ event, manualAppointment, onAction }) {
       </div>
 
       <div className="appointment-footer">
-        <span>Next Appt: {nextAppointment || 'No upcoming appointment found'}</span>
-        <span>Last Appt: {lastAppointment || 'No previous appointment found'}</span>
+        <span>Next Appt: {raw.manualUpcomingAppointment ? new Date(raw.manualUpcomingAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No upcoming appointment found'}</span>
+        <span>Last Appt: No previous appointment found</span>
       </div>
     </article>
   );

@@ -3,12 +3,11 @@ import { Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { fireAudit } from '../auditLog.js';
+import { COUNTER_OPTIONS, STAFF_OPTIONS } from '../constants.js';
 import { ARTIST_COUNTS } from '../pricingMath.js';
 import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
-import { buildStaffDirectory, normalizeStaffNameFromDirectory } from '../staffDirectory.js';
 import { getContrastTextForHex, getStaffColor, hexToRgba } from '../staffColors.js';
-import { joinNames, splitNames } from './panelUtils.js';
+import { joinNames, normalizeStaffName, splitNames } from './panelUtils.js';
 
 function staffChipStyle(name, selected) {
   const color = getStaffColor(name);
@@ -20,14 +19,11 @@ function staffChipStyle(name, selected) {
   };
 }
 
-export function StaffAssignmentsPanel({ event, viewer, staffDirectory, onSaved }) {
+export function StaffAssignmentsPanel({ event, onSaved }) {
   const raw = event.raw || {};
-  const directory = staffDirectory || buildStaffDirectory([]);
   const [artistCount, setArtistCount] = useState(raw.numberOfArtists || '1');
-  const [artists, setArtists] = useState(() =>
-    splitNames(raw.artistNames).map((name) => normalizeStaffNameFromDirectory(name, directory.aliases)).slice(0, Number(raw.numberOfArtists) || 1),
-  );
-  const [counters, setCounters] = useState(() => splitNames(raw.counterNames).map((name) => normalizeStaffNameFromDirectory(name, directory.aliases)).slice(0, 2));
+  const [artists, setArtists] = useState(() => splitNames(raw.artistNames).map(normalizeStaffName).slice(0, Number(raw.numberOfArtists) || 1));
+  const [counters, setCounters] = useState(() => splitNames(raw.counterNames).slice(0, 2));
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -45,20 +41,10 @@ export function StaffAssignmentsPanel({ event, viewer, staffDirectory, onSaved }
       const saved = await upsertEventToSheet({
         ...raw,
         numberOfArtists: artistCount,
-        artistNames: joinNames(artists.map((name) => normalizeStaffNameFromDirectory(name, directory.aliases)).slice(0, Number(artistCount) || 1)),
+        artistNames: joinNames(artists.map(normalizeStaffName).slice(0, Number(artistCount) || 1)),
         counterNames: joinNames(counters),
       });
       onSaved(saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved);
-      fireAudit(viewer, {
-        actionName: 'staff_assignments_save',
-        entryId: saved.entryId || raw.entryId,
-        details: {
-          clientName: event.clientName,
-          artistCount,
-          artists,
-          counters,
-        },
-      });
       setStatus('Saved staff assignments.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to save staff assignments.');
@@ -83,7 +69,7 @@ export function StaffAssignmentsPanel({ event, viewer, staffDirectory, onSaved }
       <section className="picker-section">
         <h3>Artists</h3>
         <div className="chip-grid">
-          {directory.artists.map((name) => (
+          {STAFF_OPTIONS.map((name) => (
             <button
               key={name}
               type="button"
@@ -100,7 +86,7 @@ export function StaffAssignmentsPanel({ event, viewer, staffDirectory, onSaved }
       <section className="picker-section">
         <h3>Counter Staff</h3>
         <div className="chip-grid">
-          {directory.counters.map((name) => (
+          {COUNTER_OPTIONS.map((name) => (
             <button
               key={name}
               type="button"

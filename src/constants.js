@@ -26,7 +26,6 @@ export const cardActions = [
 ];
 
 export const STATUS_OPTIONS = [
-  'No Consult Scheduled',
   'Post Consult Decision',
   'Need To Send Contract/Deposit Invoice',
   'Contract Signed',
@@ -60,8 +59,6 @@ export const STAFF_OPTIONS = [
   'Anne',
   'Jazz',
 ];
-
-export const GUEST_ARTIST_OPTION = 'Guest Artist';
 
 export const COUNTER_OPTIONS = [...STAFF_OPTIONS, 'Jacob', 'Jason', 'Kevin', 'Veda', 'None', 'Other'];
 

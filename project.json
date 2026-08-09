@@ -14,8 +14,8 @@
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
     "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
     "script_id": "1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK",
-    "web_app_deployment_id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec",
+    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
     "weekly_sheet_url": "https://docs.google.com/spreadsheets/d/1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw/edit?gid=1568490049#gid=1568490049",
     "weekly_sheet_id": "1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw",
     "master_sheet_url": "https://docs.google.com/spreadsheets/d/1SqOSuyRKrsgJP4bBdt_Lz9ILa_xXG8o9JuasG6IQ-qk/edit?gid=168785747#gid=168785747",
@@ -32,7 +32,7 @@
     "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
     "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
     "local_workspace_path": "/Users/Anna/Documents/Project Files/Event Details Project/clean-source-v2",
     "script_bootstrap": {
       "created": true,
@@ -153,7 +153,7 @@
         "note": "Date values differ in API representation format (MM/DD/YYYY vs ISO timestamp) but refer to same sheet dates."
       }
     },
-    "web_app_deployment_id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
+    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
     "web_app_deployment_version": 37,
     "local_weekly_project_json_path": "/Users/Anna/Documents/Project Files/Event Details Project/weekly sheets project.json",
     "last_link_parity_check": {
@@ -266,7 +266,7 @@
     "credit_ledger_reconciliation": {
       "date": "2026-04-18",
       "deployment_used": {
-        "id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
+        "id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
         "version": 37
       },
       "issue": "Older staging deployments accepted duplicate legacy-import ledger writes; Tomma carryover doubled.",
@@ -310,8 +310,11 @@
   "current_rules": {
     "home_page": {
       "show": "all projects except complete/Event Complete/Event Complete Balance Late statuses",
-      "sort": "confirmed/active visible cards first by Sheet event date/start time, soonest first; No Consult Scheduled cards remain visible but sort to the bottom; undated cards last by client name within their status group",
+      "sort": "upcoming appointments first by soonest timestamp; past dated cards follow newest first; undated cards last by client name",
       "sort_source_priority": [
+        "calendar upcoming match",
+        "manual upcoming appointment",
+        "fallback upcoming appointment",
         "event date/start time"
       ],
       "ao_dropdown_values": [
@@ -327,7 +330,6 @@
         "Event Complete"
       ],
       "event_status_options": [
-        "No Consult Scheduled",
         "Post Consult Decision",
         "Need To Send Contract/Deposit Invoice",
         "Contract Signed",
@@ -435,9 +437,9 @@
         "TFL"
       ],
       "client_detail_artist_picker": {
-        "source": "active artists from Artist License Source plus synthetic Guest Artist option",
+        "source": "active artists from Artist License Source",
         "selection_limit": "capped to Number of Artists",
-        "fallback_behavior": "if artists endpoint is unauthorized/unavailable, app falls back to latest endpoint and then to a built-in artist list; Guest Artist remains available in both live and fallback modes"
+        "fallback_behavior": "if artists endpoint is unauthorized/unavailable, app falls back to latest endpoint and then to a built-in artist list"
       },
       "client_detail_counter_staff_picker": {
         "source": "fixed options in app",
@@ -595,7 +597,6 @@
       "Admin promotion controls (2026-04-15): Admin page now includes an allowlisted-user roster with role chips and promote/remove actions; promotions persist locally via AsyncStorage override and elevate effective auth type to `admin` for app gating.",
       "Ledger action-row resilience (2026-04-15): event-card bottom action row now wraps safely on narrow layouts and keeps `Generators & Files` icon accessible instead of being squeezed out by calendar CTA.",
       "Generators/files wording/order cleanup (2026-04-15): Generated Forms now orders actions as Open Contract -> Email Contract to Client -> Open License Application -> Email License Application; contract email uses subject `{{client}} {{event type}} {{event date}} Contract` with polished default body, generator section is hidden when both files already exist, and uploaded-art permissions explainer copy is removed from UI.",
-      "Generated-file link safety update (2026-07-10): 2.0 only opens Contract/TFL/Uploaded Art actions when the value resolves to an absolute web URL, preventing plain sheet display text from opening as a relative GitHub Pages path. Apps Script source is updated locally to prefer spreadsheet rich-text/formula hyperlink targets for Event Details link columns, but deployment requires a script editor account.",
       "Generators/files color pass (2026-04-15): contract actions are now blue and license actions are now green across both generator controls and generated-form action buttons.",
       "Generators/files clipboard fallback (2026-04-15): added `Copy Email to Clipboard` as the third action for both contract and license groups (blue for client contract, green for Oregon licensing) to support workflows where `mailto:` launch is blocked.",
       "TFL artist-slot hardening (2026-04-15): Apps Script generation now uses explicit selected artist count + normalized artist-name filtering for contract/TFL generation and literal-safe placeholder replacement, preventing empty/unassigned artist rows from filling all license artist slots.",
@@ -828,7 +829,7 @@
         "Current Apps Script source exposes Events and Pricing Rules, but not legacy staff payout tabs, so payout rows label schedule fallback instead of live staff-tab override truth.",
         "Apps Script version 73 was pushed and versioned for Oregon TFL defaulting, but active deployment AKfycbywkj... remains on version 72 until redeployed by an account in the script owner's Google Workspace domain.",
         "Production write actions are wired but still need deliberate row-level mutation tests before marking save/delete/generate parity as pass.",
-        "Calendar/manual appointment display, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
+        "Calendar/manual appointment sorting, map/calendar buttons, art upload/email/copy actions, and audit log are still follow-up parity items."
       ],
       "mobile_requirement": "Pages remain mobile responsive; nav, action grids, summaries, and forms collapse to single-column controls on narrow screens.",
       "parity_audit": "docs/frontend-parity-audit.md"
@@ -871,15 +872,15 @@
           "status": "partial",
           "implemented": [
             "Sheet-backed event list",
-            "complete/event complete/event complete balance late/cancelled/canceled/not likely to continue hidden",
-            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, compact icon actions, calendar button, and appointment footer; computed total and balance are intentionally hidden from the card face",
+            "complete/event complete/event complete balance late hidden; cancelled remains visible",
+            "client card face restored to original Expo ledger layout: event-type icon and colored client title, date/time line, venue/address block, status chip, staff-colored artists line, money row, compact icon actions, calendar button, and appointment footer",
             "Sheet ISO dates are displayed without timezone day rollback",
             "Sheet serial-style time values are displayed as normal clock times",
-            "soonest Sheet event date/start time sort",
+            "manual-appointment-aware sort with event date fallback",
             "Google Calendar link",
             "Map link for usable address/venue values",
             "latest communication preview from activity entries",
-            "computed total and balance removed from the event ledger card face"
+            "local allowlist/admin viewer gate for computed total and balance display"
           ],
           "missing": [
             "external calendar feed matching",
@@ -910,7 +911,6 @@
           "implemented": [
             "artist count 1-4",
             "original Expo staff-colored artist chip picker capped by count",
-            "synthetic Guest Artist option remains available alongside live Staff Directory artists",
             "basic alias normalization for common staff aliases",
             "original Expo staff-colored counter picker capped at two with None exclusive",
             "save to upsertEvent wired",
@@ -931,7 +931,7 @@
             "Client Notes section read-only",
             "Communication Entry section",
             "Feed section from communication blocks",
-            "manual appointment from Notes overrides calendar next appointment on the card face",
+            "manual appointment used by ledger sorting",
             "save to upsertEvent wired with post-save refresh by Entry ID when possible"
           ],
           "missing": [
@@ -1205,9 +1205,9 @@
         },
         {
           "id": "external_calendar_feed_appointment_matching",
-          "status": "partial",
+          "status": "pending",
           "title": "External calendar-feed appointment matching",
-          "detail": "2.0 now pulls action=calendarfeed, parses ICS events, matches calendar entries to Sheet events, and shows calendar-derived Next/Last appointment footer values. Event ledger card order is intentionally driven by Sheet event date/start time, not calendar appointment date."
+          "detail": "Event cards have the footer and manual appointment fallback, but they do not yet pull next/last appointment from the configured calendar feeds."
         },
         {
           "id": "live_payout_override_source",
@@ -1223,15 +1223,15 @@
         },
         {
           "id": "audit_activity_log",
-          "status": "partial",
+          "status": "pending",
           "title": "Audit/activity log",
-          "detail": "Admin Audit Log page is rebuilt against the Sheet-backed Audit Log tab, and the current Apps Script source already writes internal audit rows for event upserts/deletes/generator link updates. 2.0 also includes explicit viewer-stamped audit calls for saves/deletes/generates, but the GET appendaudit Apps Script handler must be deployed by the script owner/domain account before those extra viewer payload rows work on the live /exec URL. Notes can append communication blocks, but full Expo activity-log delete/Discord behavior is not rebuilt."
+          "detail": "Admin audit log and full event activity-log behavior are not rebuilt. Notes can append communication blocks, but not the full Expo activity system."
         },
         {
           "id": "staff_assignment_live_artist_source",
-          "status": "implemented",
+          "status": "pending",
           "title": "Staff assignment live artist source",
-          "detail": "2.0 now pulls the live Staff Directory from Apps Script, uses active Sheet rows for Staff Assignment artist/counter chip options, applies ED Entry / alias normalization, and uses live Color Hex values for staff chip/card colors. Local constants remain as fallback if the endpoint is unavailable. Guest Artist is always available as a synthetic artist option for one-off guest assignments."
+          "detail": "2.0 uses local staff options and some aliases. It does not yet merge the live sheet artist list / ED-entry alias source."
         },
         {
           "id": "production_mutation_testing",

@@ -2,7 +2,7 @@ const viteEnv = import.meta.env || {};
 
 export const SHEET_WEB_APP_URL =
   viteEnv.VITE_SHEET_WEB_APP_URL ||
-  'https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec';
+  'https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec';
 
 export const SHEET_API_TOKEN = viteEnv.VITE_SHEET_API_TOKEN || '';
 
@@ -197,16 +197,6 @@ export async function pullPricingRulesFromSheet() {
   return data.pricing || [];
 }
 
-export async function pullStaffDirectoryFromSheet() {
-  const data = await requestSheetJson({ action: 'staff' });
-  return data.staff || [];
-}
-
-export async function pullCalendarFeed() {
-  const data = await requestSheetJson({ action: 'calendarfeed' });
-  return data.ics || '';
-}
-
 export async function pullSheetTabs() {
   const data = await requestSheetJson({ action: 'sheettabs' });
   return data.tabs || [];
@@ -215,20 +205,4 @@ export async function pullSheetTabs() {
 export async function pullSheetTabRows(tabName) {
   const data = await requestSheetJson({ action: 'sheettabrows', tabName });
   return data.rows || [];
-}
-
-export async function appendAuditToSheet({ actionName, entryId, targetSheet = 'Events', payload = {} }) {
-  return requestSheetJson({
-    action: 'appendaudit',
-    actionName,
-    entryId: entryId || '',
-    targetSheet,
-    payloadJson: JSON.stringify(payload),
-  });
-}
-
-export async function pullAuditRows(limit = 150) {
-  const data = await requestSheetJson({ action: 'sheettabrows', tabName: 'Audit Log', startRow: '2', limit: String(limit) });
-  const rows = data.rows || [];
-  return rows.slice(-limit).reverse();
 }

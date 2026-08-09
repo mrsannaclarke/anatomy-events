@@ -3,7 +3,6 @@ import { Copy, ExternalLink, Route, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { fireAudit } from '../auditLog.js';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 import {
@@ -25,7 +24,7 @@ const PRICING_SHEET_PUBLIC_URL_BY_YEAR = {
   2026: 'https://drive.google.com/file/d/1RqB2DEuH_AFm1yirkpdhAYQBpCTunSj9/view?usp=drive_link',
 };
 
-export function PricingPage({ events, viewer, onSaved }) {
+export function PricingPage({ events, onSaved }) {
   const [selectedId, setSelectedId] = useState('');
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedId || event.entryId === selectedId) || null,
@@ -111,16 +110,6 @@ export function PricingPage({ events, viewer, onSaved }) {
         balanceAfterDeposit: totals.balanceDue,
       });
       onSaved(saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved);
-      fireAudit(viewer, {
-        actionName: saveMode === 'new' ? 'pricing_create_event' : 'pricing_overwrite_event',
-        entryId: saved.entryId || eventForSheet.entryId,
-        details: {
-          clientName: saved.clientName || eventForSheet.clientName,
-          saveMode,
-          totalCharge: totals.totalCharge,
-          balanceDue: totals.balanceDue,
-        },
-      });
       setSaveStatus(saveMode === 'new' ? `Created ${saved.clientName} in Sheet.` : `Saved ${selectedEvent.clientName} to Sheet.`);
     } catch (error) {
       setSaveStatus(error instanceof Error ? error.message : 'Failed to save pricing.');

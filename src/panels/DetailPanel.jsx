@@ -6,7 +6,7 @@ import { FilesPanel } from './FilesPanel.jsx';
 import { NotesPanel } from './NotesPanel.jsx';
 import { StaffAssignmentsPanel } from './StaffAssignmentsPanel.jsx';
 
-export function DetailPanel({ detail, viewer, staffDirectory, onBack, onSaved, onDeleted, onManualAppointmentsChanged, onChangeMode }) {
+export function DetailPanel({ detail, onBack, onSaved, onDeleted, onManualAppointmentsChanged, onChangeMode }) {
   if (!detail) return null;
   const { mode, event } = detail;
   const activeAction = cardActions.find((action) => action.id === mode);
@@ -38,10 +38,10 @@ export function DetailPanel({ detail, viewer, staffDirectory, onBack, onSaved, o
         </div>
       </div>
 
-      {mode === 'client' ? <ClientDetailsPanel event={event} viewer={viewer} onSaved={onSaved} onDeleted={onDeleted} /> : null}
-      {mode === 'staff' ? <StaffAssignmentsPanel event={event} viewer={viewer} staffDirectory={staffDirectory} onSaved={onSaved} /> : null}
-      {mode === 'notes' ? <NotesPanel event={event} viewer={viewer} onSaved={onSaved} onManualAppointmentsChanged={onManualAppointmentsChanged} /> : null}
-      {mode === 'files' ? <FilesPanel event={event} viewer={viewer} onSaved={onSaved} /> : null}
+      {mode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSaved} onDeleted={onDeleted} /> : null}
+      {mode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSaved} /> : null}
+      {mode === 'notes' ? <NotesPanel event={event} onSaved={onSaved} onManualAppointmentsChanged={onManualAppointmentsChanged} /> : null}
+      {mode === 'files' ? <FilesPanel event={event} onSaved={onSaved} /> : null}
     </section>
   );
 }

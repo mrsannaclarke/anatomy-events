@@ -3,10 +3,9 @@ import { defineConfig } from 'vite';
 
 const SHEET_WEB_APP_URL =
   process.env.VITE_SHEET_WEB_APP_URL ||
-  'https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec';
+  'https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec';
 
 export default defineConfig({
-  base: process.env.GITHUB_PAGES === 'true' ? '/anatomy-events/' : '/',
   plugins: [
     react(),
     {
