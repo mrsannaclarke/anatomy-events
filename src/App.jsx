@@ -64,7 +64,7 @@ function GoogleSignInGate({ onSignedIn }) {
   return (
     <main className="auth-screen">
       <section className="auth-card">
-        <img src="/assets/images/anatomy-logo-circle.png" alt="" />
+        <img src="/apple-touch-icon.png" alt="" />
         <h1>Events App 2.0</h1>
         <p>Sign in with your allowlisted Google account.</p>
         <div id="google-signin-button" className="google-signin-button" />
@@ -78,7 +78,7 @@ function AccessDenied({ viewer, onSignOut }) {
   return (
     <main className="auth-screen">
       <section className="auth-card">
-        <img src="/assets/images/anatomy-logo-circle.png" alt="" />
+        <img src="/apple-touch-icon.png" alt="" />
         <h1>Access Not Allowed</h1>
         <p>{viewer.email} is not on the Events App allowlist.</p>
         <button type="button" className="secondary-button" onClick={onSignOut}>
@@ -146,9 +146,9 @@ export function App() {
   }
 
   const visibleNavItems = useMemo(() => {
-    if (!viewer.isAllowlisted) return navItems.filter((item) => item.id === 'events');
+    if (!viewer?.isAllowlisted) return navItems.filter((item) => item.id === 'events');
     return navItems;
-  }, [viewer.isAllowlisted]);
+  }, [viewer?.isAllowlisted]);
   const visibleLedgerEvents = useMemo(
     () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event)), manualAppointments),
     [events, manualAppointments],
@@ -173,7 +173,7 @@ export function App() {
     <main className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/assets/images/anatomy-logo-circle.png" alt="" />
+          <img src="/apple-touch-icon.png" alt="" />
           <div>
             <strong>Events App 2.0</strong>
             <span>{getProjectTitle()}</span>
