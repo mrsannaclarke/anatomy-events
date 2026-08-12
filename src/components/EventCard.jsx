@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
+import { DecorativeSprig } from './DecorativeSprig.jsx';
 import { computePricing, formFromEvent, PRICING_METHOD_CORPORATE_MODIFIERS } from '../pricingMath.js';
 import { getLatestCommunication } from '../activity.js';
 import { getStaffColor } from '../staffColors.js';
@@ -84,6 +85,7 @@ export function EventCard({ event, onAction }) {
 
   return (
     <article className="event-card">
+      <DecorativeSprig placement="card" />
       <div className="event-card__title-row">
         <div className="event-type-dot" style={{ borderColor: eventColor }}>
           <EventIcon size={14} color={eventColor} />

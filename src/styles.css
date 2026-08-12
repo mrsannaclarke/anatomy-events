@@ -339,7 +339,14 @@ nav button:hover {
   background: #211d19;
   border: 1px solid #51443b;
   border-radius: 8px;
+  overflow: hidden;
   padding: 16px;
+  position: relative;
+}
+
+.event-card > :not(.decorative-sprig) {
+  position: relative;
+  z-index: 1;
 }
 
 .pricing-page {
@@ -570,6 +577,15 @@ nav button:hover {
   right: 16px;
   transform: rotate(10deg);
   width: 82px;
+}
+
+.decorative-sprig--card {
+  height: 88px;
+  opacity: 0.16;
+  right: -13px;
+  top: -24px;
+  transform: rotate(146deg);
+  width: 62px;
 }
 
 .panel-heading > :not(.decorative-sprig),
