@@ -5,7 +5,6 @@ import project from '../project.json';
 import { sortLedgerEvents } from './activity.js';
 import { cacheViewer, clearCachedViewer, getCachedViewer, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
-import { DecorativeSprig } from './components/DecorativeSprig.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
 import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
@@ -259,11 +258,6 @@ export function App() {
             <strong>Events App 2.0</strong>
             <span>{getProjectTitle()}</span>
           </div>
-        </div>
-        <div className="brand-ornament" aria-hidden="true">
-          <span />
-          <DecorativeSprig placement="brand" />
-          <span />
         </div>
 
         <nav aria-label="Primary">

@@ -81,62 +81,64 @@ export function EventCard({ event, onAction }) {
   const eventTime = formatTime(raw.eventStartTime);
   const addressLines = getAddressLines(raw);
   const artistNames = splitNames(raw.artistNames);
+  const counterNames = splitNames(raw.counterNames);
+
+  const staffList = (names, fallback) => (
+    <span className="event-card__staff-list">
+      {names.length ? names.map((name) => (
+        <span key={name} className="event-card__staff-person">
+          <span className="event-card__staff-dot" style={{ background: getStaffColor(name) }} />
+          {name}
+        </span>
+      )) : <span>{fallback}</span>}
+    </span>
+  );
 
   return (
-    <article className="event-card">
-      <div className="event-card__title-row">
-        <div className="event-type-dot" style={{ borderColor: eventColor }}>
-          <EventIcon size={14} color={eventColor} />
+    <article className="event-card" style={{ '--event-color': eventColor }}>
+      <div className="event-card__main">
+        <div className="event-type-dot event-card__medallion" style={{ borderColor: eventColor }}>
+          <EventIcon size={28} color="#fff3e4" strokeWidth={1.7} />
         </div>
-        {totals.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? (
-          <span className="corporate-pricing-symbol" title="Corporate pricing" aria-label="Corporate pricing">$</span>
-        ) : null}
-        <h2 style={{ color: eventColor }}>{event.clientName}</h2>
-        {eventDate ? <span className="event-card__date" style={{ color: eventColor }}>{eventDate}</span> : null}
-      </div>
-      {eventTime ? <p className="event-card__time" style={{ color: eventColor }}>Event {eventTime}</p> : null}
-
-      <div className="event-card__venue-row">
-        <div className="event-card__venue">
-          {addressLines.map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </div>
-        <span className="status-pill">{event.status}</span>
-      </div>
-
-      <div className="event-card__artists">
-        <span>Artists:</span>
-        {artistNames.length ? (
-          <span className="artist-name-list">
-            {artistNames.map((name) => (
-              <span key={name} className="artist-name-chip" style={{ color: getStaffColor(name) }}>
-                {name}
+        <div className="event-card__body">
+          <div className="event-card__title-row">
+            {totals.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? (
+              <span className="corporate-pricing-symbol" title="Corporate pricing" aria-label="Corporate pricing">$</span>
+            ) : null}
+            <h2>{event.clientName}</h2>
+            {eventDate ? <span className="event-card__date">{eventDate}</span> : null}
+          </div>
+          {eventTime ? <p className="event-card__time">Event {eventTime}</p> : null}
+          {addressLines.length ? (
+            <a
+              className={isUsableLocation(location) ? 'event-card__venue event-card__venue--link' : 'event-card__venue'}
+              href={isUsableLocation(location) ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}` : undefined}
+              target={isUsableLocation(location) ? '_blank' : undefined}
+              rel={isUsableLocation(location) ? 'noreferrer' : undefined}
+            >
+              <MapPin size={20} />
+              <span>
+                {addressLines.map((line) => <span key={line}>{line}</span>)}
               </span>
-            ))}
-          </span>
-        ) : (
-          <strong>{raw.numberOfArtists || '0'}</strong>
-        )}
-      </div>
-
-      {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
-
-      <div className="event-card__bottom-row">
+            </a>
+          ) : null}
+        </div>
         <div className="event-card__actions" aria-label="Event ledger client card actions">
           {cardActions.map((action) => (
             <button key={action.label} type="button" title={action.label} aria-label={action.label} onClick={() => onAction(action.id, event)}>
-              <action.icon size={16} />
+              <action.icon size={22} strokeWidth={1.7} />
             </button>
           ))}
         </div>
-        {isUsableLocation(location) ? (
-          <a className="map-compact-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`} target="_blank" rel="noreferrer" aria-label="Open map">
-            <MapPin size={15} />
-          </a>
-        ) : null}
       </div>
 
+      <div className="event-card__meta-row">
+        <span className="event-card__status"><span style={{ background: eventColor }} />{event.status}</span>
+        <span className="event-card__staff-group"><strong>Artists:</strong>{staffList(artistNames, raw.numberOfArtists || '0')}</span>
+        <span className="event-card__staff-group"><strong>Counter:</strong>{staffList(counterNames, 'Unassigned')}</span>
+      </div>
+
+      {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
     </article>
   );
 }

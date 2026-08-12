@@ -38,18 +38,6 @@ button {
   margin-bottom: 10px;
 }
 
-.brand-ornament {
-  align-items: center;
-  display: flex;
-  gap: 9px;
-  justify-content: center;
-  margin: 0 8px 20px;
-}
-
-.brand-ornament > span {
-  border-top: 1px solid #805c4f;
-  flex: 1;
-}
 
 .brand img {
   width: 42px;
@@ -545,20 +533,6 @@ nav button:hover {
   justify-content: space-between;
 }
 
-.decorative-sprig {
-  object-fit: contain;
-  pointer-events: none;
-  position: absolute;
-  user-select: none;
-}
-
-.decorative-sprig--brand {
-  height: 32px;
-  opacity: 0.92;
-  position: relative;
-  transform: rotate(90deg);
-  width: 46px;
-}
 
 .page-stack > .panel-heading {
   background: #211d19;
@@ -1491,19 +1465,6 @@ nav button:hover {
     display: none;
   }
 
-  .brand-ornament {
-    margin: 0;
-    opacity: 0.78;
-    position: absolute;
-    right: 14px;
-    top: 16px;
-    width: 72px;
-  }
-
-  .brand-ornament .decorative-sprig--brand {
-    height: 28px;
-    width: 34px;
-  }
 
   nav {
     gap: 6px;
@@ -1844,5 +1805,319 @@ nav button:hover {
   .event-card__title-row h2,
   .event-card__date {
     font-size: 1.28rem;
+  }
+}
+
+/* Render-inspired roster composition: real app fields, no decorative imagery. */
+@media (min-width: 761px) {
+  .app-shell {
+    grid-template-columns: 292px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: 38px 22px;
+  }
+
+  .brand {
+    flex-direction: column;
+    margin-bottom: 44px;
+    text-align: center;
+  }
+
+  .brand img {
+    border: 1px solid #c77f6b;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+    height: 88px;
+    margin-bottom: 10px;
+    width: 88px;
+  }
+
+  .brand strong {
+    font-size: 1.35rem;
+    font-weight: 600;
+  }
+
+  .brand span {
+    color: #c98a77;
+    font-size: 1rem;
+    margin-top: 7px;
+  }
+
+  .sidebar nav {
+    gap: 12px;
+  }
+
+  .sidebar nav button {
+    border-radius: 13px;
+    font-size: 1rem;
+    min-height: 58px;
+    padding: 14px 18px;
+  }
+
+  .sidebar nav button svg {
+    height: 22px;
+    width: 22px;
+  }
+
+  .workspace {
+    padding: 38px 36px 100px;
+  }
+}
+
+.event-list {
+  gap: 22px;
+}
+
+.event-card {
+  background:
+    radial-gradient(circle at 88% 12%, rgb(199 127 107 / 7%), transparent 32%),
+    linear-gradient(135deg, #302923, #27211d);
+  border: 1px solid #594a3f;
+  border-radius: 16px;
+  box-shadow: 0 15px 34px rgb(0 0 0 / 20%);
+  padding: 26px 30px 20px;
+}
+
+.event-card__main {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+}
+
+.event-card__medallion {
+  background: color-mix(in srgb, var(--event-color) 72%, #302923);
+  border-width: 1px;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 243 228 / 12%),
+    0 8px 22px rgb(0 0 0 / 22%);
+  height: 76px;
+  width: 76px;
+}
+
+.event-card__body {
+  min-width: 0;
+}
+
+.event-card__title-row {
+  gap: 10px;
+}
+
+.event-card__title-row h2,
+.event-card__date {
+  color: #f2e6d5;
+  font-size: clamp(1.55rem, 2.15vw, 2.2rem);
+}
+
+.event-card__date {
+  font-family: ui-rounded, "Avenir Next", system-ui, sans-serif;
+  font-size: clamp(1.05rem, 1.45vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.event-card__time {
+  color: var(--event-color);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 7px 0 10px;
+}
+
+.event-card__venue {
+  align-items: flex-start;
+  color: #eadccc;
+  display: inline-flex;
+  font-size: 0.95rem;
+  gap: 10px;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.event-card__venue > svg {
+  color: #c77f6b;
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.event-card__venue > span,
+.event-card__venue > span > span {
+  display: block;
+}
+
+.event-card__venue--link:hover {
+  color: #fff3e4;
+}
+
+.event-card__actions {
+  gap: 12px;
+}
+
+.event-card__actions button {
+  background: rgb(40 35 31 / 72%);
+  border: 1px solid #675448;
+  border-radius: 11px;
+  color: #f2e6d5;
+  height: 54px;
+  min-height: 54px;
+  width: 54px;
+}
+
+.event-card__actions button:hover {
+  background: #49332c;
+  border-color: #c77f6b;
+  color: #f6c1b2;
+}
+
+.event-card__meta-row {
+  align-items: center;
+  border-top: 1px solid #594a3f;
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(180px, 0.9fr) minmax(220px, 1fr) minmax(180px, 0.8fr);
+  margin-top: 20px;
+  padding-top: 14px;
+}
+
+.event-card__meta-row > span {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 20px;
+}
+
+.event-card__meta-row > span:first-child {
+  padding-left: 4px;
+}
+
+.event-card__meta-row > span + span {
+  border-left: 1px solid #594a3f;
+}
+
+.event-card__status > span,
+.event-card__staff-dot {
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 50%;
+  flex: 0 0 auto;
+  height: 14px;
+  width: 14px;
+}
+
+.event-card__staff-group {
+  min-width: 0;
+}
+
+.event-card__staff-group > strong {
+  color: #d6c7b9;
+  font-weight: 500;
+}
+
+.event-card__staff-list,
+.event-card__staff-person {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.event-card__staff-list {
+  min-width: 0;
+}
+
+.event-card__staff-person + .event-card__staff-person {
+  margin-left: 4px;
+}
+
+.communication-preview {
+  margin-top: 14px;
+}
+
+@media (max-width: 1000px) and (min-width: 761px) {
+  .event-card__main {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .event-card__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .event-card__meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .event-card__meta-row > span {
+    padding: 6px 4px;
+  }
+
+  .event-card__meta-row > span + span {
+    border-left: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .brand {
+    align-items: center;
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .event-card {
+    padding: 18px;
+  }
+
+  .event-card__main {
+    align-items: start;
+    gap: 14px;
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .event-card__medallion {
+    height: 52px;
+    width: 52px;
+  }
+
+  .event-card__medallion svg {
+    height: 22px;
+    width: 22px;
+  }
+
+  .event-card__title-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .event-card__title-row h2 {
+    flex-basis: calc(100% - 10px);
+    font-size: 1.45rem;
+  }
+
+  .event-card__date {
+    font-size: 1rem;
+    margin-left: 0;
+  }
+
+  .event-card__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .event-card__actions button {
+    height: 46px;
+    min-height: 46px;
+    width: 46px;
+  }
+
+  .event-card__meta-row {
+    grid-template-columns: 1fr;
+    margin-top: 16px;
+  }
+
+  .event-card__meta-row > span {
+    padding: 6px 2px;
+  }
+
+  .event-card__meta-row > span + span {
+    border-left: 0;
   }
 }
