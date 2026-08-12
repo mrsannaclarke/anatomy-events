@@ -110,7 +110,7 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
               className={artists.includes(name) ? 'choice-chip selected' : 'choice-chip'}
               onClick={() => setArtists((current) => toggleFromList(current, name, Number(artistCount) || 1))}
             >
-              {name}
+              {name === OTHER_OPTION ? 'Write in' : name}
             </button>
           ))}
         </div>
@@ -132,7 +132,7 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
               className={counters.includes(name) ? 'choice-chip selected' : 'choice-chip'}
               onClick={() => setCounters((current) => toggleFromList(current, name, 2))}
             >
-              {name}
+              {name === OTHER_OPTION ? 'Write in' : name}
             </button>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { ClipboardList, Download, ExternalLink, FileSpreadsheet, ShieldCheck, Smartphone } from 'lucide-react';
+import { ClipboardList, Code2, Download, ExternalLink, FileSpreadsheet, ShieldCheck, Smartphone } from 'lucide-react';
 
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
 import project from '../../project.json';
@@ -29,7 +29,7 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
           <ExternalLink size={14} />
         </a>
         <a className="admin-action" href={scriptUrl} target="_blank" rel="noreferrer">
-          <ClipboardList size={20} />
+          <Code2 size={20} />
           <strong>Open Apps Script</strong>
           <span>Production web app deployment.</span>
           <ExternalLink size={14} />
