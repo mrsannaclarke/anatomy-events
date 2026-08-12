@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Copy, ExternalLink, Route, Save } from 'lucide-react';
 
 import { EventTypePicker } from '../components/EventTypePicker.jsx';
+import { DecorativeSprig } from '../components/DecorativeSprig.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
@@ -128,7 +129,8 @@ export function PricingPage({ events, pricingSource, onSaved }) {
   return (
     <section className="pricing-page">
       <section className="pricing-card">
-        <div className="panel-heading">
+      <div className="panel-heading">
+        <DecorativeSprig />
           <div>
             <h2>Price Plan</h2>
             <p>Select the plan year to view base per-artist pricing.</p>

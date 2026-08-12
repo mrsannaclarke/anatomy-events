@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BriefcaseBusiness, ChevronDown, Heart, PartyPopper, ScrollText, Sparkles, Users } from 'lucide-react';
 
 import { getPayoutPeopleForViewer, normalizeKey } from '../auth.js';
+import { DecorativeSprig } from '../components/DecorativeSprig.jsx';
 import {
   buildPricingPayoutMap,
   formatPayout,
@@ -144,6 +145,7 @@ export function PayoutPage({ events, viewer }) {
   if (!viewer.canUsePayoutFramework) {
     return (
       <section className="empty-state">
+        <DecorativeSprig placement="empty" />
         <strong>Pay Schedule</strong>
         <span>Pay schedule is visible to allowlisted Anatomy users.</span>
       </section>
@@ -153,6 +155,7 @@ export function PayoutPage({ events, viewer }) {
   return (
     <section className="page-stack">
       <div className="panel-heading">
+        <DecorativeSprig />
         <div>
           <h2>Pay Schedule</h2>
           <p>{canPickPerson ? 'Full payout picker enabled for this login.' : 'Access limited to your own and delegated payout schedules.'}</p>
@@ -225,6 +228,7 @@ export function PayoutPage({ events, viewer }) {
         <h3 className="section-title-tight">Assigned Events</h3>
         {visibleRows.length === 0 ? (
           <section className="empty-state">
+            <DecorativeSprig placement="empty" />
             <strong>No completed payouts found.</strong>
             <span>{effectivePerson ? `${effectivePerson} has no completed rows for this filter.` : 'Select a person to view payout rows.'}</span>
           </section>

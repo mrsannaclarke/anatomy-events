@@ -320,7 +320,11 @@ nav button:hover {
   color: #eadccc;
   display: grid;
   gap: 4px;
+  min-height: 112px;
+  overflow: hidden;
   padding: 18px;
+  padding-right: 112px;
+  position: relative;
 }
 
 .empty-state strong {
@@ -530,6 +534,39 @@ nav button:hover {
   display: flex;
   gap: 16px;
   justify-content: space-between;
+  overflow: hidden;
+  position: relative;
+}
+
+.decorative-sprig {
+  object-fit: contain;
+  pointer-events: none;
+  position: absolute;
+  user-select: none;
+}
+
+.decorative-sprig--heading {
+  height: 104px;
+  opacity: 0.13;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%) rotate(8deg);
+  width: 74px;
+}
+
+.decorative-sprig--empty {
+  bottom: -23px;
+  height: 136px;
+  opacity: 0.28;
+  right: 16px;
+  transform: rotate(10deg);
+  width: 82px;
+}
+
+.panel-heading > :not(.decorative-sprig),
+.empty-state > :not(.decorative-sprig) {
+  position: relative;
+  z-index: 1;
 }
 
 .page-stack > .panel-heading {
