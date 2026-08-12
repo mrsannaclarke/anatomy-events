@@ -9,6 +9,7 @@ const MUTATION_ACTIONS = new Set([
   'deleteEvent',
   'generateContract',
   'generateTfl',
+  'importUploadedArt',
 ]);
 
 function jsonResponse(payload, status) {

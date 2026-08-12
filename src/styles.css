@@ -768,6 +768,29 @@ nav button:hover {
   padding: 12px;
 }
 
+.saved-art-preview {
+  display: grid;
+  gap: 10px;
+}
+
+.saved-art-preview h3 {
+  margin: 0;
+}
+
+.saved-art-preview iframe,
+.saved-art-preview img {
+  background: #211d19;
+  border: 1px solid #51443b;
+  border-radius: 12px;
+  min-height: 420px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.saved-art-preview img {
+  max-height: 720px;
+}
+
 .link-row span {
   color: #9eb0c4;
   font-weight: 700;

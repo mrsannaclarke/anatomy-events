@@ -3,7 +3,7 @@ import { Copy, ExternalLink, Mail, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
+import { generateEventFile, importUploadedArt, pullEventByEntryId } from '../sheetClient.js';
 
 export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
@@ -57,6 +57,11 @@ export function FilesPanel({ event, onSaved }) {
     return `mailto:${to}?subject=${encodeURIComponent(subjectByLabel[label] || label)}&body=${encodeURIComponent(url || '')}`;
   }
 
+  function drivePreviewUrl(url) {
+    const match = String(url || '').match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+    return match ? `https://drive.google.com/file/d/${match[1]}/preview` : '';
+  }
+
   async function copyToClipboard(value, label) {
     try {
       await navigator.clipboard.writeText(value);
@@ -97,17 +102,20 @@ export function FilesPanel({ event, onSaved }) {
   }
 
   async function saveArtUrl() {
-    setStatus('Saving uploaded art URL...');
-    setPendingLabel('Saving uploaded art URL...');
+    if (!artUrl.trim()) {
+      setStatus('Paste an image or PDF URL first.');
+      return;
+    }
+    setStatus('Copying uploaded art into Drive...');
+    setPendingLabel('Copying uploaded art into Drive...');
     try {
-      const saved = await upsertEventToSheet({
-        ...raw,
-        artImageUrl: artUrl,
-        contractNotes: artUrl ? `${raw.contractNotes || ''}\nART_IMAGE_URL=${artUrl}`.trim() : raw.contractNotes || '',
-      });
-      const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
+      const result = await importUploadedArt(event.entryId, artUrl.trim());
+      const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
+      if (!refreshed) throw new Error('Art saved to Drive, but the refreshed event was not returned.');
+      setFileUrls(urlsFromEvent(refreshed));
+      setArtUrl(result.artUrl);
       onSaved(refreshed);
-      setStatus('Uploaded art URL saved.');
+      setStatus('Uploaded art copied to Drive and connected to this client.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to save art URL.');
     } finally {
@@ -160,12 +168,22 @@ export function FilesPanel({ event, onSaved }) {
         ))}
       </div>
       <Field label="Uploaded Art URL">
-        <input value={artUrl} onChange={(input) => setArtUrl(input.target.value)} />
+        <input placeholder="Paste an image, PDF, or Google Drive file URL" value={artUrl} onChange={(input) => setArtUrl(input.target.value)} />
       </Field>
-      <button type="button" className="primary-button detail-save" onClick={saveArtUrl} disabled={Boolean(pendingLabel)}>
+      <button type="button" className="primary-button detail-save" onClick={saveArtUrl} disabled={Boolean(pendingLabel) || !artUrl.trim() || artUrl.trim() === fileUrls?.artImageUrl}>
         <Save size={16} />
         Save Uploaded Art
       </button>
+      {fileUrls?.artImageUrl ? (
+        <section className="saved-art-preview">
+          <h3>Saved Uploaded Art</h3>
+          {drivePreviewUrl(fileUrls.artImageUrl) ? (
+            <iframe title={`${event.clientName} uploaded art`} src={drivePreviewUrl(fileUrls.artImageUrl)} allow="autoplay" />
+          ) : (
+            <img src={fileUrls.artImageUrl} alt={`${event.clientName} uploaded art`} />
+          )}
+        </section>
+      ) : null}
       {status ? <p className="save-status">{status}</p> : null}
     </section>
   );

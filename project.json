@@ -10,6 +10,8 @@
     "script_url": "https://script.google.com/u/0/home/projects/1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK/edit",
     "generated_contracts_folder_url": "https://drive.google.com/drive/folders/1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy?usp=drive_link",
     "generated_contracts_folder_id": "1iEL_REKwX3nJvnikrsEG6ioYszXdE6sy",
+    "uploaded_art_folder_url": "https://drive.google.com/drive/folders/1YqfcaChF5xwwqW3A_MQEsb6YUxp0plYY",
+    "uploaded_art_folder_id": "1YqfcaChF5xwwqW3A_MQEsb6YUxp0plYY",
     "templates_folder_url": "https://drive.google.com/drive/folders/1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH?usp=drive_link",
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
     "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
@@ -821,6 +823,7 @@
     "Do not use staging deployment @33 (`AKfycbyRO...`) for financial imports; it was validated as stale and can append duplicate ledger rows."
   ],
   "notes": [
+    "Uploaded art is imported into the shared Event Uploaded Art Drive folder. Apps Script copies Drive sources or downloads image/PDF URLs, names the saved file for the client and event date, replaces Events > Uploaded Art URL with the new Drive link, rebuilds Generated Files, and records an audit entry. Generators & Files previews the saved Drive art below Save Uploaded Art.",
     "Warmer & Softer appearance accepted on 2026-08-12: warm charcoal/espresso surfaces, cream text, clay primary accents, soft serif client headings, gentler borders and shadows. Functional layout and all semantic event/staff colors remain unchanged. Exact pre-theme Git checkpoint: 876792d.",
     "Google sign-in now offers Stay signed in, enabled by default and recommended for installed-app use. Persistent sessions store the viewer and current Google credential locally; session-only mode uses session storage, and Google expiration checks remain enforced.",
     "Sheet refresh, last successful update time, connection status, and error details now live in a fixed collapsible menu at the bottom of every app screen. The duplicate Admin refresh action and page-top error banner were removed.",
