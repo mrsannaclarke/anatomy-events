@@ -1,6 +1,6 @@
 :root {
-  color: #e7edf5;
-  background: #0b1117;
+  color: #f2e6d5;
+  background: #171512;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -12,7 +12,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  background: #0b1117;
+  background: #171512;
 }
 
 button {
@@ -26,8 +26,8 @@ button {
 }
 
 .sidebar {
-  border-right: 1px solid #213142;
-  background: #101821;
+  border-right: 1px solid #51443b;
+  background: #211d19;
   padding: 20px 16px;
 }
 
@@ -50,22 +50,22 @@ button {
 }
 
 .brand span {
-  color: #9eb0c4;
+  color: #bba99a;
   font-size: 13px;
   margin-top: 2px;
 }
 
 .auth-screen {
   align-items: center;
-  background: #0b1117;
+  background: #171512;
   display: grid;
   min-height: 100vh;
   padding: 20px;
 }
 
 .auth-card {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: grid;
   gap: 14px;
@@ -88,12 +88,12 @@ button {
 }
 
 .auth-card p {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .stay-signed-in-option {
   align-items: flex-start;
-  color: #e7edf5;
+  color: #f2e6d5;
   cursor: pointer;
   display: flex;
   gap: 10px;
@@ -113,7 +113,7 @@ button {
 }
 
 .stay-signed-in-option small {
-  color: #9eb0c4;
+  color: #bba99a;
   margin-top: 2px;
 }
 
@@ -141,7 +141,7 @@ nav button,
 
 nav button {
   background: transparent;
-  color: #b7c4d4;
+  color: #d6c7b9;
   justify-content: flex-start;
   min-height: 44px;
   padding: 10px 12px;
@@ -150,16 +150,16 @@ nav button {
 
 nav button.active,
 nav button:hover {
-  background: #172334;
-  border-color: #2a4058;
+  background: #28231f;
+  border-color: #5a4b40;
   color: #fff;
 }
 
 .sign-out-button {
   background: transparent;
-  border: 1px solid #2a4058;
+  border: 1px solid #5a4b40;
   border-radius: 8px;
-  color: #9eb0c4;
+  color: #bba99a;
   cursor: pointer;
   margin-top: 12px;
   min-height: 36px;
@@ -167,8 +167,8 @@ nav button:hover {
 }
 
 .sign-out-button:hover {
-  background: #172334;
-  color: #e7edf5;
+  background: #28231f;
+  color: #f2e6d5;
 }
 
 .workspace {
@@ -177,16 +177,16 @@ nav button:hover {
 }
 
 .viewer-button {
-  background: #172334;
-  border-color: #2a4058;
-  color: #e7edf5;
+  background: #28231f;
+  border-color: #5a4b40;
+  color: #f2e6d5;
   padding: 10px 12px;
 }
 
 .secondary-button {
   background: transparent;
-  border-color: #2a4058;
-  color: #c5d1df;
+  border-color: #5a4b40;
+  color: #eadccc;
   min-height: 40px;
   padding: 9px 12px;
 }
@@ -196,7 +196,7 @@ nav button:hover {
   background: #d7a84f;
   border: 1px solid #e9c06c;
   border-radius: 8px;
-  color: #101821;
+  color: #211d19;
   cursor: pointer;
   display: inline-flex;
   font-weight: 700;
@@ -223,7 +223,7 @@ nav button:hover {
 }
 
 .secondary-button:hover {
-  background: #172334;
+  background: #28231f;
 }
 
 .secondary-button:disabled {
@@ -232,8 +232,8 @@ nav button:hover {
 }
 
 .sheet-sync-menu {
-  background: #101821;
-  border: 1px solid #2a4058;
+  background: #211d19;
+  border: 1px solid #5a4b40;
   border-radius: 12px 12px 0 0;
   bottom: 0;
   box-shadow: 0 -8px 30px rgb(0 0 0 / 28%);
@@ -257,11 +257,11 @@ nav button:hover {
 }
 
 .sheet-sync-menu summary::marker {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .sheet-sync-menu summary > span:last-child {
-  color: #9eb0c4;
+  color: #bba99a;
   font-size: 12px;
   margin-left: auto;
   text-transform: uppercase;
@@ -280,7 +280,7 @@ nav button:hover {
 
 .sheet-sync-menu__body {
   align-items: center;
-  border-top: 1px solid #213142;
+  border-top: 1px solid #51443b;
   display: flex;
   gap: 14px;
   padding: 12px 18px 16px;
@@ -292,7 +292,7 @@ nav button:hover {
 }
 
 .sheet-sync-menu__status span {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .sheet-sync-menu__body > a {
@@ -314,26 +314,26 @@ nav button:hover {
 }
 
 .empty-state {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
-  color: #c5d1df;
+  color: #eadccc;
   display: grid;
   gap: 4px;
   padding: 18px;
 }
 
 .empty-state strong {
-  color: #e7edf5;
+  color: #f2e6d5;
 }
 
 .empty-state span {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .event-card {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   padding: 16px;
 }
@@ -350,8 +350,8 @@ nav button:hover {
 
 .detail-page-nav {
   align-items: center;
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: flex;
   gap: 18px;
@@ -362,10 +362,10 @@ nav button:hover {
 
 .detail-back-button {
   align-items: center;
-  background: #172334;
-  border: 1px solid #2a4058;
+  background: #28231f;
+  border: 1px solid #5a4b40;
   border-radius: 8px;
-  color: #e7edf5;
+  color: #f2e6d5;
   cursor: pointer;
   display: inline-flex;
   flex-shrink: 0;
@@ -375,7 +375,7 @@ nav button:hover {
 }
 
 .detail-back-button:hover {
-  background: #21324a;
+  background: #3a302a;
 }
 
 .detail-page-client {
@@ -385,14 +385,14 @@ nav button:hover {
 }
 
 .detail-page-client strong {
-  color: #e7edf5;
+  color: #f2e6d5;
   font-size: 18px;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
 .detail-page-client span {
-  color: #8ea6bf;
+  color: #bba99a;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -449,9 +449,9 @@ nav button:hover {
 
 .pending-overlay {
   align-items: center;
-  background: rgba(7, 11, 17, 0.72);
+  background: rgba(23, 21, 18, 0.78);
   border-radius: 8px;
-  color: #e7edf5;
+  color: #f2e6d5;
   display: grid;
   gap: 10px;
   inset: 0;
@@ -465,7 +465,7 @@ nav button:hover {
 
 .pending-spinner {
   animation: pending-spin 0.8s linear infinite;
-  border: 3px solid #38506a;
+  border: 3px solid #6b574a;
   border-top-color: #f0c86d;
   border-radius: 50%;
   height: 34px;
@@ -487,8 +487,8 @@ nav button:hover {
 }
 
 .detail-grid {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: grid;
   gap: 1px;
@@ -497,7 +497,7 @@ nav button:hover {
 }
 
 .detail-field {
-  background: #0b1117;
+  background: #171512;
   display: grid;
   gap: 5px;
   min-height: 74px;
@@ -505,14 +505,14 @@ nav button:hover {
 }
 
 .detail-field span {
-  color: #9eb0c4;
+  color: #bba99a;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .detail-field strong {
-  color: #e7edf5;
+  color: #f2e6d5;
   font-size: 15px;
   overflow-wrap: anywhere;
 }
@@ -533,8 +533,8 @@ nav button:hover {
 }
 
 .page-stack > .panel-heading {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   padding: 14px;
 }
@@ -545,7 +545,7 @@ nav button:hover {
 }
 
 .panel-heading p {
-  color: #9eb0c4;
+  color: #bba99a;
   margin: 4px 0 0;
 }
 
@@ -563,8 +563,8 @@ nav button:hover {
 .pricing-card,
 .pricing-form,
 .pricing-summary {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   padding: 16px;
 }
@@ -589,7 +589,7 @@ nav button:hover {
 }
 
 .plan-table {
-  border: 1px solid #26384c;
+  border: 1px solid #51443b;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -600,8 +600,8 @@ nav button:hover {
 }
 
 .plan-table__row span {
-  border-top: 1px solid #26384c;
-  color: #d9e2ee;
+  border-top: 1px solid #51443b;
+  color: #eadccc;
   padding: 10px;
 }
 
@@ -610,8 +610,8 @@ nav button:hover {
 }
 
 .plan-table__row--head span {
-  background: #172334;
-  color: #9eb0c4;
+  background: #28231f;
+  color: #bba99a;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -645,21 +645,21 @@ nav button:hover {
   height: 42px;
   padding: 0;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--event-type-color) 45%, #23394d);
+  border: 1px solid color-mix(in srgb, var(--event-type-color) 45%, #51443b);
   border-radius: 11px;
-  background: color-mix(in srgb, var(--event-type-color) 8%, #0e1822);
+  background: color-mix(in srgb, var(--event-type-color) 8%, #211d19);
   color: var(--event-type-color);
   cursor: pointer;
 }
 
 .event-type-choice:hover:not(:disabled) {
   border-color: var(--event-type-color);
-  background: color-mix(in srgb, var(--event-type-color) 16%, #0e1822);
+  background: color-mix(in srgb, var(--event-type-color) 16%, #211d19);
 }
 
 .event-type-choice.selected {
   border-color: var(--event-type-color);
-  background: color-mix(in srgb, var(--event-type-color) 24%, #0e1822);
+  background: color-mix(in srgb, var(--event-type-color) 24%, #211d19);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--event-type-color) 28%, transparent);
 }
 
@@ -679,7 +679,7 @@ nav button:hover {
 }
 
 .field span {
-  color: #9eb0c4;
+  color: #bba99a;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -688,10 +688,10 @@ nav button:hover {
 .field input,
 .field textarea,
 .field select {
-  background: #0b1117;
-  border: 1px solid #2a4058;
+  background: #171512;
+  border: 1px solid #5a4b40;
   border-radius: 8px;
-  color: #e7edf5;
+  color: #f2e6d5;
   min-height: 40px;
   padding: 9px 10px;
   width: 100%;
@@ -711,13 +711,13 @@ nav button:hover {
 
 .field input:disabled,
 .field select:disabled {
-  color: #a7b4c4;
+  color: #bba99a;
   opacity: 0.75;
 }
 
 .picker-section {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: grid;
   gap: 12px;
@@ -735,10 +735,10 @@ nav button:hover {
 }
 
 .choice-chip {
-  background: var(--staff-color-muted, #0b1117);
-  border: 1px solid var(--staff-color-border, #2a4058);
+  background: var(--staff-color-muted, #171512);
+  border: 1px solid var(--staff-color-border, #5a4b40);
   border-radius: 999px;
-  color: var(--staff-color, #c5d1df);
+  color: var(--staff-color, #eadccc);
   cursor: pointer;
   min-height: 36px;
   padding: 7px 12px;
@@ -762,8 +762,8 @@ nav button:hover {
 }
 
 .link-list {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: grid;
   gap: 1px;
@@ -772,7 +772,7 @@ nav button:hover {
 
 .link-row {
   align-items: center;
-  background: #0b1117;
+  background: #171512;
   display: flex;
   gap: 12px;
   justify-content: space-between;
@@ -803,7 +803,7 @@ nav button:hover {
 }
 
 .link-row span {
-  color: #9eb0c4;
+  color: #bba99a;
   font-weight: 700;
 }
 
@@ -832,7 +832,7 @@ nav button:hover {
 }
 
 .save-status {
-  color: #c5d1df;
+  color: #eadccc;
   margin: 0;
 }
 
@@ -846,10 +846,10 @@ nav button:hover {
 
 .readonly-select {
   align-items: center;
-  background: #101821;
-  border: 1px solid #2a4058;
+  background: #211d19;
+  border: 1px solid #5a4b40;
   border-radius: 8px;
-  color: #e7edf5;
+  color: #f2e6d5;
   display: inline-flex;
   gap: 8px;
   min-height: 40px;
@@ -862,8 +862,8 @@ nav button:hover {
 }
 
 .tool-panel {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   padding: 14px;
 }
@@ -875,8 +875,8 @@ nav button:hover {
 }
 
 .summary-grid div {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: grid;
   gap: 4px;
@@ -884,7 +884,7 @@ nav button:hover {
 }
 
 .summary-grid span {
-  color: #9eb0c4;
+  color: #bba99a;
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -895,7 +895,7 @@ nav button:hover {
 }
 
 .section-title-tight {
-  color: #e8f1fb;
+  color: #f2e6d5;
   font-size: 17px;
   margin: 0;
 }
@@ -908,7 +908,7 @@ nav button:hover {
 
 .year-total-row {
   align-items: center;
-  background: #0b1117;
+  background: #171512;
   display: grid;
   gap: 8px;
   grid-template-columns: minmax(74px, 0.5fr) repeat(3, minmax(0, 1fr));
@@ -920,7 +920,7 @@ nav button:hover {
 }
 
 .year-total-row span {
-  color: #c5d1df;
+  color: #eadccc;
   font-size: 13px;
 }
 
@@ -930,8 +930,8 @@ nav button:hover {
 }
 
 .ledger-card {
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
   display: grid;
   gap: 12px;
@@ -955,7 +955,7 @@ nav button:hover {
 }
 
 .ledger-card p {
-  color: #9eb0c4;
+  color: #bba99a;
   margin: 4px 0 0;
 }
 
@@ -977,12 +977,12 @@ nav button:hover {
 }
 
 .payout-card-top strong {
-  color: #e7edf5;
+  color: #f2e6d5;
   font-size: 22px;
 }
 
 .payout-date-block {
-  color: #9eb0c4;
+  color: #bba99a;
   display: grid;
   font-size: 13px;
   gap: 4px;
@@ -998,10 +998,10 @@ nav button:hover {
 }
 
 .role-chip {
-  background: #172334;
-  border: 1px solid #2a4058;
+  background: #28231f;
+  border: 1px solid #5a4b40;
   border-radius: 999px;
-  color: #c5d1df;
+  color: #eadccc;
   flex-shrink: 0;
   font-size: 12px;
   font-weight: 700;
@@ -1009,7 +1009,7 @@ nav button:hover {
 }
 
 .payout-breakdown-lines {
-  color: #dbe6f3;
+  color: #eadccc;
   display: grid;
   font-size: 13px;
   gap: 5px;
@@ -1025,18 +1025,18 @@ nav button:hover {
 
 .ledger-card dl div {
   align-items: center;
-  background: #0b1117;
+  background: #171512;
   display: flex;
   justify-content: space-between;
   padding: 8px 10px;
 }
 
 .ledger-card dt {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .ledger-card dd {
-  color: #e7edf5;
+  color: #f2e6d5;
   font-weight: 700;
   margin: 0;
   text-align: right;
@@ -1049,10 +1049,10 @@ nav button:hover {
 }
 
 .staff-lines span {
-  background: #172334;
-  border: 1px solid #2a4058;
+  background: #28231f;
+  border: 1px solid #5a4b40;
   border-radius: 999px;
-  color: #c5d1df;
+  color: #eadccc;
   padding: 6px 10px;
 }
 
@@ -1064,10 +1064,10 @@ nav button:hover {
 
 .admin-action {
   align-items: start;
-  background: #101821;
-  border: 1px solid #213142;
+  background: #211d19;
+  border: 1px solid #51443b;
   border-radius: 8px;
-  color: #e7edf5;
+  color: #f2e6d5;
   cursor: pointer;
   display: grid;
   gap: 8px;
@@ -1079,7 +1079,7 @@ nav button:hover {
 }
 
 .admin-action:hover {
-  background: #172334;
+  background: #28231f;
 }
 
 .admin-action strong {
@@ -1087,7 +1087,7 @@ nav button:hover {
 }
 
 .admin-action span {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .pricing-summary {
@@ -1103,18 +1103,18 @@ nav button:hover {
 }
 
 .mode-tabs button {
-  background: #101821;
-  border: 1px solid #2a4058;
+  background: #211d19;
+  border: 1px solid #5a4b40;
   border-radius: 999px;
-  color: #c5d1df;
+  color: #eadccc;
   min-height: 34px;
   padding: 7px 12px;
 }
 
 .mode-tabs button.active {
-  background: #2b74d9;
-  border-color: #2b74d9;
-  color: #ffffff;
+  background: #c77f6b;
+  border-color: #c77f6b;
+  color: #fff3e4;
 }
 
 .link-button {
@@ -1142,15 +1142,15 @@ nav button:hover {
 }
 
 .info-line {
-  color: #c7d6e7;
+  color: #d6c7b9;
   margin: 0;
 }
 
 .readonly-block {
-  background: #0b1117;
-  border: 1px solid #213142;
+  background: #171512;
+  border: 1px solid #51443b;
   border-radius: 8px;
-  color: #c7d6e7;
+  color: #d6c7b9;
   line-height: 1.5;
   min-height: 64px;
   padding: 12px;
@@ -1167,10 +1167,10 @@ nav button:hover {
   display: flex;
   gap: 10px;
   justify-content: space-between;
-  background: #1b2436;
-  border: 1px solid #4b5f89;
+  background: #342c26;
+  border: 1px solid #805c4f;
   border-radius: 8px;
-  color: #dce7ff;
+  color: #f2e6d5;
   font-size: 13px;
   line-height: 1.45;
   padding: 10px;
@@ -1212,21 +1212,21 @@ nav button:hover {
 
 .pricing-summary dl div {
   align-items: center;
-  background: #0b1117;
+  background: #171512;
   display: flex;
   justify-content: space-between;
   padding: 9px 10px;
 }
 
 .pricing-summary dl .summary-divider {
-  background: #26384c;
+  background: #51443b;
   height: 1px;
   padding: 0;
 }
 
 .pricing-summary dl .summary-row-lead dt,
 .pricing-summary dl .summary-row-lead dd {
-  color: #e7edf5;
+  color: #f2e6d5;
   font-size: 15px;
 }
 
@@ -1238,11 +1238,11 @@ nav button:hover {
 }
 
 .pricing-summary dt {
-  color: #9eb0c4;
+  color: #bba99a;
 }
 
 .pricing-summary dd {
-  color: #e7edf5;
+  color: #f2e6d5;
   font-weight: 700;
   margin: 0;
 }
@@ -1256,7 +1256,7 @@ nav button:hover {
 
 .event-type-dot {
   align-items: center;
-  background: #132234;
+  background: #29231f;
   border: 1px solid #f1b56f;
   border-radius: 999px;
   display: inline-flex;
@@ -1305,7 +1305,7 @@ nav button:hover {
 }
 
 .event-card__venue {
-  color: #aebfd1;
+  color: #bba99a;
   display: grid;
   flex: 1;
   font-size: 13px;
@@ -1315,16 +1315,16 @@ nav button:hover {
 }
 
 .event-card__venue span:first-child {
-  color: #aebfd1;
+  color: #bba99a;
   font-weight: 800;
 }
 
 .status-pill {
   align-self: flex-end;
-  background: #1a2837;
-  border: 1px solid #365273;
+  background: #342c26;
+  border: 1px solid #6d5649;
   border-radius: 999px;
-  color: #b9d5f6;
+  color: #f0d4c7;
   font-size: 12px;
   font-weight: 700;
   padding: 5px 9px;
@@ -1332,7 +1332,7 @@ nav button:hover {
 }
 
 .event-card__artists {
-  color: #aebfd1;
+  color: #bba99a;
   display: flex;
   flex-wrap: wrap;
   font-size: 14px;
@@ -1352,7 +1352,7 @@ nav button:hover {
 }
 
 .artist-name-chip:not(:last-child)::after {
-  color: #6f849a;
+  color: #8f7768;
   content: ",";
 }
 
@@ -1363,10 +1363,10 @@ nav button:hover {
 }
 
 .event-card__actions button {
-  background: #172334;
-  border-color: #2a4058;
+  background: #28231f;
+  border-color: #5a4b40;
   border-radius: 8px;
-  color: #e7edf5;
+  color: #f2e6d5;
   justify-content: center;
   height: 34px;
   min-height: 34px;
@@ -1375,14 +1375,14 @@ nav button:hover {
 }
 
 .event-card__actions button:hover {
-  background: #21324a;
+  background: #3a302a;
 }
 
 .communication-preview {
-  background: #1b2436;
-  border: 1px solid #4b5f89;
+  background: #342c26;
+  border: 1px solid #805c4f;
   border-radius: 8px;
-  color: #dce7ff;
+  color: #f2e6d5;
   font-size: 12px;
   line-height: 1.45;
   margin: 8px 0 0;
@@ -1400,10 +1400,10 @@ nav button:hover {
 
 .map-compact-link {
   align-items: center;
-  background: #10243a;
-  border: 1px solid #224468;
+  background: #342c26;
+  border: 1px solid #805c4f;
   border-radius: 8px;
-  color: #9fc8ff;
+  color: #f6c1b2;
   display: inline-flex;
   height: 32px;
   justify-content: center;
@@ -1437,7 +1437,7 @@ nav button:hover {
   }
 
   .sidebar {
-    border-bottom: 1px solid #213142;
+    border-bottom: 1px solid #51443b;
     border-right: 0;
     display: grid;
     gap: 10px;

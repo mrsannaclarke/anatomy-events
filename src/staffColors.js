@@ -50,5 +50,5 @@ export function getContrastTextForHex(hex) {
   const g = Number.parseInt(cleaned.slice(2, 4), 16);
   const b = Number.parseInt(cleaned.slice(4, 6), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.62 ? '#0b1117' : '#f7fbff';
+  return luminance > 0.62 ? '#211d19' : '#fff3e4';
 }
