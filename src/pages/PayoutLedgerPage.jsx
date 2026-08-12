@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { DecorativeSprig } from '../components/DecorativeSprig.jsx';
 import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay } from '../payoutMath.js';
 import { pullPricingRulesFromSheet } from '../sheetClient.js';
 
@@ -41,7 +40,6 @@ export function PayoutLedgerPage({ events, onBack }) {
   return (
     <section className="page-stack">
       <div className="panel-heading">
-        <DecorativeSprig />
         <div>
           <h2>Payout Ledger</h2>
           <p>Completed events are priced, allocated, and reconciled automatically.</p>

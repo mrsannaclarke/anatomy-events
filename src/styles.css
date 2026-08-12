@@ -35,7 +35,20 @@ button {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 10px;
+}
+
+.brand-ornament {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  justify-content: center;
+  margin: 0 8px 20px;
+}
+
+.brand-ornament > span {
+  border-top: 1px solid #805c4f;
+  flex: 1;
 }
 
 .brand img {
@@ -320,11 +333,7 @@ nav button:hover {
   color: #eadccc;
   display: grid;
   gap: 4px;
-  min-height: 112px;
-  overflow: hidden;
   padding: 18px;
-  padding-right: 112px;
-  position: relative;
 }
 
 .empty-state strong {
@@ -339,14 +348,7 @@ nav button:hover {
   background: #211d19;
   border: 1px solid #51443b;
   border-radius: 8px;
-  overflow: hidden;
   padding: 16px;
-  position: relative;
-}
-
-.event-card > :not(.decorative-sprig) {
-  position: relative;
-  z-index: 1;
 }
 
 .pricing-page {
@@ -541,8 +543,6 @@ nav button:hover {
   display: flex;
   gap: 16px;
   justify-content: space-between;
-  overflow: hidden;
-  position: relative;
 }
 
 .decorative-sprig {
@@ -552,46 +552,12 @@ nav button:hover {
   user-select: none;
 }
 
-.decorative-sprig--heading {
-  height: 104px;
-  opacity: 0.22;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%) rotate(8deg);
-  width: 74px;
-}
-
-.decorative-sprig--roster {
-  height: 54px;
-  justify-self: center;
-  margin: -5px 0 1px;
-  opacity: 0.72;
+.decorative-sprig--brand {
+  height: 32px;
+  opacity: 0.92;
   position: relative;
-  width: 42px;
-}
-
-.decorative-sprig--empty {
-  bottom: -23px;
-  height: 136px;
-  opacity: 0.28;
-  right: 16px;
-  transform: rotate(10deg);
-  width: 82px;
-}
-
-.decorative-sprig--card {
-  height: 88px;
-  opacity: 0.16;
-  right: -13px;
-  top: -24px;
-  transform: rotate(146deg);
-  width: 62px;
-}
-
-.panel-heading > :not(.decorative-sprig),
-.empty-state > :not(.decorative-sprig) {
-  position: relative;
-  z-index: 1;
+  transform: rotate(90deg);
+  width: 46px;
 }
 
 .page-stack > .panel-heading {
@@ -1508,6 +1474,7 @@ nav button:hover {
     min-height: 120px;
     overflow: hidden;
     padding: 12px 14px;
+    position: relative;
   }
 
   .brand {
@@ -1522,6 +1489,20 @@ nav button:hover {
 
   .brand span {
     display: none;
+  }
+
+  .brand-ornament {
+    margin: 0;
+    opacity: 0.78;
+    position: absolute;
+    right: 14px;
+    top: 16px;
+    width: 72px;
+  }
+
+  .brand-ornament .decorative-sprig--brand {
+    height: 28px;
+    width: 34px;
   }
 
   nav {

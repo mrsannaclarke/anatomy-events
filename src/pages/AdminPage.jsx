@@ -1,7 +1,6 @@
 import { ClipboardList, Code2, Download, ExternalLink, FileSpreadsheet, ShieldCheck, Smartphone } from 'lucide-react';
 
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
-import { DecorativeSprig } from '../components/DecorativeSprig.jsx';
 import project from '../../project.json';
 
 export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInstall }) {
@@ -12,7 +11,6 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
   return (
     <section className="page-stack">
       <div className="panel-heading">
-        <DecorativeSprig />
         <div>
           <h2>Admin Tools</h2>
           <p>Action hub for Sheet-backed event operations.</p>

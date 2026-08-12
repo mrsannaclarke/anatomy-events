@@ -260,6 +260,11 @@ export function App() {
             <span>{getProjectTitle()}</span>
           </div>
         </div>
+        <div className="brand-ornament" aria-hidden="true">
+          <span />
+          <DecorativeSprig placement="brand" />
+          <span />
+        </div>
 
         <nav aria-label="Primary">
           {visibleNavItems.map((item) => (
@@ -308,7 +313,6 @@ export function App() {
           <PayoutLedgerPage events={events} viewer={viewer} onBack={() => setActivePage('admin')} />
         ) : activePage === 'events' ? (
           <section className="event-list" aria-label="Upcoming client cards">
-            <DecorativeSprig placement="roster" />
             {events.length > 0 ? (
               visibleLedgerEvents
                 .map((event) => (
@@ -321,7 +325,6 @@ export function App() {
                 ))
             ) : (
               <section className="empty-state">
-                <DecorativeSprig placement="empty" />
                 <strong>{syncStatus === 'loading' ? 'Loading events from sheet...' : 'No events loaded'}</strong>
                 <span>Events App 2.0 will only show Sheet-backed rows here.</span>
               </section>
@@ -329,7 +332,6 @@ export function App() {
           </section>
         ) : (
           <section className="empty-state">
-            <DecorativeSprig placement="empty" />
             <strong>{navItems.find((item) => item.id === activePage)?.label || 'Page'} rebuild pending</strong>
             <span>This page will be rebuilt from project.json and docs/app-rules.json next.</span>
           </section>
