@@ -1548,3 +1548,224 @@ nav button:hover {
     flex-direction: column;
   }
 }
+
+/* Warmer & Softer visual theme — appearance only.
+   Pre-theme checkpoint: git commit 876792d. */
+:root {
+  color: #f2e6d5;
+  background: #171512;
+  font-family: ui-rounded, "Avenir Next", "Nunito Sans", system-ui, sans-serif;
+}
+
+body,
+.auth-screen {
+  background: #171512;
+}
+
+.sidebar {
+  background: #1c1916;
+  border-color: #51443b;
+}
+
+.brand strong,
+.auth-card h1,
+.panel-heading h2,
+.detail-page-client strong,
+.pricing-card h2,
+.picker-section h3,
+.tool-panel h3,
+.payout-event-card h3,
+.ledger-card h3 {
+  color: #f2e6d5;
+}
+
+.brand span,
+.panel-heading p,
+.field span,
+.detail-field span,
+.readonly-block span,
+.sheet-sync-menu__status span,
+.empty-state span,
+.admin-action span,
+.link-row > span,
+.save-status {
+  color: #bba99a;
+}
+
+nav button {
+  color: #d6c7b9;
+  border-radius: 12px;
+}
+
+nav button.active,
+nav button:hover {
+  background: #3a2924;
+  border-color: #574139;
+  color: #ee9e8c;
+}
+
+.auth-card,
+.event-card,
+.pricing-card,
+.picker-section,
+.tool-panel,
+.panel-heading,
+.detail-page-nav,
+.payout-event-card,
+.ledger-card,
+.admin-action,
+.empty-state,
+.readonly-block,
+.feed-row,
+.link-row,
+.pricing-summary {
+  background: linear-gradient(135deg, #2e2722, #28221e);
+  border-color: #51443b;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 16%);
+}
+
+.event-card {
+  padding: 20px 22px;
+}
+
+.event-card__title-row h2,
+.event-card__date,
+.total-number,
+.summary-title-row strong,
+.payout-title-row h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.event-card__title-row h2,
+.event-card__date {
+  font-size: clamp(1.35rem, 2.1vw, 2rem);
+}
+
+.event-type-dot {
+  background: #29231f;
+  border-width: 1px;
+  height: 42px;
+  width: 42px;
+}
+
+.event-card__venue-row,
+.event-card__bottom-row {
+  border-color: #51443b;
+}
+
+.status-pill,
+.role-chip,
+.choice-chip,
+.artist-name-chip {
+  background: #342c26;
+  border-color: #5b4b40;
+  color: #eadccc;
+}
+
+.event-card__actions button,
+.icon-link-button,
+.viewer-button,
+.secondary-button,
+.sign-out-button,
+.detail-back-button {
+  background: #28231f;
+  border-color: #5a4b40;
+  color: #eadccc;
+  border-radius: 10px;
+}
+
+.event-card__actions button:hover,
+.icon-link-button:hover,
+.secondary-button:hover,
+.sign-out-button:hover,
+.detail-back-button:hover {
+  background: #3a302a;
+  border-color: #806657;
+  color: #fff3e4;
+}
+
+.primary-button {
+  background: #c77f6b;
+  border-color: #dda08e;
+  color: #241a17;
+  border-radius: 10px;
+}
+
+.danger-button {
+  background: #492b25;
+  border-color: #7a493e;
+  color: #ffd9ce;
+}
+
+.field input,
+.field textarea,
+.field select,
+.detail-field input,
+.detail-field textarea,
+.detail-field select,
+.readonly-select {
+  background: #211d19;
+  border-color: #5a4b40;
+  border-radius: 10px;
+  color: #f2e6d5;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.detail-field input:focus,
+.detail-field textarea:focus,
+.detail-field select:focus {
+  border-color: #c77f6b;
+  box-shadow: 0 0 0 2px rgb(199 127 107 / 18%);
+}
+
+.mode-tabs,
+.plan-table,
+.summary-grid {
+  border-color: #51443b;
+}
+
+.mode-tabs button {
+  background: #211d19;
+  border-color: #51443b;
+  color: #bba99a;
+}
+
+.mode-tabs button.active {
+  background: #49332c;
+  border-color: #805c4f;
+  color: #f6c1b2;
+}
+
+.sheet-sync-menu {
+  background: #29231f;
+  border-color: #51443b;
+  box-shadow: 0 -8px 25px rgb(0 0 0 / 22%);
+}
+
+.sheet-sync-menu__body {
+  border-color: #51443b;
+}
+
+.sheet-sync-indicator {
+  background: #8fc9ad;
+}
+
+.pending-overlay {
+  background: rgb(23 21 18 / 82%);
+}
+
+@media (max-width: 760px) {
+  .event-card {
+    padding: 16px;
+  }
+
+  .event-card__title-row h2,
+  .event-card__date {
+    font-size: 1.28rem;
+  }
+}

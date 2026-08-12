@@ -821,6 +821,7 @@
     "Do not use staging deployment @33 (`AKfycbyRO...`) for financial imports; it was validated as stale and can append duplicate ledger rows."
   ],
   "notes": [
+    "Warmer & Softer appearance accepted on 2026-08-12: warm charcoal/espresso surfaces, cream text, clay primary accents, soft serif client headings, gentler borders and shadows. Functional layout and all semantic event/staff colors remain unchanged. Exact pre-theme Git checkpoint: 876792d.",
     "Google sign-in now offers Stay signed in, enabled by default and recommended for installed-app use. Persistent sessions store the viewer and current Google credential locally; session-only mode uses session storage, and Google expiration checks remain enforced.",
     "Sheet refresh, last successful update time, connection status, and error details now live in a fixed collapsible menu at the bottom of every app screen. The duplicate Admin refresh action and page-top error banner were removed.",
     "Accepted contract-signature automation: production Apps Script scans the generated-contracts Drive folder every 10 minutes, excludes TFL/license PDFs, matches a PDF to the existing Google Doc by normalized filename plus client name, selects the newest unambiguous match, and replaces Events > Contract URL. It does not infer Contract Signed. Skips and updates are written to Audit Log.",
