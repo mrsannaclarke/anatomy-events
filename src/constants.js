@@ -6,7 +6,7 @@ import {
   NotebookPen,
   Settings,
   UserRound,
-  UsersRound,
+  UserRoundCog,
 } from 'lucide-react';
 
 export const EVENTS_CACHE_KEY = 'events-app-2.0:last-sheet-events';
@@ -20,7 +20,7 @@ export const navItems = [
 
 export const cardActions = [
   { id: 'client', label: 'Client Details', icon: UserRound },
-  { id: 'staff', label: 'Staff Assignments', icon: UsersRound },
+  { id: 'staff', label: 'Staff Assignments', icon: UserRoundCog },
   { id: 'notes', label: 'Notes', icon: NotebookPen },
   { id: 'files', label: 'Generators & Files', icon: FolderOpen },
 ];
