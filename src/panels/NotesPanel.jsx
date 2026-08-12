@@ -91,7 +91,7 @@ export function NotesPanel({ event, viewerEmail, onSaved }) {
         <p className="info-line">Current Status: {statusValue || 'Open'}</p>
         <div className="chip-grid">
           {STATUS_OPTIONS.map((option) => (
-            <button key={option} type="button" className={statusValue === option ? 'choice-chip selected' : 'choice-chip'} onClick={() => setStatusValue(option)}>
+            <button key={option} type="button" className={statusValue === option ? 'choice-chip status-choice selected' : 'choice-chip status-choice'} onClick={() => setStatusValue(option)}>
               {option}
             </button>
           ))}

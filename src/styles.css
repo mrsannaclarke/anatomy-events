@@ -746,6 +746,12 @@ nav button:hover {
   font-weight: 800;
 }
 
+.choice-chip.status-choice.selected {
+  background: #d9ad62;
+  border-color: #efc87f;
+  color: #2c241e;
+}
+
 .detail-save {
   justify-self: start;
 }
