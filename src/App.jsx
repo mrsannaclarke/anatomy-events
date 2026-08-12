@@ -308,6 +308,7 @@ export function App() {
           <PayoutLedgerPage events={events} viewer={viewer} onBack={() => setActivePage('admin')} />
         ) : activePage === 'events' ? (
           <section className="event-list" aria-label="Upcoming client cards">
+            <DecorativeSprig placement="roster" />
             {events.length > 0 ? (
               visibleLedgerEvents
                 .map((event) => (

@@ -547,11 +547,20 @@ nav button:hover {
 
 .decorative-sprig--heading {
   height: 104px;
-  opacity: 0.13;
+  opacity: 0.22;
   right: 18px;
   top: 50%;
   transform: translateY(-50%) rotate(8deg);
   width: 74px;
+}
+
+.decorative-sprig--roster {
+  height: 54px;
+  justify-self: center;
+  margin: -5px 0 1px;
+  opacity: 0.72;
+  position: relative;
+  width: 42px;
 }
 
 .decorative-sprig--empty {
