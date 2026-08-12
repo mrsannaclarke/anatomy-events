@@ -407,10 +407,10 @@ nav button:hover {
 
 .detail-page-actions button {
   align-items: center;
-  background: #172334;
-  border: 1px solid #2a4058;
-  border-radius: 8px;
-  color: #e7edf5;
+  background: #342c26;
+  border: 1px solid #675448;
+  border-radius: 11px;
+  color: #eadccc;
   cursor: pointer;
   display: inline-flex;
   height: 42px;
@@ -420,17 +420,22 @@ nav button:hover {
 }
 
 .detail-page-actions button.active {
-  background: #2b74d9;
-  border-color: #3c8dff;
-  color: #ffffff;
+  background: #c77f6b;
+  border-color: #e0a492;
+  color: #2c1f1a;
+  box-shadow: 0 0 0 2px rgb(199 127 107 / 18%);
 }
 
 .detail-page-actions button:hover {
-  background: #21324a;
+  background: #493a31;
+  border-color: #8a6c5d;
+  color: #fff3e4;
 }
 
 .detail-page-actions button.active:hover {
-  background: #2b74d9;
+  background: #d48b76;
+  border-color: #efb29f;
+  color: #2c1f1a;
 }
 
 .detail-stack {

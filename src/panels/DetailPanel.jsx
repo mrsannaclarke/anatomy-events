@@ -32,7 +32,7 @@ export function DetailPanel({ detail, viewerEmail, onBack, onSaved, onDeleted, o
               aria-current={mode === action.id ? 'page' : undefined}
               onClick={() => onChangeMode(action.id)}
             >
-              <action.icon size={18} />
+              <action.icon size={21} strokeWidth={1.8} />
             </button>
           ))}
         </div>
