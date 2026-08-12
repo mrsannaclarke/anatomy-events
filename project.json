@@ -1,6 +1,7 @@
 {
   "project": {
     "name": "Anatomy Events",
+    "app_name": "Events App 3.0",
     "updated_at": "2026-08-12",
     "owner": "Anna / Anatomy Tattoo",
     "canonical_rules_file": "docs/app-rules.json"

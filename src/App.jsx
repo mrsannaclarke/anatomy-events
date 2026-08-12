@@ -17,7 +17,7 @@ import { pullEventsFromSheet, pullPricingRulesFromSheet, SHEET_WEB_APP_URL } fro
 const LAST_SHEET_SYNC_KEY = 'events-app-2.0:last-sheet-sync-at';
 
 function getProjectTitle() {
-  return project?.project?.name || project?.name || 'Events App 2.0';
+  return project?.project?.name || project?.name || 'Events App 3.0';
 }
 
 function GoogleSignInGate({ onSignedIn }) {
@@ -71,7 +71,7 @@ function GoogleSignInGate({ onSignedIn }) {
     <main className="auth-screen">
       <section className="auth-card">
         <img src="/apple-touch-icon.png" alt="" />
-        <h1>Events App 2.0</h1>
+        <h1>Events App 3.0</h1>
         <p>Sign in with your allowlisted Google account.</p>
         <div id="google-signin-button" className="google-signin-button" />
         <label className="stay-signed-in-option">
@@ -255,7 +255,7 @@ export function App() {
         <div className="brand">
           <img src="/apple-touch-icon.png" alt="" />
           <div>
-            <strong>Events App 2.0</strong>
+            <strong>Events App 3.0</strong>
             <span>{getProjectTitle()}</span>
           </div>
         </div>
@@ -320,7 +320,7 @@ export function App() {
             ) : (
               <section className="empty-state">
                 <strong>{syncStatus === 'loading' ? 'Loading events from sheet...' : 'No events loaded'}</strong>
-                <span>Events App 2.0 will only show Sheet-backed rows here.</span>
+                <span>Events App 3.0 will only show Sheet-backed rows here.</span>
               </section>
             )}
           </section>
