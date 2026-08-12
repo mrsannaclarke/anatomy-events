@@ -66,7 +66,7 @@ function getAddressLines(raw) {
     .split(',')
     .map((part) => part.trim())
     .filter((part) => part && !/^united states$/i.test(part));
-  return [venue, ...addressParts].filter(Boolean);
+  return [venue, addressParts.join(', ')].filter(Boolean);
 }
 
 export function EventCard({ event, onAction }) {

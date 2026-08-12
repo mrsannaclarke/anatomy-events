@@ -1944,6 +1944,14 @@ nav button:hover {
   display: block;
 }
 
+.event-card__venue > span {
+  font-weight: 400;
+}
+
+.event-card__venue > span > span:first-child {
+  font-weight: 650;
+}
+
 .event-card__venue--link:hover {
   color: #fff3e4;
 }
@@ -2063,12 +2071,13 @@ nav button:hover {
   }
 
   .event-card {
-    padding: 18px;
+    padding: 17px 18px 15px;
   }
 
   .event-card__main {
     align-items: start;
-    gap: 14px;
+    column-gap: 14px;
+    row-gap: 11px;
     grid-template-columns: 56px minmax(0, 1fr);
   }
 
@@ -2083,41 +2092,122 @@ nav button:hover {
   }
 
   .event-card__title-row {
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: baseline;
+    flex-wrap: nowrap;
+    gap: 8px;
   }
 
   .event-card__title-row h2 {
-    flex-basis: calc(100% - 10px);
-    font-size: 1.45rem;
+    flex: 1 1 auto;
+    font-size: clamp(1.2rem, 5vw, 1.45rem);
+    min-width: 0;
   }
 
   .event-card__date {
-    font-size: 1rem;
-    margin-left: 0;
+    font-size: 0.9rem;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .event-card__time {
+    font-size: 0.88rem;
+    margin: 4px 0 7px;
+  }
+
+  .event-card__venue {
+    font-size: 0.85rem;
+    gap: 7px;
+    line-height: 1.35;
+  }
+
+  .event-card__venue > svg {
+    height: 17px;
+    width: 17px;
   }
 
   .event-card__actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
+    gap: 8px;
+    grid-column: 2;
+    justify-content: flex-start;
   }
 
   .event-card__actions button {
-    height: 46px;
-    min-height: 46px;
-    width: 46px;
+    height: 40px;
+    min-height: 40px;
+    width: 40px;
+  }
+
+  .event-card__actions button svg {
+    height: 19px;
+    width: 19px;
   }
 
   .event-card__meta-row {
-    grid-template-columns: 1fr;
-    margin-top: 16px;
+    font-size: 0.78rem;
+    grid-template-columns: minmax(118px, 1.15fr) minmax(74px, 0.65fr) minmax(126px, 1fr);
+    margin-top: 14px;
+    padding-top: 10px;
   }
 
   .event-card__meta-row > span {
-    padding: 6px 2px;
+    gap: 5px;
+    min-height: 24px;
+    padding: 0 8px;
   }
 
   .event-card__meta-row > span + span {
+    border-left: 1px solid #594a3f;
+  }
+
+  .event-card__meta-row > span:first-child {
+    padding-left: 2px;
+  }
+
+  .event-card__status > span,
+  .event-card__staff-dot {
+    height: 11px;
+    width: 11px;
+  }
+
+  .event-card__staff-group > strong {
+    font-size: 0.76rem;
+  }
+
+  .event-card__staff-list,
+  .event-card__staff-person {
+    gap: 4px;
+  }
+
+  .communication-preview {
+    font-size: 0.76rem;
+    margin-top: 11px;
+    overflow: hidden;
+    padding: 8px 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sheet-sync-menu summary {
+    font-size: 0.82rem;
+  }
+
+  .sheet-sync-menu summary strong {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .event-card__meta-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .event-card__meta-row > span:first-child {
+    grid-column: 1 / -1;
+    padding-bottom: 7px;
+  }
+
+  .event-card__meta-row > span:nth-child(2) {
     border-left: 0;
+    padding-left: 2px;
   }
 }
