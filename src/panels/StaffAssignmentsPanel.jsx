@@ -9,7 +9,25 @@ import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 import { getContrastTextForHex, getStaffColor, hexToRgba } from '../staffColors.js';
 import { joinNames, normalizeStaffName, splitNames } from './panelUtils.js';
 
-function staffChipStyle(name, selected) {
+const OTHER_OPTION = 'Other';
+const ARTIST_OPTIONS = [...STAFF_OPTIONS, OTHER_OPTION];
+const KNOWN_ARTISTS = new Set(STAFF_OPTIONS.map((name) => name.toLowerCase()));
+const KNOWN_COUNTERS = new Set(COUNTER_OPTIONS.filter((name) => name !== OTHER_OPTION).map((name) => name.toLowerCase()));
+
+function buildPickerState(value, knownNames, normalize = (name) => name) {
+  const names = splitNames(value).map(normalize);
+  const customNames = names.filter((name) => !knownNames.has(name.toLowerCase()) && name !== OTHER_OPTION);
+  const selections = names.filter((name) => knownNames.has(name.toLowerCase()));
+  if (customNames.length > 0 || names.includes(OTHER_OPTION)) selections.push(OTHER_OPTION);
+  return { selections, customName: joinNames(customNames) };
+}
+
+function expandWriteIn(selection, customName, max) {
+  const expanded = selection.flatMap((name) => (name === OTHER_OPTION ? splitNames(customName) : [name]));
+  return expanded.filter((name) => name !== 'None').slice(0, max);
+}
+
+function staffChipStyle(name) {
   const color = getStaffColor(name);
   return {
     '--staff-color': color,
@@ -21,9 +39,13 @@ function staffChipStyle(name, selected) {
 
 export function StaffAssignmentsPanel({ event, onSaved }) {
   const raw = event.raw || {};
+  const initialArtists = buildPickerState(raw.artistNames, KNOWN_ARTISTS, normalizeStaffName);
+  const initialCounters = buildPickerState(raw.counterNames, KNOWN_COUNTERS);
   const [artistCount, setArtistCount] = useState(raw.numberOfArtists || '1');
-  const [artists, setArtists] = useState(() => splitNames(raw.artistNames).map(normalizeStaffName).slice(0, Number(raw.numberOfArtists) || 1));
-  const [counters, setCounters] = useState(() => splitNames(raw.counterNames).slice(0, 2));
+  const [artists, setArtists] = useState(() => initialArtists.selections.slice(0, Number(raw.numberOfArtists) || 1));
+  const [artistWriteIn, setArtistWriteIn] = useState(initialArtists.customName);
+  const [counters, setCounters] = useState(() => initialCounters.selections.slice(0, 2));
+  const [counterWriteIn, setCounterWriteIn] = useState(initialCounters.customName);
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -35,14 +57,25 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
   }
 
   async function saveStaffAssignments() {
+    const artistNames = expandWriteIn(artists, artistWriteIn, Number(artistCount) || 1).map(normalizeStaffName);
+    const counterNames = expandWriteIn(counters, counterWriteIn, 2);
+    if (artists.includes(OTHER_OPTION) && !artistWriteIn.trim()) {
+      setStatus('Enter the tattooer name for Other before saving.');
+      return;
+    }
+    if (counters.includes(OTHER_OPTION) && !counterWriteIn.trim()) {
+      setStatus('Enter the counter staff name for Other before saving.');
+      return;
+    }
+
     setStatus('Saving staff assignments to Sheet...');
     setIsSaving(true);
     try {
       const saved = await upsertEventToSheet({
         ...raw,
         numberOfArtists: artistCount,
-        artistNames: joinNames(artists.map(normalizeStaffName).slice(0, Number(artistCount) || 1)),
-        counterNames: joinNames(counters),
+        artistNames: joinNames(artistNames),
+        counterNames: joinNames(counterNames),
       });
       onSaved(saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved);
       setStatus('Saved staff assignments.');
@@ -69,11 +102,11 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
       <section className="picker-section">
         <h3>Artists</h3>
         <div className="chip-grid">
-          {STAFF_OPTIONS.map((name) => (
+          {ARTIST_OPTIONS.map((name) => (
             <button
               key={name}
               type="button"
-              style={staffChipStyle(name, artists.includes(name))}
+              style={staffChipStyle(name)}
               className={artists.includes(name) ? 'choice-chip selected' : 'choice-chip'}
               onClick={() => setArtists((current) => toggleFromList(current, name, Number(artistCount) || 1))}
             >
@@ -81,6 +114,11 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
             </button>
           ))}
         </div>
+        {artists.includes(OTHER_OPTION) ? (
+          <Field label="Tattooer name">
+            <input value={artistWriteIn} onChange={(input) => setArtistWriteIn(input.target.value)} placeholder="Enter tattooer name" />
+          </Field>
+        ) : null}
       </section>
 
       <section className="picker-section">
@@ -90,7 +128,7 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
             <button
               key={name}
               type="button"
-              style={staffChipStyle(name, counters.includes(name))}
+              style={staffChipStyle(name)}
               className={counters.includes(name) ? 'choice-chip selected' : 'choice-chip'}
               onClick={() => setCounters((current) => toggleFromList(current, name, 2))}
             >
@@ -98,6 +136,11 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
             </button>
           ))}
         </div>
+        {counters.includes(OTHER_OPTION) ? (
+          <Field label="Counter staff name">
+            <input value={counterWriteIn} onChange={(input) => setCounterWriteIn(input.target.value)} placeholder="Enter counter staff name" />
+          </Field>
+        ) : null}
       </section>
 
       <button type="button" className="primary-button detail-save" onClick={saveStaffAssignments} disabled={isSaving}>

@@ -1,13 +1,23 @@
 import { useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Trash2 } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { STATUS_OPTIONS } from '../constants.js';
-import { saveManualAppointment } from '../activity.js';
-import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
+import { pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
 
-export function NotesPanel({ event, onSaved, onManualAppointmentsChanged }) {
+const COMMUNICATION_DELETE_EMAIL = 'admin@anatomytattoo.com';
+const COMMUNICATION_ENTRY_PATTERN = /^COMMUNICATION ENTRY\[[^\n]*\]:[\s\S]*?(?=^COMMUNICATION ENTRY\[|(?![\s\S]))/gim;
+
+export function getCommunicationEntries(notes) {
+  return [...String(notes || '').matchAll(COMMUNICATION_ENTRY_PATTERN)].map((match) => ({
+    text: match[0].trim(),
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
+}
+
+export function NotesPanel({ event, viewerEmail, onSaved }) {
   const raw = event.raw || {};
   const [statusValue, setStatusValue] = useState(raw.status || raw.payStatus || '');
   const [privateNotes, setPrivateNotes] = useState(raw.privateNotes || '');
@@ -15,10 +25,33 @@ export function NotesPanel({ event, onSaved, onManualAppointmentsChanged }) {
   const [communicationEntry, setCommunicationEntry] = useState('');
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const feedEntries = String(privateNotes || '')
-    .split(/\n{2,}/)
-    .map((entry) => entry.trim())
-    .filter((entry) => /^COMMUNICATION ENTRY\[/i.test(entry));
+  const feedEntries = getCommunicationEntries(privateNotes);
+  const canDeleteCommunication = String(viewerEmail || '').trim().toLowerCase() === COMMUNICATION_DELETE_EMAIL;
+
+  async function deleteCommunicationEntry(entry) {
+    if (!canDeleteCommunication || isSaving) return;
+    if (!window.confirm('Delete this communication entry? This cannot be undone.')) return;
+
+    setStatus('Deleting communication entry...');
+    setIsSaving(true);
+    try {
+      const notes = `${privateNotes.slice(0, entry.start)}${privateNotes.slice(entry.end)}`
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      const saved = await upsertEventPartialToSheet({
+        entryId: raw.entryId,
+        internalNotes: notes,
+      });
+      const refreshed = (await pullEventByEntryId(saved.entryId)) || event;
+      onSaved(refreshed);
+      setPrivateNotes(refreshed.raw?.privateNotes ?? notes);
+      setStatus('Communication entry deleted.');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Failed to delete communication entry.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   async function saveNotes() {
     setStatus('Saving notes to Sheet...');
@@ -28,19 +61,19 @@ export function NotesPanel({ event, onSaved, onManualAppointmentsChanged }) {
       ? `\n\nCOMMUNICATION ENTRY[Anna | ${timestamp}]: ${communicationEntry.trim()}`
       : '';
     try {
-      const saved = await upsertEventToSheet({
-        ...raw,
-        status: statusValue,
-        payStatus: statusValue,
-        privateNotes: `${privateNotes || ''}${communicationBlock}`.trim(),
-        contractNotes: raw.contractNotes || '',
+      const notes = `${privateNotes || ''}${communicationBlock}`.trim();
+      const hadAppointment = Boolean(String(raw.manualUpcomingAppointment || '').trim());
+      const nextStatus = !hadAppointment && manualAppointment.trim() ? 'New' : statusValue;
+      const saved = await upsertEventPartialToSheet({
+        entryId: raw.entryId,
+        status: nextStatus,
+        internalNotes: notes,
         manualUpcomingAppointment: manualAppointment,
       });
-      const nextAppointments = saveManualAppointment(raw.entryId, manualAppointment);
-      onManualAppointmentsChanged?.(nextAppointments);
-      const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
+      const refreshed = (await pullEventByEntryId(saved.entryId)) || event;
       onSaved(refreshed);
-      setPrivateNotes(saved.raw.privateNotes || `${privateNotes || ''}${communicationBlock}`.trim());
+      setPrivateNotes(refreshed.raw?.privateNotes || notes);
+      setStatusValue(refreshed.raw?.status || refreshed.raw?.payStatus || nextStatus);
       setCommunicationEntry('');
       setStatus('Saved notes.');
     } catch (error) {
@@ -88,7 +121,23 @@ export function NotesPanel({ event, onSaved, onManualAppointmentsChanged }) {
         <h3>Feed</h3>
         {feedEntries.length ? (
           <div className="feed-list">
-            {feedEntries.map((entry, index) => <div key={`${entry}-${index}`} className="feed-row">{entry}</div>)}
+            {feedEntries.map((entry, index) => (
+              <div key={`${entry.start}-${index}`} className="feed-row">
+                <span>{entry.text}</span>
+                {canDeleteCommunication ? (
+                  <button
+                    type="button"
+                    className="feed-delete-button"
+                    aria-label="Delete communication entry"
+                    title="Delete communication entry"
+                    disabled={isSaving}
+                    onClick={() => deleteCommunicationEntry(entry)}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                ) : null}
+              </div>
+            ))}
           </div>
         ) : (
           <p className="info-line">No communication entries yet.</p>

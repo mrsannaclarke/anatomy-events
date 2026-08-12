@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Events App — Warmer & Softer Roster</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #171512;
+      --sidebar: #1c1916;
+      --surface: #28221e;
+      --surface-2: #2e2722;
+      --cream: #f2e6d5;
+      --muted: #bba99a;
+      --clay: #c77f6b;
+      --line: #51443b;
+      --pink: #dd7897;
+      --purple: #9d6bd0;
+      --blue: #6d9fda;
+      --green: #8fc9ad;
+      --orange: #e48655;
+      font-family: ui-rounded, "Nunito Sans", "Avenir Next", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--bg); color: var(--cream); }
+    button { font: inherit; }
+    .shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar { border-right: 1px solid var(--line); background: var(--sidebar); padding: 34px 22px; }
+    .brand { display: grid; gap: 16px; margin: 4px 10px 42px; }
+    .mark { align-items: center; border: 2px solid var(--clay); border-radius: 50%; color: var(--clay); display: flex; font: 52px/1 Georgia, serif; height: 92px; justify-content: center; width: 92px; }
+    .brand strong { display: block; font-size: 21px; font-weight: 650; }
+    .brand span { color: var(--clay); display: block; margin-top: 5px; }
+    nav { display: grid; gap: 10px; }
+    nav button { align-items: center; background: transparent; border: 1px solid transparent; border-radius: 12px; color: var(--cream); cursor: default; display: flex; gap: 13px; min-height: 52px; padding: 12px 15px; text-align: left; }
+    nav button.active { background: #3a2924; border-color: #574139; color: #ee9e8c; }
+    nav svg { color: var(--muted); height: 21px; width: 21px; }
+    nav button.active svg { color: #ee9e8c; }
+    .workspace { min-width: 0; padding: 36px 38px 100px; }
+    .roster { display: grid; gap: 18px; margin: 0 auto; max-width: 1180px; }
+    .card { background: linear-gradient(135deg, var(--surface-2), var(--surface)); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 28px rgb(0 0 0 / 18%); padding: 24px 26px 18px; }
+    .card-top { align-items: start; display: grid; gap: 20px; grid-template-columns: 72px minmax(0, 1fr) auto; }
+    .type-icon { align-items: center; border: 1px solid currentColor; border-radius: 50%; display: flex; height: 64px; justify-content: center; width: 64px; }
+    .type-icon svg { height: 29px; width: 29px; }
+    .wedding { color: var(--pink); } .private { color: var(--purple); } .corporate { color: var(--blue); }
+    .title-line { align-items: baseline; display: flex; gap: 9px; }
+    h2 { color: var(--cream); font: 36px/1.1 Georgia, "Times New Roman", serif; letter-spacing: -.02em; margin: 0; }
+    .price-symbol { color: var(--blue); font-size: 25px; font-weight: 700; }
+    .time { color: currentColor; font-size: 16px; margin: 7px 0 14px; }
+    .location { color: var(--cream); display: flex; gap: 8px; line-height: 1.45; }
+    .location svg { color: var(--clay); flex: 0 0 auto; height: 18px; margin-top: 2px; width: 18px; }
+    .location span { display: block; }
+    .date-actions { align-items: flex-end; display: grid; gap: 25px; justify-items: end; }
+    .date { font: 20px/1.2 Georgia, serif; }
+    .actions { display: flex; gap: 9px; }
+    .actions button { align-items: center; background: #28231f; border: 1px solid #5a4b40; border-radius: 10px; color: var(--cream); cursor: default; display: flex; height: 42px; justify-content: center; padding: 0; width: 42px; }
+    .actions svg { height: 19px; width: 19px; }
+    .card-bottom { align-items: center; border-top: 1px solid var(--line); display: grid; gap: 16px; grid-template-columns: minmax(180px, .9fr) 1fr .9fr; margin-top: 18px; padding-top: 15px; }
+    .meta { align-items: center; display: flex; gap: 9px; min-width: 0; }
+    .meta + .meta { border-left: 1px solid var(--line); padding-left: 22px; }
+    .dot { background: currentColor; border-radius: 50%; flex: 0 0 auto; height: 11px; width: 11px; }
+    .meta-label { color: var(--muted); margin-right: 2px; }
+    .sheet-bar { align-items: center; background: #29231f; border: 1px solid var(--line); border-radius: 14px 14px 0 0; bottom: 0; display: flex; gap: 12px; left: 250px; min-height: 58px; padding: 12px 32px; position: fixed; right: 0; box-shadow: 0 -8px 25px rgb(0 0 0 / 20%); }
+    .sheet-bar svg { color: var(--clay); height: 21px; width: 21px; }
+    .sheet-bar span:last-child { color: var(--muted); margin-left: auto; text-transform: uppercase; font-size: 12px; letter-spacing: .08em; }
+    svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+    @media (max-width: 760px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { border-bottom: 1px solid var(--line); border-right: 0; padding: 12px 14px; }
+      .brand { align-items: center; display: flex; gap: 10px; margin: 0 0 10px; }
+      .mark { font-size: 23px; height: 40px; width: 40px; }
+      .brand strong { font-size: 16px; } .brand span { display: none; }
+      nav { grid-template-columns: repeat(4, 1fr); }
+      nav button { font-size: 12px; gap: 5px; justify-content: center; min-height: 42px; padding: 5px; }
+      nav svg { height: 16px; width: 16px; }
+      .workspace { padding: 14px 14px 88px; }
+      .card { padding: 17px 16px 15px; }
+      .card-top { gap: 12px; grid-template-columns: 45px 1fr; }
+      .type-icon { height: 42px; width: 42px; } .type-icon svg { height: 21px; width: 21px; }
+      h2 { font-size: 25px; }
+      .date-actions { grid-column: 2; justify-items: start; }
+      .actions { position: absolute; right: 28px; transform: translateY(-50px); }
+      .actions button { height: 35px; width: 35px; }
+      .date { font-size: 16px; }
+      .card-bottom { align-items: start; grid-template-columns: 1fr; }
+      .meta + .meta { border-left: 0; padding-left: 0; }
+      .sheet-bar { left: 0; padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="mark">A</div><div><strong>Events App 2.0</strong><span>Anatomy Events</span></div></div>
+      <nav aria-label="Prototype navigation">
+        <button class="active" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Events</button>
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M20 13 11 22l-9-9L11 4h7l2 2v7Z"/><circle cx="16" cy="8" r="1"/></svg>Pricing</button>
+        <button type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 13h5M3 10h18"/></svg>Payout</button>
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>Admin</button>
+      </nav>
+    </aside>
+    <section class="workspace">
+      <section class="roster" aria-label="Event roster prototype">
+        <article class="card">
+          <div class="card-top">
+            <div class="type-icon wedding"><svg viewBox="0 0 24 24"><path d="M8 12a5 5 0 1 0 7.7 4.2M16 12a5 5 0 1 1-7.7 4.2"/><path d="m9 7 3-4 3 4"/></svg></div>
+            <div><div class="title-line"><h2>Chris and Katelyn</h2></div><p class="time wedding">Event 5:00 PM</p><div class="location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg><div><span>The Evergreen</span><span>618 SE Alder St, Portland, OR</span></div></div></div>
+            <div class="date-actions"><span class="date">9/25/2027</span><div class="actions" aria-label="Inert event actions">
+              <button type="button" aria-label="Client Details"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
+              <button type="button" aria-label="Staff Assignments"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 15a5 5 0 0 1 7 5"/></svg></button>
+              <button type="button" aria-label="Notes"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg></button>
+              <button type="button" aria-label="Generators and Files"><svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v12H3z"/></svg></button>
+            </div></div>
+          </div>
+          <div class="card-bottom"><div class="meta wedding"><i class="dot"></i><span>Contract Signed</span></div><div class="meta"><span class="meta-label">Artists:</span><i class="dot wedding"></i><span>Lindsay</span></div><div class="meta"><span class="meta-label">Counter:</span><i class="dot" style="color:var(--orange)"></i><span>Marissa</span></div></div>
+        </article>
+        <article class="card">
+          <div class="card-top">
+            <div class="type-icon private"><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M12 14v3"/></svg></div>
+            <div><div class="title-line"><h2>Sabrina Gallegos</h2></div><p class="time private">Event 4:00 PM</p><div class="location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg><div><span>Riverside Hall</span><span>Portland, OR</span></div></div></div>
+            <div class="date-actions"><span class="date">7/3/2027</span><div class="actions" aria-label="Inert event actions">
+              <button type="button" aria-label="Client Details"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button><button type="button" aria-label="Staff Assignments"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 15a5 5 0 0 1 7 5"/></svg></button><button type="button" aria-label="Notes"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg></button><button type="button" aria-label="Generators and Files"><svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v12H3z"/></svg></button>
+            </div></div>
+          </div>
+          <div class="card-bottom"><div class="meta private"><i class="dot"></i><span>Deposit Paid</span></div><div class="meta"><span class="meta-label">Artists:</span><i class="dot" style="color:var(--green)"></i><span>Tomma</span><i class="dot private"></i><span>Shy</span></div><div class="meta"><span class="meta-label">Counter:</span><i class="dot" style="color:var(--orange)"></i><span>Anna</span></div></div>
+        </article>
+        <article class="card">
+          <div class="card-top">
+            <div class="type-icon corporate"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg></div>
+            <div><div class="title-line"><span class="price-symbol">$</span><h2>OPB Events</h2></div><p class="time corporate">Event 6:00 PM</p><div class="location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg><div><span>OPB</span><span>Portland, OR</span></div></div></div>
+            <div class="date-actions"><span class="date">7/17/2026</span><div class="actions" aria-label="Inert event actions">
+              <button type="button" aria-label="Client Details"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button><button type="button" aria-label="Staff Assignments"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 15a5 5 0 0 1 7 5"/></svg></button><button type="button" aria-label="Notes"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg></button><button type="button" aria-label="Generators and Files"><svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v12H3z"/></svg></button>
+            </div></div>
+          </div>
+          <div class="card-bottom"><div class="meta corporate"><i class="dot"></i><span>Balance Invoice Sent</span></div><div class="meta"><span class="meta-label">Artists:</span><i class="dot" style="color:#70c7c2"></i><span>Mikki</span></div><div class="meta"><span class="meta-label">Counter:</span><i class="dot" style="color:var(--orange)"></i><span>Marissa</span></div></div>
+        </article>
+      </section>
+    </section>
+    <footer class="sheet-bar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Updated Aug 12 at 11:00 AM</span><span>Sheet menu</span></footer>
+  </main>
+</body>
+</html>

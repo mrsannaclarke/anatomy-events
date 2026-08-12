@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Copy, ExternalLink, Route, Save } from 'lucide-react';
 
+import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
@@ -16,6 +17,8 @@ import {
   formatMoney,
   parseMoney,
   PLAN_YEARS,
+  PRICING_METHOD_CORPORATE_MODIFIERS,
+  PRICING_METHOD_STANDARD,
   PRICING_SCHEDULE,
 } from '../pricingMath.js';
 
@@ -24,7 +27,7 @@ const PRICING_SHEET_PUBLIC_URL_BY_YEAR = {
   2026: 'https://drive.google.com/file/d/1RqB2DEuH_AFm1yirkpdhAYQBpCTunSj9/view?usp=drive_link',
 };
 
-export function PricingPage({ events, onSaved }) {
+export function PricingPage({ events, pricingSource, onSaved }) {
   const [selectedId, setSelectedId] = useState('');
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedId || event.entryId === selectedId) || null,
@@ -32,7 +35,7 @@ export function PricingPage({ events, onSaved }) {
   );
   const [form, setForm] = useState(() => formFromEvent(null));
   const [saveMode, setSaveMode] = useState('new');
-  const [newClient, setNewClient] = useState({ clientName: '', contactPhone: '', email: '', eventDate: '' });
+  const [newClient, setNewClient] = useState({ clientName: '', contactPhone: '', email: '', eventDate: '', eventType: '' });
   const [saveStatus, setSaveStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLookingUpMileage, setIsLookingUpMileage] = useState(false);
@@ -131,6 +134,7 @@ export function PricingPage({ events, onSaved }) {
             <p>Select the plan year to view base per-artist pricing.</p>
           </div>
           <div className="panel-actions">
+            <span className="status-pill">{pricingSource === 'live' ? 'Pricing Rules live' : 'Offline pricing fallback'}</span>
             <button type="button" className="secondary-button" onClick={() => navigator.clipboard?.writeText(pricingSheetUrl)}>
               <Copy size={16} />
               Share
@@ -174,6 +178,22 @@ export function PricingPage({ events, onSaved }) {
           <h2>Pricing Calculator</h2>
           <p className="info-line">Modifiers and radius update automatically based on your inputs.</p>
         </div>
+
+        <Field label="Pricing Method">
+          <div className="mode-tabs" role="radiogroup" aria-label="Pricing method">
+            <button type="button" className={form.pricingMethod === PRICING_METHOD_STANDARD ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_STANDARD)}>
+              Standard Event
+            </button>
+            <button type="button" className={form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_CORPORATE_MODIFIERS)}>
+              Corporate / Walk-Up
+            </button>
+          </div>
+          <span className="field-help">
+            {form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
+              ? 'The event client pays modifiers only. Walk-up tattoo sales are not tracked in this app.'
+              : 'The event client pays the standard tattoo base plus modifiers.'}
+          </span>
+        </Field>
 
         <Field label="Number of Artists">
           <div className="mode-tabs" role="radiogroup" aria-label="Number of artists">
@@ -274,6 +294,9 @@ export function PricingPage({ events, onSaved }) {
             </Field>
             <Field label="Date of Event">
               <input placeholder="MM/DD/YYYY" value={newClient.eventDate} onChange={(event) => setNewClient((current) => ({ ...current, eventDate: event.target.value }))} />
+            </Field>
+            <Field label="Type of Event">
+              <EventTypePicker value={newClient.eventType} onChange={(eventType) => setNewClient((current) => ({ ...current, eventType }))} />
             </Field>
           </div>
         ) : (

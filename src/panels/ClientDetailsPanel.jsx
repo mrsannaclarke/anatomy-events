@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Pencil, Route, Save, Trash2 } from 'lucide-react';
 
+import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
-import { buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, parseMoney, PLAN_YEARS } from '../pricingMath.js';
+import { buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, PLAN_YEARS, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD } from '../pricingMath.js';
 
 export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   const [isEditable, setIsEditable] = useState(true);
@@ -20,6 +21,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       extraHours: raw.extraHours || '',
       customFlash: raw.customFlash || 'NO',
       temporaryTattoos: raw.temporaryTattoos || 'NO',
+      pricingMethod: normalizePricingMethod(raw.pricingMethod),
       staffPriceAdjustment: raw.staffPriceAdjustment || '',
       staffPriceAdjustmentReason: raw.staffPriceAdjustmentReason || '',
     };
@@ -65,6 +67,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       await upsertEventPartialToSheet({
         entryId,
         pricePlan: form.year,
+        pricingMethod: pricingMethodToSheetValue(form.pricingMethod),
         clientName: form.clientName,
         eventDate: form.eventDate,
         venueName: form.venueName,
@@ -117,7 +120,9 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   function renderClientField([key, label, type]) {
     return (
       <Field key={key} label={label}>
-        {type === 'select-year' ? (
+        {key === 'eventType' ? (
+          <EventTypePicker value={form[key]} onChange={(value) => updateField(key, value)} disabled={!isEditable} />
+        ) : type === 'select-year' ? (
           <select disabled={!isEditable} value={form[key]} onChange={(input) => updateField(key, input.target.value)}>
             {PLAN_YEARS.map((year) => (
               <option key={year} value={year}>
@@ -179,6 +184,12 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       <section className="picker-section">
         <h3>Options</h3>
         <div className="form-grid">
+          <Field label="Pricing Method">
+            <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
+              <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
+              <option value={PRICING_METHOD_CORPORATE_MODIFIERS}>Corporate / Walk-Up — Client Pays Modifiers Only</option>
+            </select>
+          </Field>
           {[
             ['customFlash', 'Custom Flash?'],
             ['temporaryTattoos', 'Temporary Tattoos?'],

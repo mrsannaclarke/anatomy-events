@@ -1,15 +1,11 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
-    "target": "ES2022",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "target": "ES2022"
   },
   "include": ["src/**/*", "project.json", "docs/app-rules.json"]
 }

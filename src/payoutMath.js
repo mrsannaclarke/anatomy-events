@@ -20,7 +20,7 @@ export function parseNames(value) {
     .map((name) => name.trim())
     .filter((name) => {
       const key = normalizeNameKey(name);
-      return key && key !== '-' && key !== 'n/a' && key !== 'na' && key !== 'none';
+      return key && key !== '-' && key !== 'n/a' && key !== 'na' && key !== 'none' && key !== 'other';
     });
 }
 
@@ -95,13 +95,14 @@ export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
   const customFlashShare = payoutRule.customFlashArtistSharePct ?? 0.5;
   const radiusShare = payoutRule.radiusArtistSharePct ?? 0.85;
   const extraHourlyShare = payoutRule.extraHourlyArtistSharePct ?? 0.8;
+  const temporaryTattooShare = payoutRule.temporaryTattooArtistSharePct ?? 0.5;
 
   const historical = HISTORICAL_PAYOUT_TRUTH[String(raw.entryId || '').trim()];
   let artistBasePayout = isArtist ? totals.baseTotal / artistCount : 0;
   let artistModifierBreakdown = {
     customFlash: isArtist ? (totals.customFlashFee * customFlashShare) / artistCount : 0,
     radius: isArtist ? (totals.radiusFee * radiusShare) / artistCount : 0,
-    temporaryTattoos: 0,
+    temporaryTattoos: isArtist ? (totals.temporaryTattooFee * temporaryTattooShare) / artistCount : 0,
     extraHourly: isArtist ? (totals.extraHourlyCharge * extraHourlyShare) / artistCount : 0,
     licensingSplit: 0,
   };
@@ -132,6 +133,46 @@ export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
     counterPayout,
     totalPayout: artistPayout + counterPayout,
     payoutSource: 'schedule_fallback',
+  };
+}
+
+function normalizeCurrency(value) {
+  const amount = Number(value) || 0;
+  return Math.abs(amount) < 0.005 ? 0 : Number(amount.toFixed(2));
+}
+
+export function calculateEventPayout(event, people, pricingPayoutMap = {}) {
+  const raw = event?.raw || event || {};
+  const computed = computePricing(formFromEvent(event));
+  const savedGross = parseMoney(raw.totalCharge || raw.computedTotal);
+  const gross = normalizeCurrency(savedGross > 0 ? savedGross : computed.totalCharge);
+  const lines = people
+    .map((person) => ({ person, row: getPersonPayRow(event, person, pricingPayoutMap) }))
+    .filter((line) => line.row?.totalPayout > 0);
+
+  const capturedLines = lines.filter((line) => normalizeNameKey(line.person) === 'tomma');
+  const paidLines = lines.filter((line) => normalizeNameKey(line.person) !== 'tomma');
+  const staffPaid = normalizeCurrency(paidLines.reduce((sum, line) => sum + line.row.totalPayout, 0));
+  const shopCaptured = normalizeCurrency(capturedLines.reduce((sum, line) => sum + line.row.totalPayout, 0));
+  const allStaffAllocations = normalizeCurrency(staffPaid + shopCaptured);
+
+  // Everything not allocated to a staff payout belongs to the shop: facility
+  // fees, shop modifier percentages, and price adjustments. Tomma's tracked
+  // payout is then added because her salaried allocation is also shop income.
+  const shopOwnEarnings = normalizeCurrency(Math.max(0, gross - allStaffAllocations));
+  const shopTotal = normalizeCurrency(shopOwnEarnings + shopCaptured);
+  const remainder = normalizeCurrency(gross - staffPaid - shopTotal);
+
+  return {
+    event,
+    lines,
+    gross,
+    staffPaid,
+    shopCaptured,
+    shopOwnEarnings,
+    shopTotal,
+    remainder,
+    grossSource: savedGross > 0 ? 'saved' : 'calculated',
   };
 }
 

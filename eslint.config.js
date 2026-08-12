@@ -1,10 +1,24 @@
-// https://docs.expo.dev/guides/using-eslint/
-const { defineConfig } = require('eslint/config');
-const expoConfig = require('eslint-config-expo/flat');
+import js from '@eslint/js';
+import globals from 'globals';
 
-module.exports = defineConfig([
-  expoConfig,
+export default [
+  { ignores: ['dist/**', 'node_modules/**'] },
+  js.configs.recommended,
   {
-    ignores: ['dist/*'],
+    files: ['src/**/*.{js,jsx}', 'functions/**/*.js', 'shared/**/*.js', 'vite.config.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
   },
-]);
+];

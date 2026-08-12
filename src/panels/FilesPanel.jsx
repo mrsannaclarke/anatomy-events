@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Copy, ExternalLink, Mail, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
@@ -8,8 +8,44 @@ import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sh
 export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
   const [artUrl, setArtUrl] = useState(raw.artImageUrl || '');
+  const [fileUrls, setFileUrls] = useState(null);
   const [status, setStatus] = useState('');
   const [pendingLabel, setPendingLabel] = useState('');
+
+  function urlsFromEvent(sourceEvent) {
+    const source = sourceEvent?.raw || {};
+    return {
+      contractUrl: source.contractUrl || '',
+      tflUrl: source.tflUrl || '',
+      artImageUrl: source.artImageUrl || '',
+    };
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshFileLinks() {
+      setFileUrls(null);
+      setStatus('Checking the latest file links in the Sheet...');
+      try {
+        const refreshed = await pullEventByEntryId(event.entryId);
+        if (cancelled) return;
+        if (!refreshed) throw new Error('The latest event record was not returned.');
+        setFileUrls(urlsFromEvent(refreshed));
+        setArtUrl(refreshed.raw?.artImageUrl || '');
+        setStatus('File links are current with the Sheet.');
+      } catch (error) {
+        if (cancelled) return;
+        setFileUrls(urlsFromEvent(event));
+        setStatus(error instanceof Error ? `Could not refresh file links: ${error.message}` : 'Could not refresh file links.');
+      }
+    }
+
+    void refreshFileLinks();
+    return () => {
+      cancelled = true;
+    };
+  }, [event.entryId]);
 
   function mailtoLink(label, url) {
     const subjectByLabel = {
@@ -36,15 +72,24 @@ export function FilesPanel({ event, onSaved }) {
     setPendingLabel(label);
     try {
       const result = await generateEventFile(event.entryId, kind);
-      const saved = await upsertEventToSheet({
-        ...raw,
-        contractUrl: result.contractUrl || raw.contractUrl,
-        tflUrl: result.tflUrl || raw.tflUrl,
-      });
-      const refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
+      const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
+      if (!refreshed) throw new Error('File generated, but the refreshed event record was not returned.');
+      setFileUrls(urlsFromEvent(refreshed));
       onSaved(refreshed);
       setStatus('Generated file link saved.');
     } catch (error) {
+      try {
+        const refreshed = await pullEventByEntryId(event.entryId);
+        const generatedUrl = kind === 'tfl' ? refreshed?.raw?.tflUrl : refreshed?.raw?.contractUrl;
+        if (refreshed && generatedUrl) {
+          setFileUrls(urlsFromEvent(refreshed));
+          onSaved(refreshed);
+          setStatus('Generated file link saved.');
+          return;
+        }
+      } catch {
+        // Preserve the original generation error when the recovery lookup also fails.
+      }
       setStatus(error instanceof Error ? error.message : 'Failed to generate file.');
     } finally {
       setPendingLabel('');
@@ -71,19 +116,19 @@ export function FilesPanel({ event, onSaved }) {
   }
 
   const links = [
-    ['Contract', raw.contractUrl],
-    ['Temporary License', raw.tflUrl],
-    ['Uploaded Art', raw.artImageUrl],
+    ['Contract', fileUrls?.contractUrl],
+    ['Temporary License', fileUrls?.tflUrl],
+    ['Uploaded Art', fileUrls?.artImageUrl],
   ];
 
   return (
     <section className="detail-stack pending-scope">
       <PendingOverlay show={Boolean(pendingLabel)} label={pendingLabel} />
       <div className="file-actions">
-        <button type="button" className="primary-button" onClick={() => generate('contract')} disabled={Boolean(raw.contractUrl) || Boolean(pendingLabel)}>
+        <button type="button" className="primary-button" onClick={() => generate('contract')} disabled={!fileUrls || Boolean(fileUrls.contractUrl) || Boolean(pendingLabel)}>
           Generate Contract
         </button>
-        <button type="button" className="primary-button" onClick={() => generate('tfl')} disabled={Boolean(raw.tflUrl) || Boolean(pendingLabel)}>
+        <button type="button" className="primary-button" onClick={() => generate('tfl')} disabled={!fileUrls || Boolean(fileUrls.tflUrl) || Boolean(pendingLabel)}>
           Generate TFL
         </button>
       </div>
@@ -106,8 +151,10 @@ export function FilesPanel({ event, onSaved }) {
                   Email
                 </a>
               </div>
-            ) : (
+            ) : fileUrls ? (
               <strong>Not generated</strong>
+            ) : (
+              <strong>Checking Sheet...</strong>
             )}
           </div>
         ))}

@@ -1,12 +1,20 @@
+import { getGoogleCredential } from './auth.js';
+
 const viteEnv = import.meta.env || {};
 
 export const SHEET_WEB_APP_URL =
   viteEnv.VITE_SHEET_WEB_APP_URL ||
-  'https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec';
-
-export const SHEET_API_TOKEN = viteEnv.VITE_SHEET_API_TOKEN || '';
+  'https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec';
 
 const DEV_SHEET_PROXY_URL = '/api/sheet';
+
+const MUTATION_ACTIONS = new Set([
+  'upsertEvent',
+  'upsertEventPartialJson',
+  'deleteEvent',
+  'generateContract',
+  'generateTfl',
+]);
 
 function normalizeText(value) {
   return String(value || '').trim();
@@ -103,13 +111,30 @@ export function normalizeEvent(raw, index = 0) {
 }
 
 async function requestSheetJson(params) {
-  const url = new URL(viteEnv.DEV ? DEV_SHEET_PROXY_URL : SHEET_WEB_APP_URL, window.location.origin);
+  const action = String(params.action || '');
+  const isMutation = MUTATION_ACTIONS.has(action);
+  const url = new URL(isMutation || viteEnv.DEV ? DEV_SHEET_PROXY_URL : SHEET_WEB_APP_URL, window.location.origin);
+
+  if (isMutation) {
+    const credential = getGoogleCredential();
+    if (!credential) throw new Error('Your Google sign-in expired. Sign out and sign in again before saving.');
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${credential}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+    return parseSheetResponse(response);
+  }
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
   });
   url.searchParams.set('_ts', String(Date.now()));
-  if (SHEET_API_TOKEN) url.searchParams.set('token', SHEET_API_TOKEN);
-
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
@@ -117,6 +142,10 @@ async function requestSheetJson(params) {
     },
   });
 
+  return parseSheetResponse(response);
+}
+
+async function parseSheetResponse(response) {
   const text = await response.text();
   let data;
   try {
@@ -163,8 +192,8 @@ export async function pullEventByEntryId(entryId) {
 export async function upsertEventToSheet(event, computed) {
   const data = await requestSheetJson({
     action: 'upsertEvent',
-    event: JSON.stringify(event),
-    computed: JSON.stringify(computed || {}),
+    event,
+    computed: computed || {},
   });
   if (!data.event) throw new Error('Sheet save did not return an event.');
   return normalizeEvent(data.event, event.entryId || Date.now());
@@ -193,16 +222,15 @@ export async function generateEventFile(entryId, kind) {
 }
 
 export async function pullPricingRulesFromSheet() {
-  const data = await requestSheetJson({ action: 'pricing' });
-  return data.pricing || [];
+  if (!pullPricingRulesFromSheet.pending) {
+    pullPricingRulesFromSheet.pending = requestSheetJson({ action: 'pricing' })
+      .then((data) => data.pricing || [])
+      .catch((error) => {
+        pullPricingRulesFromSheet.pending = null;
+        throw error;
+      });
+  }
+  return pullPricingRulesFromSheet.pending;
 }
 
-export async function pullSheetTabs() {
-  const data = await requestSheetJson({ action: 'sheettabs' });
-  return data.tabs || [];
-}
-
-export async function pullSheetTabRows(tabName) {
-  const data = await requestSheetJson({ action: 'sheettabrows', tabName });
-  return data.rows || [];
-}
+pullPricingRulesFromSheet.pending = null;

@@ -1,24 +1,31 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { formatPayout, getCompletedYear, getPeopleFromEvents, getPersonPayRow, isCompletedForPay, isCancelledForPay } from '../payoutMath.js';
-import { parseMoney } from '../pricingMath.js';
+import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay } from '../payoutMath.js';
+import { pullPricingRulesFromSheet } from '../sheetClient.js';
 
 export function PayoutLedgerPage({ events, onBack }) {
   const [selectedYear, setSelectedYear] = useState('All');
+  const [pricingPayoutMap, setPricingPayoutMap] = useState({});
   const people = useMemo(() => getPeopleFromEvents(events), [events]);
+  useEffect(() => {
+    let active = true;
+    pullPricingRulesFromSheet()
+      .then((rows) => {
+        if (active) setPricingPayoutMap(buildPricingPayoutMap(rows));
+      })
+      .catch(() => {
+        // The payout framework's recorded defaults remain available offline.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const cards = useMemo(
     () =>
       events
         .filter((event) => isCompletedForPay(event) && !isCancelledForPay(event))
-        .map((event) => {
-          const lines = people.map((person) => ({ person, row: getPersonPayRow(event, person) })).filter((line) => line.row?.totalPayout > 0);
-          const staffPaid = lines.filter((line) => line.person !== 'Tomma').reduce((sum, line) => sum + line.row.totalPayout, 0);
-          const shopCaptured = lines.filter((line) => line.person === 'Tomma').reduce((sum, line) => sum + line.row.totalPayout, 0);
-          const gross = parseMoney(event.raw?.totalCharge || event.raw?.computedTotal || event.raw?.balanceDue || 0);
-          const shopTotal = Math.max(0, gross - staffPaid);
-          return { event, lines, gross, staffPaid, shopCaptured, shopTotal, remainder: gross - staffPaid - shopTotal };
-        }),
-    [events, people],
+        .map((event) => calculateEventPayout(event, people, pricingPayoutMap)),
+    [events, people, pricingPayoutMap],
   );
   const yearOptions = useMemo(() => {
     const years = [...new Set(cards.map((card) => getCompletedYear(card.event)).filter(Boolean))].sort((a, b) => {
@@ -35,7 +42,7 @@ export function PayoutLedgerPage({ events, onBack }) {
       <div className="panel-heading">
         <div>
           <h2>Payout Ledger</h2>
-          <p>Completed-event gross, staff, shop, and remainder summary.</p>
+          <p>Completed events are priced, allocated, and reconciled automatically.</p>
         </div>
         <button type="button" className="secondary-button" onClick={onBack}>Back to Admin</button>
       </div>
@@ -57,7 +64,8 @@ export function PayoutLedgerPage({ events, onBack }) {
             <dl>
               <div><dt>Gross</dt><dd>{formatPayout(card.gross)}</dd></div>
               <div><dt>Staff Paid</dt><dd>{formatPayout(card.staffPaid)}</dd></div>
-              <div><dt>Captured to Shop</dt><dd>{formatPayout(card.shopCaptured)}</dd></div>
+              <div><dt>Tomma Captured to Shop</dt><dd>{formatPayout(card.shopCaptured)}</dd></div>
+              <div><dt>Additional Shop Earnings</dt><dd>{formatPayout(card.shopOwnEarnings)}</dd></div>
               <div><dt>Shop Total</dt><dd>{formatPayout(card.shopTotal)}</dd></div>
               <div><dt>Remainder</dt><dd>{formatPayout(card.remainder)}</dd></div>
             </dl>

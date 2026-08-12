@@ -1,0 +1,378 @@
+diff --git a/src/styles.css b/src/styles.css
+index 5e68f71..c627cd6 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -91,6 +91,32 @@ button {
+   color: #9eb0c4;
+ }
+ 
++.stay-signed-in-option {
++  align-items: flex-start;
++  color: #e7edf5;
++  cursor: pointer;
++  display: flex;
++  gap: 10px;
++}
++
++.stay-signed-in-option input {
++  accent-color: #d7a84f;
++  height: 18px;
++  margin: 2px 0 0;
++  width: 18px;
++}
++
++.stay-signed-in-option span,
++.stay-signed-in-option strong,
++.stay-signed-in-option small {
++  display: block;
++}
++
++.stay-signed-in-option small {
++  color: #9eb0c4;
++  margin-top: 2px;
++}
++
+ .google-signin-button {
+   min-height: 44px;
+ }
+@@ -147,7 +173,7 @@ nav button:hover {
+ 
+ .workspace {
+   min-width: 0;
+-  padding: 24px;
++  padding: 24px 24px 92px;
+ }
+ 
+ .viewer-button {
+@@ -205,28 +231,83 @@ nav button:hover {
+   opacity: 0.55;
+ }
+ 
+-.sync-error {
++.sheet-sync-menu {
++  background: #101821;
++  border: 1px solid #2a4058;
++  border-radius: 12px 12px 0 0;
++  bottom: 0;
++  box-shadow: 0 -8px 30px rgb(0 0 0 / 28%);
++  left: 260px;
++  position: fixed;
++  right: 0;
++  z-index: 40;
++}
++
++.sheet-sync-menu.has-error {
++  border-color: #9b503d;
++}
++
++.sheet-sync-menu summary {
+   align-items: center;
+-  background: #3a241f;
+-  border: 1px solid #6b3a2e;
+-  border-radius: 8px;
+-  color: #ffd7c9;
++  cursor: pointer;
+   display: flex;
+-  flex-wrap: wrap;
+-  gap: 8px 12px;
+-  margin-bottom: 14px;
+-  padding: 12px 14px;
++  gap: 9px;
++  min-height: 52px;
++  padding: 10px 18px;
++}
++
++.sheet-sync-menu summary::marker {
++  color: #9eb0c4;
++}
++
++.sheet-sync-menu summary > span:last-child {
++  color: #9eb0c4;
++  font-size: 12px;
++  margin-left: auto;
++  text-transform: uppercase;
++}
++
++.sheet-sync-indicator {
++  background: #7fd29a;
++  border-radius: 50%;
++  height: 9px;
++  width: 9px;
++}
++
++.sheet-sync-menu.has-error .sheet-sync-indicator {
++  background: #ff8f73;
++}
++
++.sheet-sync-menu__body {
++  align-items: center;
++  border-top: 1px solid #213142;
++  display: flex;
++  gap: 14px;
++  padding: 12px 18px 16px;
+ }
+ 
+-.sync-error span {
+-  color: #f2b9a6;
++.sheet-sync-menu__status {
++  display: grid;
++  gap: 2px;
+ }
+ 
+-.sync-error a {
++.sheet-sync-menu__status span {
++  color: #9eb0c4;
++}
++
++.sheet-sync-menu__body > a {
+   color: #ffd7c9;
+   margin-left: auto;
+ }
+ 
++.is-spinning {
++  animation: sync-spin 0.9s linear infinite;
++}
++
++@keyframes sync-spin {
++  to { transform: rotate(360deg); }
++}
++
+ .event-list {
+   display: grid;
+   gap: 12px;
+@@ -545,6 +626,48 @@ nav button:hover {
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+ }
+ 
++.event-type-picker {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 0.55rem;
++  min-height: 42px;
++  align-items: center;
++}
++
++.event-type-choice {
++  display: inline-grid;
++  width: 42px;
++  height: 42px;
++  padding: 0;
++  place-items: center;
++  border: 1px solid color-mix(in srgb, var(--event-type-color) 45%, #23394d);
++  border-radius: 11px;
++  background: color-mix(in srgb, var(--event-type-color) 8%, #0e1822);
++  color: var(--event-type-color);
++  cursor: pointer;
++}
++
++.event-type-choice:hover:not(:disabled) {
++  border-color: var(--event-type-color);
++  background: color-mix(in srgb, var(--event-type-color) 16%, #0e1822);
++}
++
++.event-type-choice.selected {
++  border-color: var(--event-type-color);
++  background: color-mix(in srgb, var(--event-type-color) 24%, #0e1822);
++  box-shadow: 0 0 0 2px color-mix(in srgb, var(--event-type-color) 28%, transparent);
++}
++
++.event-type-choice:focus-visible {
++  outline: 2px solid var(--event-type-color);
++  outline-offset: 2px;
++}
++
++.event-type-choice:disabled {
++  cursor: default;
++  opacity: 0.55;
++}
++
+ .field {
+   display: grid;
+   gap: 6px;
+@@ -1006,6 +1129,10 @@ nav button:hover {
+ }
+ 
+ .feed-row {
++  align-items: flex-start;
++  display: flex;
++  gap: 10px;
++  justify-content: space-between;
+   background: #1b2436;
+   border: 1px solid #4b5f89;
+   border-radius: 8px;
+@@ -1016,6 +1143,28 @@ nav button:hover {
+   white-space: pre-wrap;
+ }
+ 
++.feed-delete-button {
++  align-items: center;
++  background: transparent;
++  border: 1px solid #7f3b3b;
++  border-radius: 7px;
++  color: #f28b82;
++  cursor: pointer;
++  display: inline-flex;
++  flex: 0 0 auto;
++  justify-content: center;
++  padding: 5px;
++}
++
++.feed-delete-button:hover:not(:disabled) {
++  background: #3a2023;
++}
++
++.feed-delete-button:disabled {
++  cursor: not-allowed;
++  opacity: 0.5;
++}
++
+ .total-number {
+   color: #f0c86d;
+   font-size: 30px;
+@@ -1082,6 +1231,14 @@ nav button:hover {
+   width: 26px;
+ }
+ 
++.corporate-pricing-symbol {
++  color: #e2b756;
++  flex: 0 0 auto;
++  font-size: 18px;
++  font-weight: 800;
++  line-height: 1;
++}
++
+ .event-card h2 {
+   flex: 1;
+   font-size: 18px;
+@@ -1091,6 +1248,15 @@ nav button:hover {
+ }
+ 
+ .event-card__date {
++  flex: 0 0 auto;
++  font-size: 18px;
++  font-weight: 700;
++  line-height: 1.2;
++  margin-left: auto;
++  text-align: right;
++}
++
++.event-card__time {
+   font-size: 13px;
+   font-weight: 700;
+   margin: 1px 0 0;
+@@ -1156,32 +1322,6 @@ nav button:hover {
+   content: ",";
+ }
+ 
+-.amount-row {
+-  display: flex;
+-  gap: 18px;
+-  justify-content: space-between;
+-  margin-top: 8px;
+-}
+-
+-.amount-row div {
+-  display: grid;
+-  gap: 2px;
+-}
+-
+-.amount-row span {
+-  color: #7f95ad;
+-  font-size: 12px;
+-  font-weight: 700;
+-  letter-spacing: 0;
+-  text-transform: none;
+-}
+-
+-.amount-row strong {
+-  color: #e3ecf8;
+-  font-size: 16px;
+-  font-weight: 800;
+-}
+-
+ .event-card__actions {
+   display: flex;
+   gap: 8px;
+@@ -1224,21 +1364,6 @@ nav button:hover {
+   margin-top: 8px;
+ }
+ 
+-.calendar-compact-button {
+-  align-items: center;
+-  background: #1f5fbc;
+-  border: 1px solid #3c8dff;
+-  border-radius: 8px;
+-  color: #d9e9ff;
+-  display: inline-flex;
+-  font-size: 11px;
+-  font-weight: 800;
+-  gap: 5px;
+-  margin-left: auto;
+-  padding: 6px 9px;
+-  text-decoration: none;
+-}
+-
+ .map-compact-link {
+   align-items: center;
+   background: #10243a;
+@@ -1252,15 +1377,6 @@ nav button:hover {
+   width: 32px;
+ }
+ 
+-.appointment-footer {
+-  color: #90a6c1;
+-  display: grid;
+-  font-size: 13px;
+-  gap: 2px;
+-  line-height: 1.4;
+-  margin-top: 8px;
+-}
+-
+ @media (max-width: 760px) {
+   .app-shell {
+     align-content: start;
+@@ -1333,7 +1449,25 @@ nav button:hover {
+   }
+ 
+   .workspace {
+-    padding: 14px 14px 18px;
++    padding: 14px 14px 84px;
++  }
++
++  .sheet-sync-menu {
++    left: 0;
++  }
++
++  .sheet-sync-menu summary {
++    padding: 10px 14px;
++  }
++
++  .sheet-sync-menu__body {
++    align-items: stretch;
++    flex-direction: column;
++    padding: 12px 14px 14px;
++  }
++
++  .sheet-sync-menu__body > a {
++    margin-left: 0;
+   }
+ 
+   .workspace > :where(.event-list, .pricing-page, .page-stack, .detail-panel, .empty-state) {
+@@ -1395,16 +1529,11 @@ nav button:hover {
+     width: 100%;
+   }
+ 
+-  .event-card__venue-row,
+-  .amount-row {
++  .event-card__venue-row {
+     align-items: flex-start;
+     flex-direction: column;
+   }
+ 
+-  .calendar-compact-button {
+-    margin-left: 0;
+-  }
+-
+   .pricing-layout,
+   .form-grid,
+   .detail-grid,

@@ -26,6 +26,7 @@ export const cardActions = [
 ];
 
 export const STATUS_OPTIONS = [
+  'New',
   'Post Consult Decision',
   'Need To Send Contract/Deposit Invoice',
   'Contract Signed',
@@ -33,10 +34,11 @@ export const STATUS_OPTIONS = [
   'Deposit Late',
   'Deposit Paid',
   'Temporary License Submitted',
-  'Temporary license recieved',
+  'Temporary License Received',
   'Awaiting Follow Up',
   'Needing Changes',
   'Balance Invoice Sent',
+  'Invoice Paid in Full',
   'Cancelled',
   'Not Likely to Continue',
   'Event Complete',

@@ -1,12 +1,16 @@
 import { STAFF_OPTIONS } from './constants.js';
+import { ALLOWED_USERS } from '../shared/authPolicy.js';
 
 const AUTH_CACHE_KEY = 'events-app-2.0:viewer';
+const GOOGLE_CREDENTIAL_KEY = 'events-app-2.0:google-credential';
+const STAY_SIGNED_IN_KEY = 'events-app-2.0:stay-signed-in';
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 
 export const GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || '';
 
 export const FULL_PAYOUT_ACCESS_EMAILS = new Set([
   'events.anatomytattoo@gmail.com',
+  'ladyshytattoos@gmail.com',
   'tattoosbytomma@gmail.com',
   'admin@anatomytattoo.com',
   'mrs.annaclarke@gmail.com',
@@ -14,6 +18,7 @@ export const FULL_PAYOUT_ACCESS_EMAILS = new Set([
 
 export const PRIMARY_PAYOUT_PERSON_BY_EMAIL = {
   'events.anatomytattoo@gmail.com': 'Shy',
+  'ladyshytattoos@gmail.com': 'Shy',
   'tattoosbytomma@gmail.com': 'Tomma',
   'admin@anatomytattoo.com': 'Anna',
   'mrs.annaclarke@gmail.com': 'Anna',
@@ -25,33 +30,7 @@ export const STAFF_DELEGATES = {
   Shy: ['Jason'],
 };
 
-export const ALLOWED_USERS = [
-  { email: 'tattoosbytomma@gmail.com', name: 'Tomma' },
-  { email: 'ladyshytattoos@gmail.com', name: 'Shy' },
-  { email: 'events.anatomytattoo@gmail.com', name: 'Shy' },
-  { email: 'event.anatomytattoo@gmail.com', name: 'Shy' },
-  { email: 'sketchu2@gmail.com', name: 'Summer' },
-  { email: 'sailorsisilia@gmail.com', name: 'Sisi' },
-  { email: 'info@agneshamilton.com', name: 'Agnes' },
-  { email: 'meganechtattoos@gmail.com', name: 'Megan' },
-  { email: 'meganechevarria96@gmail.com', name: 'Megan' },
-  { email: 'jazzstahrtattoo@gmail.com', name: 'Jazz' },
-  { email: 'jazzstahr@gmail.com', name: 'Jazz' },
-  { email: 'appointments@drewlinden.com', name: 'Drew' },
-  { email: 'drew@drewlinden.com', name: 'Drew' },
-  { email: 'honeyandsass@gmail.com', name: 'Lindsay' },
-  { email: 'inkdiva66@gmail.com', name: 'Anne' },
-  { email: 'jaketongtattoos@gmail.com', name: 'Jake' },
-  { email: 'artsofjayden@gmail.com', name: 'Jayden' },
-  { email: 'jamueller01@gmail.com', name: 'Jayden' },
-  { email: 'luckymalony@gmail.com', name: 'Lucky' },
-  { email: 'sirjasonbarnes@gmail.com', name: 'Jason' },
-  { email: 'veda.mueller.27@gmail.com', name: 'Veda' },
-  { email: 'breannenorling@gmail.com', name: 'Bree' },
-  { email: 'anatomytattoo@gmail.com', name: 'Tomma' },
-  { email: 'mrs.annaclarke@gmail.com', name: 'Anna' },
-  { email: 'admin@anatomytattoo.com', name: 'Anna' },
-];
+export { ALLOWED_USERS };
 
 export function normalizeKey(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -59,19 +38,55 @@ export function normalizeKey(value) {
 
 export function getCachedViewer() {
   try {
-    const cached = JSON.parse(window.localStorage.getItem(AUTH_CACHE_KEY) || 'null');
+    const credential = getGoogleCredential();
+    if (!credential) return null;
+    const storage = getStaySignedInPreference() ? window.localStorage : window.sessionStorage;
+    const cached = JSON.parse(storage.getItem(AUTH_CACHE_KEY) || 'null');
     return cached?.authSource === 'google' && cached?.email ? normalizeViewer(cached) : null;
   } catch {
     return null;
   }
 }
 
-export function cacheViewer(viewer) {
-  window.localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ ...viewer, authSource: 'google' }));
+export function getStaySignedInPreference() {
+  return window.localStorage.getItem(STAY_SIGNED_IN_KEY) !== 'false';
+}
+
+export function cacheViewer(viewer, credential, staySignedIn = true) {
+  window.localStorage.setItem(STAY_SIGNED_IN_KEY, staySignedIn ? 'true' : 'false');
+  window.localStorage.removeItem(AUTH_CACHE_KEY);
+  window.localStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
+  window.sessionStorage.removeItem(AUTH_CACHE_KEY);
+  window.sessionStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
+  const storage = staySignedIn ? window.localStorage : window.sessionStorage;
+  storage.setItem(AUTH_CACHE_KEY, JSON.stringify({ ...viewer, authSource: 'google' }));
+  storage.setItem(GOOGLE_CREDENTIAL_KEY, String(credential || ''));
 }
 
 export function clearCachedViewer() {
   window.localStorage.removeItem(AUTH_CACHE_KEY);
+  window.localStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
+  window.sessionStorage.removeItem(AUTH_CACHE_KEY);
+  window.sessionStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
+}
+
+export function getGoogleCredential() {
+  const credential = window.localStorage.getItem(GOOGLE_CREDENTIAL_KEY)
+    || window.sessionStorage.getItem(GOOGLE_CREDENTIAL_KEY)
+    || '';
+  if (!credential) return '';
+
+  try {
+    const payload = decodeJwtPayload(credential);
+    if (!payload.exp || Number(payload.exp) * 1000 <= Date.now()) {
+      clearCachedViewer();
+      return '';
+    }
+    return credential;
+  } catch {
+    clearCachedViewer();
+    return '';
+  }
 }
 
 export function normalizeViewer(user) {

@@ -1,9 +1,10 @@
-import { BriefcaseBusiness, CalendarPlus, Heart, MapPin, PartyPopper, ScrollText, Users } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
-import { computePricing, formFromEvent, formatMoney } from '../pricingMath.js';
+import { computePricing, formFromEvent, PRICING_METHOD_CORPORATE_MODIFIERS } from '../pricingMath.js';
 import { getLatestCommunication } from '../activity.js';
 import { getStaffColor } from '../staffColors.js';
+import { getEventTypeVisual } from './EventTypePicker.jsx';
 
 const STAFF_NAME_ALIASES = {
   Lindsey: 'Lindsay',
@@ -11,28 +12,20 @@ const STAFF_NAME_ALIASES = {
   'Tomma Mueller': 'Tomma',
 };
 
-function isOpenStatus(event) {
-  const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
-  return !status || status === 'open';
-}
-
 export function isHiddenLedgerStatus(event) {
   const status = String(event.status || event.raw?.payStatus || '').trim().toLowerCase();
-  return status === 'complete' || status === 'event complete' || status === 'event complete balance late';
+  return [
+    'complete',
+    'event complete',
+    'cancelled',
+    'canceled',
+    'not likely to continue',
+  ].includes(status);
 }
 
 function isUsableLocation(value) {
   const text = String(value || '').trim();
   return text && !/^tbd\b|to be determined/i.test(text);
-}
-
-function getEventTypeVisual(eventType) {
-  const key = String(eventType || '').toLowerCase();
-  if (key.includes('private')) return { icon: PartyPopper, color: '#b58bff' };
-  if (key.includes('corporate')) return { icon: BriefcaseBusiness, color: '#6ab7ff' };
-  if (key.includes('wedding')) return { icon: Heart, color: '#ff7fb8' };
-  if (key.includes('fundraiser')) return { icon: Users, color: '#7fd29a' };
-  return { icon: ScrollText, color: '#f1b56f' };
 }
 
 function normalizeDisplayName(name) {
@@ -61,15 +54,10 @@ function formatDate(value) {
 function formatTime(value) {
   const text = String(value || '').trim();
   if (!text) return '';
-  const clock = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?/);
-  const simple = text.match(/^(\d{1,2}):(\d{2})/);
-  const match = clock || simple;
+  const match = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?/) || text.match(/^(\d{1,2}):(\d{2})/);
   if (!match) return '';
   const hour24 = Number(match[1]);
-  const minutes = match[2];
-  const hour12 = hour24 % 12 || 12;
-  const suffix = hour24 >= 12 ? 'PM' : 'AM';
-  return `${hour12}:${minutes} ${suffix}`;
+  return `${hour24 % 12 || 12}:${match[2]} ${hour24 >= 12 ? 'PM' : 'AM'}`;
 }
 
 function getAddressLines(raw) {
@@ -81,25 +69,7 @@ function getAddressLines(raw) {
   return [venue, ...addressParts].filter(Boolean);
 }
 
-function buildCalendarUrl(event) {
-  const raw = event.raw || {};
-  const parsed = new Date(raw.eventDate || event.eventDate);
-  const dates = Number.isNaN(parsed.getTime())
-    ? ''
-    : `${parsed.toISOString().slice(0, 10).replaceAll('-', '')}/${parsed.toISOString().slice(0, 10).replaceAll('-', '')}`;
-  const title = [event.clientName, raw.eventType].filter(Boolean).join(' ');
-  const details = [`Phone: ${raw.contactPhone || '-'}`, `Email: ${raw.email || '-'}`].join('\n');
-  const url = new URL('https://calendar.google.com/calendar/render');
-  url.searchParams.set('action', 'TEMPLATE');
-  url.searchParams.set('text', title || 'Anatomy Event');
-  if (dates) url.searchParams.set('dates', dates);
-  if (raw.eventAddress) url.searchParams.set('location', raw.eventAddress);
-  url.searchParams.set('details', details);
-  return url.toString();
-}
-
-export function EventCard({ event, onAction, showAdminMoney = false }) {
-  const showMoney = showAdminMoney && !isOpenStatus(event);
+export function EventCard({ event, onAction }) {
   const totals = computePricing(formFromEvent(event));
   const raw = event.raw || {};
   const location = raw.eventAddress || raw.venueName || '';
@@ -109,7 +79,6 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
   const eventColor = eventVisual.color;
   const eventDate = formatDate(raw.eventDate || event.eventDate);
   const eventTime = formatTime(raw.eventStartTime);
-  const dateLine = [eventDate, eventTime ? `Event ${eventTime}` : ''].filter(Boolean).join(' • ');
   const addressLines = getAddressLines(raw);
   const artistNames = splitNames(raw.artistNames);
 
@@ -119,9 +88,13 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
         <div className="event-type-dot" style={{ borderColor: eventColor }}>
           <EventIcon size={14} color={eventColor} />
         </div>
+        {totals.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? (
+          <span className="corporate-pricing-symbol" title="Corporate pricing" aria-label="Corporate pricing">$</span>
+        ) : null}
         <h2 style={{ color: eventColor }}>{event.clientName}</h2>
+        {eventDate ? <span className="event-card__date" style={{ color: eventColor }}>{eventDate}</span> : null}
       </div>
-      {dateLine ? <p className="event-card__date" style={{ color: eventColor }}>{dateLine}</p> : null}
+      {eventTime ? <p className="event-card__time" style={{ color: eventColor }}>Event {eventTime}</p> : null}
 
       <div className="event-card__venue-row">
         <div className="event-card__venue">
@@ -147,19 +120,6 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
         )}
       </div>
 
-      {showMoney ? (
-        <div className="amount-row">
-          <div>
-            <span>Computed Total</span>
-            <strong>{formatMoney(totals.totalCharge)}</strong>
-          </div>
-          <div>
-            <span>Balance</span>
-            <strong>{event.balanceDue || formatMoney(totals.balanceDue)}</strong>
-          </div>
-        </div>
-      ) : null}
-
       {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
 
       <div className="event-card__bottom-row">
@@ -170,10 +130,6 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
             </button>
           ))}
         </div>
-        <a className="calendar-compact-button" href={buildCalendarUrl(event)} target="_blank" rel="noreferrer">
-          <CalendarPlus size={14} />
-          Add to Google Calendar
-        </a>
         {isUsableLocation(location) ? (
           <a className="map-compact-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`} target="_blank" rel="noreferrer" aria-label="Open map">
             <MapPin size={15} />
@@ -181,10 +137,6 @@ export function EventCard({ event, onAction, showAdminMoney = false }) {
         ) : null}
       </div>
 
-      <div className="appointment-footer">
-        <span>Next Appt: {raw.manualUpcomingAppointment ? new Date(raw.manualUpcomingAppointment).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No upcoming appointment found'}</span>
-        <span>Last Appt: No previous appointment found</span>
-      </div>
     </article>
   );
 }

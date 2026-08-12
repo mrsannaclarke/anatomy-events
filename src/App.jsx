@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 
 import project from '../project.json';
-import { loadManualAppointments, sortLedgerEvents } from './activity.js';
-import { cacheViewer, clearCachedViewer, getCachedViewer, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
+import { sortLedgerEvents } from './activity.js';
+import { cacheViewer, clearCachedViewer, getCachedViewer, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
@@ -10,7 +11,10 @@ import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
 import { DetailPanel } from './panels/DetailPanel.jsx';
-import { pullEventsFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
+import { configurePricingSchedule } from './pricingMath.js';
+import { pullEventsFromSheet, pullPricingRulesFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
+
+const LAST_SHEET_SYNC_KEY = 'events-app-2.0:last-sheet-sync-at';
 
 function getProjectTitle() {
   return project?.project?.name || project?.name || 'Events App 2.0';
@@ -18,6 +22,7 @@ function getProjectTitle() {
 
 function GoogleSignInGate({ onSignedIn }) {
   const [authStatus, setAuthStatus] = useState('');
+  const [staySignedIn, setStaySignedIn] = useState(() => getStaySignedInPreference());
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +41,7 @@ function GoogleSignInGate({ onSignedIn }) {
           callback: (response) => {
             try {
               const viewer = viewerFromGoogleCredential(response.credential);
-              cacheViewer(viewer);
+              cacheViewer(viewer, response.credential, staySignedIn);
               onSignedIn(viewer);
             } catch (error) {
               setAuthStatus(error instanceof Error ? error.message : 'Google sign-in failed.');
@@ -50,6 +55,7 @@ function GoogleSignInGate({ onSignedIn }) {
           shape: 'rectangular',
           width: 260,
         });
+        if (staySignedIn) google.accounts.id.prompt();
       } catch (error) {
         if (!cancelled) setAuthStatus(error instanceof Error ? error.message : 'Google sign-in failed to load.');
       }
@@ -59,7 +65,7 @@ function GoogleSignInGate({ onSignedIn }) {
     return () => {
       cancelled = true;
     };
-  }, [onSignedIn]);
+  }, [onSignedIn, staySignedIn]);
 
   return (
     <main className="auth-screen">
@@ -68,9 +74,51 @@ function GoogleSignInGate({ onSignedIn }) {
         <h1>Events App 2.0</h1>
         <p>Sign in with your allowlisted Google account.</p>
         <div id="google-signin-button" className="google-signin-button" />
+        <label className="stay-signed-in-option">
+          <input type="checkbox" checked={staySignedIn} onChange={(event) => setStaySignedIn(event.target.checked)} />
+          <span>
+            <strong>Stay signed in</strong>
+            <small>Recommended when this app is installed on your device.</small>
+          </span>
+        </label>
         {authStatus ? <p className="save-status">{authStatus}</p> : null}
       </section>
     </main>
+  );
+}
+
+function formatSyncTime(value) {
+  if (!value) return 'Not updated yet';
+  const date = new Date(Number(value));
+  if (Number.isNaN(date.getTime())) return 'Not updated yet';
+  return `Updated ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+}
+
+function SheetSyncMenu({ syncStatus, syncError, lastSyncAt, onRefresh }) {
+  const isBusy = syncStatus === 'loading' || syncStatus === 'refreshing';
+  const statusLabel = syncError ? 'Sheet needs attention' : isBusy ? 'Updating Sheet data…' : formatSyncTime(lastSyncAt);
+
+  return (
+    <details className={syncError ? 'sheet-sync-menu has-error' : 'sheet-sync-menu'}>
+      <summary>
+        <span className="sheet-sync-indicator" aria-hidden="true" />
+        <strong>{statusLabel}</strong>
+        <span>Sheet menu</span>
+      </summary>
+      <div className="sheet-sync-menu__body">
+        <button type="button" className="secondary-button" onClick={onRefresh} disabled={isBusy}>
+          <RefreshCw size={16} className={isBusy ? 'is-spinning' : ''} />
+          {isBusy ? 'Refreshing…' : 'Refresh Sheet'}
+        </button>
+        <div className="sheet-sync-menu__status" aria-live="polite">
+          <strong>{formatSyncTime(lastSyncAt)}</strong>
+          {syncError ? <span>{syncError}</span> : <span>Sheet data is available.</span>}
+        </div>
+        {syncError ? (
+          <a href={SHEET_WEB_APP_URL} target="_blank" rel="noreferrer">Open Apps Script</a>
+        ) : null}
+      </div>
+    </details>
   );
 }
 
@@ -100,18 +148,54 @@ export function App() {
   });
   const [syncStatus, setSyncStatus] = useState('loading');
   const [syncError, setSyncError] = useState('');
+  const [lastSyncAt, setLastSyncAt] = useState(() => window.localStorage.getItem(LAST_SHEET_SYNC_KEY) || '');
+  const [pricingSource, setPricingSource] = useState('loading');
   const [activePage, setActivePage] = useState('events');
   const [detail, setDetail] = useState(null);
   const [viewer, setViewer] = useState(() => getCachedViewer());
-  const [manualAppointments, setManualAppointments] = useState(() => loadManualAppointments());
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(
+    () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
+  );
+
+  useEffect(() => {
+    function handleInstallPrompt(event) {
+      event.preventDefault();
+      setInstallPrompt(event);
+    }
+    function handleInstalled() {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+    }
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('appinstalled', handleInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
+  }, []);
+
+  async function installApp() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === 'accepted') setInstallPrompt(null);
+  }
 
   async function loadEvents() {
     setSyncStatus((current) => (events.length > 0 && current === 'connected' ? 'refreshing' : 'loading'));
     setSyncError('');
     try {
-      const sheetEvents = await pullEventsFromSheet();
+      const [sheetEvents, pricingRows] = await Promise.all([
+        pullEventsFromSheet(),
+        pullPricingRulesFromSheet().catch(() => null),
+      ]);
+      setPricingSource(pricingRows && configurePricingSchedule(pricingRows) ? 'live' : 'fallback');
       setEvents(sheetEvents);
       window.localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(sheetEvents));
+      const syncedAt = String(Date.now());
+      window.localStorage.setItem(LAST_SHEET_SYNC_KEY, syncedAt);
+      setLastSyncAt(syncedAt);
       setSyncStatus('connected');
     } catch (error) {
       setSyncError(error instanceof Error ? error.message : 'Unable to load events from sheet.');
@@ -132,10 +216,6 @@ export function App() {
     setDetail((current) => (current ? { ...current, event: savedEvent } : current));
   }
 
-  function handleManualAppointmentsChanged(nextManualAppointments) {
-    setManualAppointments(nextManualAppointments);
-  }
-
   function removeDeletedEvent(deletedEvent) {
     setEvents((current) => {
       const next = current.filter((event) => event.entryId !== deletedEvent.entryId);
@@ -150,8 +230,8 @@ export function App() {
     return navItems;
   }, [viewer?.isAllowlisted]);
   const visibleLedgerEvents = useMemo(
-    () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event)), manualAppointments),
-    [events, manualAppointments],
+    () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event))),
+    [events],
   );
 
   function signOut() {
@@ -202,31 +282,27 @@ export function App() {
       </aside>
 
       <section className="workspace">
-        {syncError ? (
-          <section className="sync-error" aria-live="polite">
-            <strong>Sheet connection issue</strong>
-            <span>{syncError}</span>
-            <a href={SHEET_WEB_APP_URL} target="_blank" rel="noreferrer">
-              Open Apps Script
-            </a>
-          </section>
-        ) : null}
-
         {detail ? (
           <DetailPanel
             detail={detail}
+            viewerEmail={viewer.email}
             onBack={() => setDetail(null)}
             onSaved={replaceSavedEvent}
             onDeleted={removeDeletedEvent}
-            onManualAppointmentsChanged={handleManualAppointmentsChanged}
             onChangeMode={(mode) => setDetail((current) => (current ? { ...current, mode } : current))}
           />
         ) : activePage === 'pricing' ? (
-          <PricingPage events={events} onSaved={replaceSavedEvent} />
+          <PricingPage events={events} pricingSource={pricingSource} onSaved={replaceSavedEvent} />
         ) : activePage === 'payout' ? (
           <PayoutPage events={events} viewer={viewer} />
         ) : activePage === 'admin' ? (
-          <AdminPage viewer={viewer} onOpenPage={setActivePage} onRefresh={loadEvents} />
+          <AdminPage
+            viewer={viewer}
+            onOpenPage={setActivePage}
+            canInstall={Boolean(installPrompt)}
+            isInstalled={isInstalled}
+            onInstall={installApp}
+          />
         ) : activePage === 'payoutLedger' ? (
           <PayoutLedgerPage events={events} viewer={viewer} onBack={() => setActivePage('admin')} />
         ) : activePage === 'events' ? (
@@ -237,7 +313,7 @@ export function App() {
                   <EventCard
                     key={event.id || event.clientName}
                     event={event}
-                    showAdminMoney={viewer.canAccessAdminTools}
+                    pricingSource={pricingSource}
                     onAction={(mode, selectedEvent) => setDetail({ mode, event: selectedEvent })}
                   />
                 ))
@@ -255,6 +331,7 @@ export function App() {
           </section>
         )}
       </section>
+      <SheetSyncMenu syncStatus={syncStatus} syncError={syncError} lastSyncAt={lastSyncAt} onRefresh={loadEvents} />
     </main>
   );
 }

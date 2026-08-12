@@ -1,20 +1,22 @@
 # Anatomy Events
 
-Anatomy Events is an Expo app for managing tattoo event operations:
+Anatomy Events is a Vite/React web app for managing tattoo-event operations:
+
 - event ledger and status tracking
-- client details and pricing breakdowns
+- client details and pricing
 - staff assignments and payouts
-- admin payout ledger/audit tools
-- generated files workflow (contracts, licensing, uploaded art)
+- payout-ledger and admin tools
+- contracts, licensing, and uploaded-art links
 
-The app syncs with a Google Sheet via an Apps Script web app.
+Google Sheets is the operational data source through an authenticated Apps Script web app. The production frontend is hosted on Cloudflare Pages.
 
-## Tech
+## Technology
 
-- Expo + React Native + Expo Router
-- TypeScript
-- Google OAuth (via `expo-auth-session`)
-- Google Sheets/Apps Script backend
+- React 19 and Vite
+- Google Identity Services
+- Google Sheets and Apps Script
+- Cloudflare Pages and Pages Functions
+- Progressive Web App manifest and service worker
 
 ## Local setup
 
@@ -24,76 +26,40 @@ The app syncs with a Google Sheet via an Apps Script web app.
 npm install
 ```
 
-2. Create `.env.local`:
+2. Configure `.env.local` using the existing `.env` variable names. Do not commit secrets.
+
+3. Start the local app:
 
 ```bash
-EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=YOUR_IOS_CLIENT_ID
-EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=YOUR_WEB_CLIENT_ID
-EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=YOUR_ANDROID_CLIENT_ID
+npm run dev
 ```
 
-3. Start the app:
+## Validation
+
+Run both checks before publishing:
 
 ```bash
-npm run web
-# or
-npm run ios
-# or
-npm run android
+npm run lint
+npm run build
 ```
 
-## Auth and app identifiers
+## Deployment
 
-Current identifiers in this repo:
-- iOS bundle id: `com.anatomytattoo.anatomyevents`
-- Android package: `com.anatomytattoo.anatomyevents`
-- App scheme: `anatomyevents`
-
-Google sign-in is enforced through allowlisted emails in:
-- `constants/auth-permissions.ts`
-
-## Backend integration
-
-Apps Script web app URL is configured in `app.json` under:
-- `expo.extra.sheetSyncWebAppUrl`
-
-Operational project context and continuity notes are tracked in:
-- `project.json`
-
-## Web deployment (GitHub Pages)
-
-This repo is configured for GitHub Pages deploys.
-
-- Base path: `/anatomy-events` (configured in `app.json`)
-- Deploy scripts:
-  - `npm run predeploy` -> `expo export -p web`
-  - `npm run deploy` -> publish `dist` to `gh-pages`
-
-Deploy steps:
+Publish the production build to Cloudflare Pages:
 
 ```bash
 npm run deploy
 ```
 
-Then in GitHub repo settings:
-- `Settings -> Pages`
-- Source: `Deploy from a branch`
-- Branch: `gh-pages` / root
+Production URL: <https://anatomy-events.pages.dev/>
 
-Expected URL:
-- `https://mrsannaclarke.github.io/anatomy-events/`
+Google OAuth must use the stable production origin. Temporary Cloudflare deployment URLs are not registered OAuth origins.
 
-## OAuth settings for web login
+## Backend
 
-For Google OAuth web client, include:
-- Authorized JavaScript origin: `https://mrsannaclarke.github.io`
-- Authorized redirect URI: `https://mrsannaclarke.github.io/anatomy-events/`
+The production Apps Script and spreadsheet identifiers are recorded in `project.json`. Frontend mutations pass through `functions/api/sheet.js`, which verifies the signed-in Google user before forwarding authorized writes.
 
-## Validation
+Operational rules and continuity notes are maintained in:
 
-Before pushing changes:
-
-```bash
-npm run lint
-npx tsc --noEmit
-```
+- `project.json`
+- `docs/app-rules.json`

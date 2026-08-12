@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "Anatomy Events",
-    "updated_at": "2026-06-04",
+    "updated_at": "2026-08-12",
     "owner": "Anna / Anatomy Tattoo",
     "canonical_rules_file": "docs/app-rules.json"
   },
@@ -14,8 +14,8 @@
     "templates_folder_id": "1wiu6KgqNpqr46R3GXbIqhWnzMaZky_WH",
     "sheet_id": "1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs",
     "script_id": "1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK",
-    "web_app_deployment_id": "AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg",
-    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbywkjIVhLk8D2ZnrMlIh5OGZNBYFeC4w3WMMVz-6irRqAfXVVchZAySyE2UPB0qLRHMVg/exec",
+    "web_app_deployment_id": "AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA",
+    "web_app_exec_url": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec",
     "weekly_sheet_url": "https://docs.google.com/spreadsheets/d/1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw/edit?gid=1568490049#gid=1568490049",
     "weekly_sheet_id": "1bfj1Ud6QDSCMVeVC7j-vg9O-2o4mRXSd2fzQWBYyMNw",
     "master_sheet_url": "https://docs.google.com/spreadsheets/d/1SqOSuyRKrsgJP4bBdt_Lz9ILa_xXG8o9JuasG6IQ-qk/edit?gid=168785747#gid=168785747",
@@ -309,13 +309,12 @@
   },
   "current_rules": {
     "home_page": {
-      "show": "all projects except complete/Event Complete/Event Complete Balance Late statuses",
-      "sort": "upcoming appointments first by soonest timestamp; past dated cards follow newest first; undated cards last by client name",
+      "show": "all projects except Complete, Event Complete, Cancelled/Canceled, and Not Likely to Continue statuses; Event Complete Balance Late remains visible as confirmed",
+      "sort": "confirmed statuses first and pending statuses second; each group sorts by event date soonest to latest, with undated cards last by client name",
       "sort_source_priority": [
-        "calendar upcoming match",
-        "manual upcoming appointment",
-        "fallback upcoming appointment",
-        "event date/start time"
+        "confirmed versus pending status group",
+        "event date",
+        "client name for undated or tied events"
       ],
       "ao_dropdown_values": [
         "Reply Sent",
@@ -341,11 +340,13 @@
         "Awaiting Follow Up",
         "Needing Changes",
         "Balance Invoice Sent",
+        "Invoice Paid in Full",
         "Cancelled",
         "Not Likely to Continue",
         "Event Complete",
         "Event Complete Balance Late"
       ],
+      "invoice_paid_in_full_rule": "Invoice Paid in Full means the client invoice has been fully paid. It is post-deposit but does not mark the event complete or make it payout-eligible.",
       "hidden_ao_values": [
         "Event Complete",
         "Event Complete Balance Late",
@@ -653,7 +654,7 @@
       "Admin promotion roster grouping (2026-04-17): Admin Promotion page now groups allowlisted rows by person display name, shows all login emails on the same row, and applies promote/remove actions across that person’s grouped login emails.",
       "Admin capability policy update (2026-04-17): admins can promote staff to admin but cannot remove admin promotions; only super admins can remove promotions. `anatomytattoo@gmail.com` remains admin for Admin/Audit access but is now blocked from payout surfaces (Pay tab + Payout Ledger) and from admin-promotion actions.",
       "Shy super-admin lock (2026-04-21): elevated `Shy` to `super_admin` in both `STAFF_PERMISSIONS` and Google allowlist entries (`ladyshytattoos@gmail.com`, `events.anatomytattoo@gmail.com`) so role no longer reverts to staff after session/promotion state changes.",
-      "Shy auth hard-pin (2026-04-21): added runtime guard in auth framework so `ladyshytattoos@gmail.com`, `events.anatomytattoo@gmail.com`, and `event.anatomytattoo@gmail.com` are always resolved as `super_admin` with admin visibility even if stale local session data exists.",
+      "Shy auth hard-pin (2026-04-21; corrected 2026-08-09): `ladyshytattoos@gmail.com` and `events.anatomytattoo@gmail.com` are always resolved as `super_admin`; nonexistent `event.anatomytattoo@gmail.com` was removed.",
       "UI polish + role lock pass (2026-04-17): added shared 3-second tap glow behavior to app buttons via `GlowPressable`, added a global rainbow sparkle dark-blue app background layer (with page canvases set transparent so cards/tables stay foreground), and locked Notes status editing to admin/super-admin while keeping status visible to staff.",
       "Staff assignment + ledger communication UX pass (2026-04-17): Staff Assignements now seeds artist chips immediately from local artist permissions (then merges live sheet artist list when it returns) to remove delayed artist chip load; Event Ledger cards now show latest staff `Communication Entry` preview at card bottom in a soft-highlight note format (`Staff • Date/Time • Message`) with display-only 300-character truncation.",
       "Rainbow sparkle visibility fix (2026-04-17): set tab navigator scene background to transparent so root sparkle layer is visible on all tab screens, restored dark-blue base in sparkle background, and increased orb/sparkle opacity for clearer effect.",
@@ -721,6 +722,26 @@
         "visibility": "developer_only",
         "intent": "Inspect allowlist, auth-type resolution, and framework state while auth is active."
       }
+    },
+    "selectable_pricing_methods": {
+      "date": "2026-08-09",
+      "status": "implemented_and_deployed",
+      "storage": "Events.Pricing Method stores Standard or Corporate / Walk-Up. collectFullPayout remains reserved for full-payment-versus-deposit behavior and must not store the pricing method.",
+      "methods": {
+        "STANDARD": "The hiring client pays the standard tattoo base plus all event modifiers.",
+        "CORPORATE_MODIFIERS": "The hiring client pays only counter staff, facility/admin licensing, custom flash, temporary tattoos, radius, extra hourly charges, and explicit adjustments. Walk-up tattoo pricing and sales are outside this app."
+      },
+      "calculation_effects": [
+        "Corporate / Walk-Up sets the client-facing tattoo base to zero.",
+        "Modifier calculations and their existing payout percentage rules remain active.",
+        "Corporate / Walk-Up has no deposit split; the complete company invoice is due in full.",
+        "The method is selectable in Pricing Calculator and Client Details and is saved with the event."
+      ],
+      "event_card_indicator": "Standard pricing has no badge. Corporate / Walk-Up shows a single gold $ between the event-type icon and client name.",
+      "walk_up_revenue_rule": "Artists keep walk-up tattoo revenue, but those transactions are never entered, estimated, reconciled, or reported anywhere in this system.",
+      "payout_rule": "Artist and counter allocations from the corporate company invoice use the live Pricing Rules row for the event's plan year and artist count; the shop receives the remainder.",
+      "proration_rule": "Corporate / Walk-Up never prorates the five-hour package or counter charge for shorter events; extra-hour charges begin only after five hours.",
+      "deployment_note": "Pricing Method was added to Events column AQ with Standard and Corporate / Walk-Up validation. Apps Script Version 78 was published on 2026-08-09 and verified to return pricingMethod independently from collectFullPayout."
     }
   },
   "planned_features": [
@@ -800,6 +821,21 @@
     "Do not use staging deployment @33 (`AKfycbyRO...`) for financial imports; it was validated as stale and can append duplicate ledger rows."
   ],
   "notes": [
+    "Google sign-in now offers Stay signed in, enabled by default and recommended for installed-app use. Persistent sessions store the viewer and current Google credential locally; session-only mode uses session storage, and Google expiration checks remain enforced.",
+    "Sheet refresh, last successful update time, connection status, and error details now live in a fixed collapsible menu at the bottom of every app screen. The duplicate Admin refresh action and page-top error banner were removed.",
+    "Accepted contract-signature automation: production Apps Script scans the generated-contracts Drive folder every 10 minutes, excludes TFL/license PDFs, matches a PDF to the existing Google Doc by normalized filename plus client name, selects the newest unambiguous match, and replaces Events > Contract URL. It does not infer Contract Signed. Skips and updates are written to Audit Log.",
+    "Generators & Files refreshes each event's file URLs from the Sheet when opened. If a generated Google Doc URL is replaced in the Sheet with a signature-request PDF URL, Contract > Open, Copy, and Email use that replacement PDF; generation remains disabled while any current contract URL exists.",
+    "Event type is assigned through the same color-coded icon-only picker in Pricing > New Client Entry and Client Details. The saved values remain Private, Corporate, Wedding, Fundraiser, or Other, and accessible labels are available to screen readers and on hover.",
+    "Secure Apps Script POST generation now handles generateContract and generateTfl. The frontend reloads the backend-updated event instead of redundantly overwriting the complete event after generation.",
+    "Generator UI recovers from a Cloudflare/Apps Script response timeout by reloading the event and accepting the operation as successful when the generated link was saved.",
+    "Computed Total and Balance were removed from the event-card face; money remains available in Client Details, Pricing, Pay, and Payout Ledger.",
+    "Event cards show the event date right-aligned on the same title row and at the same size as the client name; event time remains on the smaller line beneath it.",
+    "Apps Script production deployment was updated to Version 80 on 2026-08-12. Events now includes Manual Upcoming Appointment and the production API returns it as manualUpcomingAppointment.",
+    "The unused Expo/React Native source tree, Expo assets, GitHub Pages scripts, and Expo package snapshots were removed on 2026-08-12 after confirming the Cloudflare production build uses only src/, shared/, functions/, and public/.",
+    "ESLint now uses a maintained React/Vite flat configuration and runs through npm run lint.",
+    "Manual Upcoming Appointment is persisted in the Events sheet. Adding the first nonblank appointment automatically applies status New; changing an existing appointment preserves the current status.",
+    "The client-card appointment footer and Add to Google Calendar control were removed on 2026-08-12 because the calendar hook was unreliable and added card-face clutter.",
+    "Only admin@anatomytattoo.com receives per-entry delete controls for communication entries in the client-card feed; deletion requires confirmation and preserves other notes and event fields.",
     "Staff uses the app; customers do not.",
     "Staff can override customer inputs and pricing outputs before saving.",
     "When status becomes Event Complete/Cancelled, it should disappear from first page.",
@@ -809,7 +845,7 @@
   ],
   "events_app_2_0": {
     "client_card_pages": {
-      "date": "2026-06-04",
+      "date": "2026-08-09",
       "summary": "Events App 2.0 client-card button panels rebuilt as lightweight Vite/React panels. Client Details, Staff Assignments, Notes, and Generators & Files now open from event cards and use Sheet-backed helpers for save/delete/generate actions. Work remains partial until auth gating, live production mutation testing, exact routing semantics, manual appointments, art upload, and email/copy actions are completed.",
       "mobile_requirement": "Events App 2.0 pages must remain mobile-first/responsive; action rows stack, forms collapse to one column, and chip/link controls must remain reachable on narrow screens.",
       "parity_audit": "docs/frontend-parity-audit.md"
@@ -835,15 +871,40 @@
       "parity_audit": "docs/frontend-parity-audit.md"
     },
     "current_state": {
-      "date": "2026-06-04",
+      "date": "2026-08-09",
       "update_policy": "Keep this section current whenever Events App 2.0 functionality changes. If implementation differs from the rule map, mark it partial/blocked and do not leave the mismatch implicit.",
       "app_path": "/Users/Anna/Documents/Project Files/01 Active Projects/Events App 2.0",
       "local_url": "http://127.0.0.1:5173/",
-      "build_status": "npm run build passes with Vite; last verified 2026-06-04 after page parity pass.",
+      "build_status": "npm run build and Cloudflare Pages Functions compilation pass; production deployed and verified 2026-08-09 at https://anatomy-events.pages.dev/.",
       "source_of_truth": {
         "events": "Google Sheet via Apps Script action=events, action=event, action=upsertEvent, action=deleteEvent.",
         "pricing_rules": "Apps Script action=pricing is readable and used for payout percentage fallback rules.",
         "payout_overrides": "Blocked/partial: current 2.0 Apps Script source exposes Events/Pricing Rules but not legacy staff payout tabs, so payout pages use schedule fallback until live override rows are restored or replaced."
+      },
+      "audit_2026_08_09": {
+        "pwa_installability": {
+          "result": "implemented",
+          "detail": "The active Vite app now links public/manifest.webmanifest, provides 180px Apple and 192px/512px install icons, uses standalone display with Anatomy theme/background colors, registers a production service worker, and presents install guidance in Admin Tools.",
+          "cache_boundary": "The service worker caches only same-origin GET shell/static requests; /api routes, Apps Script requests, mutations, and authentication traffic are not cached. Navigation is network-first with the cached shell as an offline fallback."
+        },
+        "spreadsheet_writes": {
+          "result": "secured_pending_authenticated_mutation_test",
+          "evidence": "An unauthenticated upsertEventPartialJson request created diagnostic Entry ID CODEX-NONMUTATING-AUTH-CHECK in production Events row 25; an unauthenticated deleteEvent request then removed that exact row, and a follow-up action=event read confirmed it absent.",
+          "security_fix": "APP_SYNC_TOKEN was rotated into a normal Apps Script property and an encrypted Cloudflare Pages secret. React mutations now POST to /api/sheet with a short-lived Google credential; the Pages Function verifies Google's signature, client audience, issuer, expiry, verified email, shared allowlist, and allowed action before forwarding.",
+          "verification": "Direct anonymous Apps Script mutation now returns Unauthorized and creates no row. Unsigned Cloudflare proxy mutation returns Authentication failed and creates no row. The deployed app and event reads still load normally.",
+          "remaining_test": "Perform one signed-in save and delete of a disposable event through the production UI to verify the complete authorized proxy path."
+        },
+        "payout_rules": {
+          "result": "partial",
+          "verified": "The eight live Pricing Rules rows match src/pricingMath.js for 2025 and 2026 base rates, counter charges, custom flash fees, hourly rates, temporary tattoo fees, facility fees, deposit rate, radius rules, and percentage splits.",
+          "gap": "The payout pages use schedule fallback and percentage rules but cannot load authoritative live staff-tab payout overrides. Historical exceptions therefore depend on a small hard-coded map and may be wrong for events with sheet-level overrides not represented in code.",
+          "additional_caveat": "Resolved 2026-08-09: the live Pricing Rules feed now configures the complete React pricing engine and payout percentages; the bundled values are offline fallback only."
+        },
+        "custom_staff_names": {
+          "result": "implemented",
+          "detail": "Staff Assignments offers an Other write-in for tattooers and counter staff. The entered name replaces the Other marker in Events artistNames/counterNames and therefore joins the payout person dropdown derived from event assignments.",
+          "production_correction": "Entry 3545 (Shandra Knapstad) counterNames was corrected from Other to Marissa on 2026-08-09. The row update succeeded; the subsequent generated-artifact rebuild raised an existing undefined-length error and remains a separate Apps Script follow-up."
+        }
       },
       "frontend_structure": {
         "shell": "src/App.jsx",
@@ -1030,12 +1091,14 @@
       "permission_rules_implemented": {
         "full_payout_access_emails": [
           "events.anatomytattoo@gmail.com",
+          "ladyshytattoos@gmail.com",
           "tattoosbytomma@gmail.com",
           "admin@anatomytattoo.com",
           "mrs.annaclarke@gmail.com"
         ],
         "payout_default_person_by_email": {
           "events.anatomytattoo@gmail.com": "Shy",
+          "ladyshytattoos@gmail.com": "Shy",
           "tattoosbytomma@gmail.com": "Tomma",
           "admin@anatomytattoo.com": "Anna",
           "mrs.annaclarke@gmail.com": "Anna"
@@ -1235,11 +1298,33 @@
         },
         {
           "id": "production_mutation_testing",
-          "status": "pending",
+          "status": "partial",
           "title": "Production mutation testing",
-          "detail": "Save/delete/generate/new/overwrite are wired, but we have not deliberately tested them on a safe production row. Until then, those should stay partial."
+          "detail": "The authorization flaw was fixed on 2026-08-09: direct anonymous Apps Script writes and unsigned Cloudflare proxy writes are rejected without creating rows. One signed-in disposable-row save/delete through the production UI remains before full mutation parity can be marked verified."
         }
       ]
+    },
+    "automatic_event_payment_reconciliation": {
+      "date": "2026-08-09",
+      "status": "implemented_in_react_payout_ledger",
+      "rule": "For every completed, non-cancelled event: Gross = non-salaried staff paid + Tomma's shop-captured allocation + the shop's own earnings.",
+      "behavior": [
+        "When Total Charge is blank, gross is calculated automatically from the event and pricing schedule instead of using Balance Due.",
+        "Tomma remains visible as a tracked payout line, but her full event allocation is captured by the shop because she is salaried.",
+        "The shop's own earnings are calculated separately from Tomma and include all gross not allocated to staff payouts, such as facility fees, shop percentage shares, and adjustments.",
+        "Shop Total equals Tomma captured plus additional shop earnings.",
+        "Remainder is a reconciliation check and should be zero; a nonzero amount indicates over-allocation or incomplete pricing data."
+      ],
+      "verified_sample": {
+        "entry_id": "3545",
+        "client": "Shandra Knapstad",
+        "gross": 4270,
+        "staff_paid": 2080,
+        "tomma_captured": 1780,
+        "additional_shop_earnings": 410,
+        "shop_total": 2190,
+        "remainder": 0
+      }
     }
   }
 }

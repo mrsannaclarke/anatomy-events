@@ -1,9 +1,9 @@
-import { ClipboardList, ExternalLink, FileSpreadsheet, RefreshCw, ShieldCheck } from 'lucide-react';
+import { ClipboardList, Download, ExternalLink, FileSpreadsheet, ShieldCheck, Smartphone } from 'lucide-react';
 
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
 import project from '../../project.json';
 
-export function AdminPage({ viewer, onOpenPage, onRefresh }) {
+export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInstall }) {
   const canOpenPayoutLedger = FULL_PAYOUT_ACCESS_EMAILS.has(normalizeKey(viewer.email));
   const sheetUrl = project?.source_links?.sheet_url || '';
   const scriptUrl = project?.source_links?.script_url || '';
@@ -34,11 +34,19 @@ export function AdminPage({ viewer, onOpenPage, onRefresh }) {
           <span>Production web app deployment.</span>
           <ExternalLink size={14} />
         </a>
-        <button type="button" className="admin-action" onClick={onRefresh}>
-          <RefreshCw size={20} />
-          <strong>Refresh Sheet Data</strong>
-          <span>Pull current Event rows into the app cache.</span>
-        </button>
+        {canInstall ? (
+          <button type="button" className="admin-action" onClick={onInstall}>
+            <Download size={20} />
+            <strong>Install Events App</strong>
+            <span>Add the standalone app to this device.</span>
+          </button>
+        ) : (
+          <div className="admin-action install-guidance">
+            <Smartphone size={20} />
+            <strong>{isInstalled ? 'Events App Installed' : 'Install on iPhone or iPad'}</strong>
+            <span>{isInstalled ? 'This app is running from your home screen.' : 'In Safari, tap Share, then Add to Home Screen.'}</span>
+          </div>
+        )}
         {canOpenPayoutLedger ? (
           <button type="button" className="admin-action" onClick={() => onOpenPage('payoutLedger')}>
             <ClipboardList size={20} />

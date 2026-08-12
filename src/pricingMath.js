@@ -1,5 +1,18 @@
 export const BASE_INCLUDED_HOURS = 5;
 export const DEFAULT_BASE_ADDRESS = 'Anatomy Tattoo, Portland, OR';
+export const PRICING_METHOD_STANDARD = 'STANDARD';
+export const PRICING_METHOD_CORPORATE_MODIFIERS = 'CORPORATE_MODIFIERS';
+
+export function normalizePricingMethod(value) {
+  const normalized = String(value || '').trim().toUpperCase();
+  return normalized === PRICING_METHOD_CORPORATE_MODIFIERS || normalized === 'CORPORATE / WALK-UP'
+    ? PRICING_METHOD_CORPORATE_MODIFIERS
+    : PRICING_METHOD_STANDARD;
+}
+
+export function pricingMethodToSheetValue(value) {
+  return normalizePricingMethod(value) === PRICING_METHOD_CORPORATE_MODIFIERS ? 'Corporate / Walk-Up' : 'Standard';
+}
 
 export const PRICING_SCHEDULE = {
   2025: {
@@ -15,6 +28,39 @@ export const PRICING_SCHEDULE = {
     4: { baseRatePerArtist5h: 1300, counterPerArtist: 150, customFlashFeeEvent: 400, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
   },
 };
+
+export function configurePricingSchedule(pricingRows) {
+  if (!Array.isArray(pricingRows) || pricingRows.length === 0) return false;
+  const nextSchedule = {};
+  pricingRows.forEach((source) => {
+    const year = Number(source['Plan Year']);
+    const artists = Number(source.Artists);
+    if (!Number.isFinite(year) || !Number.isFinite(artists) || artists < 1) return;
+    if (!nextSchedule[year]) nextSchedule[year] = {};
+    nextSchedule[year][artists] = {
+      baseRatePerArtist5h: Number(source['Base Rate Per Artist (5h)']) || 0,
+      counterPerArtist: Number(source['Counter Per Artist (5h)']) || 0,
+      customFlashFeeEvent: Number(source['Custom Flash Fee (Event)']) || 0,
+      extraHourlyPerArtist: Number(source['Extra Hourly Per Artist']) || 0,
+      tempTattoosFee: Number(source['Temporary Tattoos Fee (Event)']) || 0,
+      facilityCityFee: Number(source['Facility City Fee']) || 0,
+      facilityAdminFee: Number(source['Facility Admin Fee']) || 0,
+      depositRatePct: Number(source['Deposit Rate %']) || 0,
+      freeRadiusMiles: Number(source['Radius Included Miles']) || 0,
+      radiusStepMiles: Number(source['Radius Step Miles']) || 0,
+      radiusStepFee: Number(source['Radius Step Fee']) || 0,
+    };
+  });
+  if (Object.keys(nextSchedule).length === 0) return false;
+  Object.keys(PRICING_SCHEDULE).forEach((year) => delete PRICING_SCHEDULE[year]);
+  Object.assign(PRICING_SCHEDULE, nextSchedule);
+  PLAN_YEARS.splice(0, PLAN_YEARS.length, ...Object.keys(nextSchedule).sort((a, b) => Number(b) - Number(a)));
+  const artistCounts = [...new Set(Object.values(nextSchedule).flatMap((schedule) => Object.keys(schedule)))].sort(
+    (a, b) => Number(a) - Number(b),
+  );
+  ARTIST_COUNTS.splice(0, ARTIST_COUNTS.length, ...artistCounts);
+  return true;
+}
 
 export const PLAN_YEARS = Object.keys(PRICING_SCHEDULE).sort((a, b) => Number(b) - Number(a));
 export const ARTIST_COUNTS = ['1', '2', '3', '4'];
@@ -94,11 +140,14 @@ export function computePricing(form) {
   const extraHours = Math.max(0, bookedHours - BASE_INCLUDED_HOURS);
   const travelDistance = Math.max(0, Number(form.travelDistance) || 0);
 
+  const pricingMethod = normalizePricingMethod(form.pricingMethod);
+  const isCorporateModifiers = pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS;
   const hasBaseInputs = Boolean(row && artistCount > 0 && bookedHours > 0);
-  const baseForFiveHours = hasBaseInputs ? row.baseRatePerArtist5h * artistCount : 0;
+  const standardBaseForFiveHours = hasBaseInputs ? row.baseRatePerArtist5h * artistCount : 0;
+  const baseForFiveHours = isCorporateModifiers ? 0 : standardBaseForFiveHours;
   const counterBaseCharge = hasBaseInputs ? row.counterPerArtist * artistCount : 0;
-  const shouldProrateBase = hasBaseInputs && bookedHours < BASE_INCLUDED_HOURS;
-  const shouldScaleCounterWithHours = hasBaseInputs && bookedHours !== BASE_INCLUDED_HOURS;
+  const shouldProrateBase = !isCorporateModifiers && hasBaseInputs && bookedHours < BASE_INCLUDED_HOURS;
+  const shouldScaleCounterWithHours = !isCorporateModifiers && hasBaseInputs && bookedHours !== BASE_INCLUDED_HOURS;
   const baseTotal = shouldProrateBase ? (baseForFiveHours / BASE_INCLUDED_HOURS) * bookedHours : baseForFiveHours;
   const counterStaffCharge = shouldScaleCounterWithHours ? (counterBaseCharge / BASE_INCLUDED_HOURS) * bookedHours : counterBaseCharge;
   const extraHourlyCharge = row ? row.extraHourlyPerArtist * artistCount * extraHours : 0;
@@ -113,7 +162,7 @@ export function computePricing(form) {
   const staffAdjustment = parseMoney(form.staffPriceAdjustment);
   const extrasTotal = counterStaffCharge + extraHourlyCharge + customFlashFee + temporaryTattooFee + tempFacilityLicenseFee + radiusFee;
   const totalCharge = Math.max(0, baseTotal + extrasTotal + staffAdjustment);
-  const depositRatePct = row?.depositRatePct || 30;
+  const depositRatePct = isCorporateModifiers ? 0 : row?.depositRatePct || 30;
   const depositRequired = totalCharge * (depositRatePct / 100);
   const balanceDue = Math.max(0, totalCharge - depositRequired);
   const freeRadiusMiles = row?.freeRadiusMiles ?? 20;
@@ -122,6 +171,8 @@ export function computePricing(form) {
 
   return {
     year,
+    pricingMethod,
+    isCorporateModifiers,
     artistCount,
     bookedHours,
     extraHours,
@@ -156,7 +207,11 @@ export function computePricing(form) {
 
 export function buildPricingSummaryRows(totals) {
   const rows = [
-    { label: 'Base Price (5 hours)', value: formatMoney(totals.baseForFiveHours), lead: true },
+    {
+      label: totals.isCorporateModifiers ? 'Tattoo Pricing (paid by walk-up clients)' : 'Base Price (5 hours)',
+      value: formatMoney(totals.baseForFiveHours),
+      lead: true,
+    },
     { label: 'Counter Staff (5 hours)', value: formatMoney(totals.counterBaseCharge), lead: true },
     { divider: true },
   ];
@@ -186,9 +241,16 @@ export function buildPricingSummaryRows(totals) {
     { label: 'Modifiers Total', value: formatMoney(totals.effectiveModifiersTotal), modifier: true },
     { divider: true },
     { label: 'Total', value: formatMoney(totals.totalCharge), total: true },
-    { label: `Deposit (${totals.depositRatePct.toFixed(0)}%)`, value: formatMoney(totals.depositRequired) },
-    { label: 'Balance', value: formatMoney(totals.balanceDue) },
   );
+
+  if (totals.isCorporateModifiers) {
+    rows.push({ label: 'Due in Full', value: formatMoney(totals.balanceDue) });
+  } else {
+    rows.push(
+      { label: `Deposit (${totals.depositRatePct.toFixed(0)}%)`, value: formatMoney(totals.depositRequired) },
+      { label: 'Balance', value: formatMoney(totals.balanceDue) },
+    );
+  }
 
   return rows;
 }
@@ -220,6 +282,7 @@ export function formFromEvent(event) {
   const bookedHoursFromTimes = deriveEventHours(raw.eventStartTime, raw.eventEndTime);
   return {
     year: String(raw.year || '2026'),
+    pricingMethod: normalizePricingMethod(raw.pricingMethod),
     numberOfArtists: String(raw.numberOfArtists || ''),
     bookedHours: hasEvent ? bookedHoursFromTimes || bookedHoursFromReason || String(BASE_INCLUDED_HOURS + extraHours) : '',
     customFlash: normalizeFlag(raw.customFlash),
@@ -240,6 +303,7 @@ export function buildPricingEvent(baseEvent, form, totals) {
   const event = {
     ...raw,
     year: form.year,
+    pricingMethod: pricingMethodToSheetValue(form.pricingMethod),
     numberOfArtists: form.numberOfArtists,
     customFlash: normalizeFlag(form.customFlash),
     customFlashFee: formatDecimal(totals.customFlashFee),

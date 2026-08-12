@@ -6,7 +6,7 @@ import { FilesPanel } from './FilesPanel.jsx';
 import { NotesPanel } from './NotesPanel.jsx';
 import { StaffAssignmentsPanel } from './StaffAssignmentsPanel.jsx';
 
-export function DetailPanel({ detail, onBack, onSaved, onDeleted, onManualAppointmentsChanged, onChangeMode }) {
+export function DetailPanel({ detail, viewerEmail, onBack, onSaved, onDeleted, onChangeMode }) {
   if (!detail) return null;
   const { mode, event } = detail;
   const activeAction = cardActions.find((action) => action.id === mode);
@@ -40,7 +40,7 @@ export function DetailPanel({ detail, onBack, onSaved, onDeleted, onManualAppoin
 
       {mode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSaved} onDeleted={onDeleted} /> : null}
       {mode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSaved} /> : null}
-      {mode === 'notes' ? <NotesPanel event={event} onSaved={onSaved} onManualAppointmentsChanged={onManualAppointmentsChanged} /> : null}
+      {mode === 'notes' ? <NotesPanel event={event} viewerEmail={viewerEmail} onSaved={onSaved} /> : null}
       {mode === 'files' ? <FilesPanel event={event} onSaved={onSaved} /> : null}
     </section>
   );
