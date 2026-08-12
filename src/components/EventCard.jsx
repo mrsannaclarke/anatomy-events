@@ -133,9 +133,9 @@ export function EventCard({ event, onAction }) {
       </div>
 
       <div className="event-card__meta-row">
-        <span className="event-card__status"><span style={{ background: eventColor }} />{event.status}</span>
         <span className="event-card__staff-group"><strong>Artists:</strong>{staffList(artistNames, raw.numberOfArtists || '0')}</span>
         <span className="event-card__staff-group"><strong>Counter:</strong>{staffList(counterNames, 'Unassigned')}</span>
+        <span className="event-card__status"><span style={{ background: eventColor }} />{event.status}</span>
       </div>
 
       {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
