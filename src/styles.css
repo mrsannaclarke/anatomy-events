@@ -1163,6 +1163,200 @@ nav button:hover {
   color: #bba99a;
 }
 
+/* Admin and Pay Schedule use the same warm dimensional language as the roster. */
+.admin-page .panel-heading,
+.pay-schedule-page .panel-heading {
+  background:
+    radial-gradient(circle at 92% 14%, rgb(199 127 107 / 11%), transparent 32%),
+    linear-gradient(135deg, #332b25, #28221e);
+  border-color: #675448;
+}
+
+.admin-page .panel-heading h2,
+.pay-schedule-page .panel-heading h2,
+.pay-schedule-page .section-title-tight {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.admin-action-grid {
+  gap: 16px;
+}
+
+.admin-action {
+  --admin-accent: #c77f6b;
+  background:
+    radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--admin-accent) 13%, transparent), transparent 38%),
+    linear-gradient(145deg, #302923, #27211d);
+  border-color: color-mix(in srgb, var(--admin-accent) 38%, #51443b);
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 18%);
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  min-height: 156px;
+  padding: 22px;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.admin-action--sheet { --admin-accent: #c77f6b; }
+.admin-action--script { --admin-accent: #d9ad62; }
+.admin-action--install { --admin-accent: #8fc9ad; }
+.admin-action--ledger { --admin-accent: #d77f98; }
+
+.admin-action > svg:first-child {
+  background: color-mix(in srgb, var(--admin-accent) 42%, #2b241f);
+  border: 1px solid color-mix(in srgb, var(--admin-accent) 66%, #51443b);
+  border-radius: 14px;
+  color: #fff3e4;
+  grid-row: 1 / span 3;
+  height: 54px;
+  padding: 14px;
+  width: 54px;
+}
+
+.admin-action > strong,
+.admin-action > span {
+  grid-column: 2;
+}
+
+.admin-action > strong {
+  align-self: end;
+  color: #f2e6d5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.admin-action > span {
+  align-self: start;
+  line-height: 1.45;
+}
+
+.admin-action > svg:last-child:not(:first-child) {
+  color: var(--admin-accent);
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.admin-action:hover {
+  background:
+    radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--admin-accent) 21%, transparent), transparent 42%),
+    linear-gradient(145deg, #382f28, #2c2520);
+  border-color: var(--admin-accent);
+  box-shadow: 0 18px 38px rgb(0 0 0 / 25%);
+  transform: translateY(-2px);
+}
+
+.pay-schedule-page > .tool-panel {
+  background:
+    linear-gradient(135deg, rgb(217 173 98 / 7%), transparent 45%),
+    linear-gradient(145deg, #302923, #27211d);
+  border-color: #675448;
+  border-radius: 15px;
+  padding: 18px;
+}
+
+.pay-schedule-page .field > span {
+  color: #c98a77;
+  letter-spacing: 0.06em;
+}
+
+.pay-schedule-page .field select,
+.pay-schedule-page .readonly-select {
+  min-height: 46px;
+}
+
+.pay-schedule-page .summary-grid {
+  gap: 14px;
+}
+
+.pay-schedule-page .pay-summary-card {
+  --pay-accent: #d9ad62;
+  background:
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--pay-accent) 18%, transparent), transparent 42%),
+    linear-gradient(145deg, #332b25, #28221e);
+  border-color: color-mix(in srgb, var(--pay-accent) 48%, #51443b);
+  border-radius: 15px;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 18%);
+  min-height: 108px;
+  padding: 20px;
+}
+
+.pay-summary-card--total { --pay-accent: #d9ad62; }
+.pay-summary-card--artist { --pay-accent: #c77f6b; }
+.pay-summary-card--counter { --pay-accent: #8fc9ad; }
+
+.pay-schedule-page .pay-summary-card span {
+  color: color-mix(in srgb, var(--pay-accent) 78%, #f2e6d5);
+  letter-spacing: 0.08em;
+}
+
+.pay-schedule-page .pay-summary-card strong {
+  color: #fff3e4;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.55rem, 2.4vw, 2rem);
+  font-weight: 500;
+}
+
+.pay-schedule-page .year-total-list {
+  border: 1px solid #51443b;
+  border-radius: 11px;
+  margin-top: 14px;
+}
+
+.pay-schedule-page .year-total-row {
+  background: rgb(33 29 25 / 72%);
+  padding: 13px 14px;
+}
+
+.pay-schedule-page .year-total-row + .year-total-row {
+  border-top: 1px solid #51443b;
+}
+
+.pay-schedule-page .year-total-row strong {
+  color: #d9ad62;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+}
+
+.pay-schedule-page .ledger-list {
+  gap: 16px;
+}
+
+.pay-schedule-page .ledger-list > .section-title-tight {
+  border-bottom: 1px solid #594a3f;
+  padding: 2px 2px 10px;
+}
+
+.pay-schedule-page .payout-event-card {
+  background:
+    radial-gradient(circle at 92% 8%, rgb(199 127 107 / 8%), transparent 34%),
+    linear-gradient(145deg, #302923, #27211d);
+  border-color: #594a3f;
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 18%);
+  padding: 20px 22px;
+}
+
+.pay-schedule-page .payout-title-row .event-type-dot {
+  background: color-mix(in srgb, currentColor 18%, #29231f);
+  height: 46px;
+  width: 46px;
+}
+
+.pay-schedule-page .payout-card-top strong {
+  color: #d9ad62;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.65rem;
+  font-weight: 500;
+}
+
+.pay-schedule-page .role-chip {
+  background: #49332c;
+  border-color: #805c4f;
+  color: #f6c1b2;
+}
+
 .pricing-summary {
   align-self: start;
   display: grid;

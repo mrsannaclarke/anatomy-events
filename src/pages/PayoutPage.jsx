@@ -151,7 +151,7 @@ export function PayoutPage({ events, viewer }) {
   }
 
   return (
-    <section className="page-stack">
+    <section className="page-stack pay-schedule-page">
       <div className="panel-heading">
         <div>
           <h2>Pay Schedule</h2>
@@ -189,15 +189,15 @@ export function PayoutPage({ events, viewer }) {
       </section>
 
       <section className="summary-grid">
-        <div>
+        <div className="pay-summary-card pay-summary-card--total">
           <span>Total</span>
           <strong>{formatPayout(totals.total)}</strong>
         </div>
-        <div>
+        <div className="pay-summary-card pay-summary-card--artist">
           <span>Artist</span>
           <strong>{formatPayout(totals.artist)}</strong>
         </div>
-        <div>
+        <div className="pay-summary-card pay-summary-card--counter">
           <span>Counter</span>
           <strong>{formatPayout(totals.counter)}</strong>
         </div>

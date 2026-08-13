@@ -9,7 +9,7 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
   const scriptUrl = project?.source_links?.script_url || '';
 
   return (
-    <section className="page-stack">
+    <section className="page-stack admin-page">
       <div className="panel-heading">
         <div>
           <h2>Admin Tools</h2>
@@ -22,33 +22,33 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
       </div>
 
       <section className="admin-action-grid">
-        <a className="admin-action" href={sheetUrl} target="_blank" rel="noreferrer">
+        <a className="admin-action admin-action--sheet" href={sheetUrl} target="_blank" rel="noreferrer">
           <FileSpreadsheet size={20} />
           <strong>Open Event Details gSheet</strong>
           <span>Production Sheet source of truth.</span>
           <ExternalLink size={14} />
         </a>
-        <a className="admin-action" href={scriptUrl} target="_blank" rel="noreferrer">
+        <a className="admin-action admin-action--script" href={scriptUrl} target="_blank" rel="noreferrer">
           <Code2 size={20} />
           <strong>Open Apps Script</strong>
           <span>Production web app deployment.</span>
           <ExternalLink size={14} />
         </a>
         {canInstall ? (
-          <button type="button" className="admin-action" onClick={onInstall}>
+          <button type="button" className="admin-action admin-action--install" onClick={onInstall}>
             <Download size={20} />
             <strong>Install Events App</strong>
             <span>Add the standalone app to this device.</span>
           </button>
         ) : (
-          <div className="admin-action install-guidance">
+          <div className="admin-action admin-action--install install-guidance">
             <Smartphone size={20} />
             <strong>{isInstalled ? 'Events App Installed' : 'Install on iPhone or iPad'}</strong>
             <span>{isInstalled ? 'This app is running from your home screen.' : 'In Safari, tap Share, then Add to Home Screen.'}</span>
           </div>
         )}
         {canOpenPayoutLedger ? (
-          <button type="button" className="admin-action" onClick={() => onOpenPage('payoutLedger')}>
+          <button type="button" className="admin-action admin-action--ledger" onClick={() => onOpenPage('payoutLedger')}>
             <ClipboardList size={20} />
             <strong>Open Payout Ledger</strong>
             <span>Completed-event shop totals and waterfall.</span>
