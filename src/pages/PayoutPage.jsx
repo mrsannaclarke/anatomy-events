@@ -56,7 +56,6 @@ export function PayoutPage({ events, viewer }) {
   const [selectedPerson, setSelectedPerson] = useState('');
   const [selectedYear, setSelectedYear] = useState('All');
   const [pricingPayoutMap, setPricingPayoutMap] = useState({});
-  const [syncStatus, setSyncStatus] = useState('loading');
 
   const canPickPerson = viewer.canViewFullPayout;
   const defaultPerson = viewer.name;
@@ -75,17 +74,14 @@ export function PayoutPage({ events, viewer }) {
 
   useEffect(() => {
     let mounted = true;
-    setSyncStatus('loading');
     pullPricingRulesFromSheet()
       .then((rows) => {
         if (!mounted) return;
         setPricingPayoutMap(buildPricingPayoutMap(rows));
-        setSyncStatus('ready');
       })
       .catch(() => {
         if (!mounted) return;
         setPricingPayoutMap({});
-        setSyncStatus('fallback');
       });
     return () => {
       mounted = false;
@@ -157,7 +153,6 @@ export function PayoutPage({ events, viewer }) {
           <h2>Pay Schedule</h2>
           <p>{canPickPerson ? 'Full payout picker enabled for this login.' : 'Access limited to your own and delegated payout schedules.'}</p>
         </div>
-        <span className="status-pill">{syncStatus === 'ready' ? 'Pricing rules live' : 'Schedule fallback'}</span>
       </div>
 
       <section className="tool-panel">
