@@ -16,7 +16,6 @@ import {
   formFromEvent,
   formatMoney,
   parseMoney,
-  PLAN_YEARS,
   PRICING_METHOD_CORPORATE_MODIFIERS,
   PRICING_METHOD_STANDARD,
   PRICING_SCHEDULE,
@@ -35,7 +34,7 @@ export function PricingPage({ events, pricingSource, onSaved }) {
   );
   const [form, setForm] = useState(() => formFromEvent(null));
   const [saveMode, setSaveMode] = useState('new');
-  const [newClient, setNewClient] = useState({ clientName: '', contactPhone: '', email: '', eventDate: '', eventType: '' });
+  const [newClient, setNewClient] = useState({ clientName: '', contactPhone: '', email: '', eventDate: '', eventType: '', venueName: '' });
   const [saveStatus, setSaveStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLookingUpMileage, setIsLookingUpMileage] = useState(false);
@@ -48,8 +47,8 @@ export function PricingPage({ events, pricingSource, onSaved }) {
 
   const totals = useMemo(() => computePricing(form), [form]);
   const summaryRows = useMemo(() => buildPricingSummaryRows(totals), [totals]);
-  const pricingSheetUrl = PRICING_SHEET_PUBLIC_URL_BY_YEAR[Number(form.year)] || PRICING_SHEET_PUBLIC_URL_BY_YEAR[2026];
-  const planRows = Object.entries(PRICING_SCHEDULE[Number(form.year)] || {}).sort(([left], [right]) => Number(left) - Number(right));
+  const pricingSheetUrl = PRICING_SHEET_PUBLIC_URL_BY_YEAR[2026];
+  const planRows = Object.entries(PRICING_SCHEDULE[2026] || {}).sort(([left], [right]) => Number(left) - Number(right));
 
   function updateForm(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -128,10 +127,10 @@ export function PricingPage({ events, pricingSource, onSaved }) {
   return (
     <section className="pricing-page">
       <section className="pricing-card">
-      <div className="panel-heading">
+        <div className="panel-heading">
           <div>
-            <h2>Price Plan</h2>
-            <p>Select the plan year to view base per-artist pricing.</p>
+            <h2>Pricing</h2>
+            <p>Current base per-artist pricing.</p>
           </div>
           <div className="panel-actions">
             <span className="status-pill">{pricingSource === 'live' ? 'Pricing Rules live' : 'Offline pricing fallback'}</span>
@@ -145,18 +144,7 @@ export function PricingPage({ events, pricingSource, onSaved }) {
             </a>
           </div>
         </div>
-        <div className="mode-tabs" role="radiogroup" aria-label="Price plan year">
-          {PLAN_YEARS.map((year) => (
-            <button key={year} type="button" className={String(form.year) === String(year) ? 'active' : ''} onClick={() => updateForm('year', year)}>
-              {year}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="pricing-card">
-        <h3>Plan {form.year}</h3>
-        <div className="plan-table" role="table" aria-label={`Plan ${form.year} pricing`}>
+        <div className="plan-table" role="table" aria-label="Current pricing">
           <div className="plan-table__row plan-table__row--head" role="row">
             <span role="columnheader">Artists</span>
             <span role="columnheader">Per Artist</span>
@@ -178,6 +166,48 @@ export function PricingPage({ events, pricingSource, onSaved }) {
           <h2>Pricing Calculator</h2>
           <p className="info-line">Modifiers and radius update automatically based on your inputs.</p>
         </div>
+
+        <div className="mode-tabs" role="tablist" aria-label="Pricing save mode">
+          {['new', 'import', 'overwrite'].map((mode) => (
+            <button key={mode} type="button" className={saveMode === mode ? 'active' : ''} onClick={() => setSaveMode(mode)}>
+              {mode === 'new' ? 'New Client Entry' : mode === 'import' ? 'Import' : 'Overwrite'}
+            </button>
+          ))}
+        </div>
+
+        {saveMode === 'new' ? (
+          <div className="form-grid">
+            <Field label="Client Name">
+              <input value={newClient.clientName} onChange={(event) => setNewClient((current) => ({ ...current, clientName: event.target.value }))} />
+            </Field>
+            <Field label="Client Phone">
+              <input value={newClient.contactPhone} onChange={(event) => setNewClient((current) => ({ ...current, contactPhone: event.target.value }))} />
+            </Field>
+            <Field label="Client Email">
+              <input value={newClient.email} onChange={(event) => setNewClient((current) => ({ ...current, email: event.target.value }))} />
+            </Field>
+            <Field label="Date of Event">
+              <input placeholder="MM/DD/YYYY" value={newClient.eventDate} onChange={(event) => setNewClient((current) => ({ ...current, eventDate: event.target.value }))} />
+            </Field>
+            <Field label="Venue Name">
+              <input value={newClient.venueName} onChange={(event) => setNewClient((current) => ({ ...current, venueName: event.target.value }))} />
+            </Field>
+            <Field label="Type of Event">
+              <EventTypePicker value={newClient.eventType} onChange={(eventType) => setNewClient((current) => ({ ...current, eventType }))} />
+            </Field>
+          </div>
+        ) : (
+          <Field label="Existing Client Entry">
+            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
+              <option value="">Select existing entry</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.clientName} {event.eventDate ? `- ${event.eventDate}` : ''}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field label="Pricing Method">
           <div className="mode-tabs" role="radiogroup" aria-label="Pricing method">
@@ -272,45 +302,6 @@ export function PricingPage({ events, pricingSource, onSaved }) {
             )}
           </dl>
         </aside>
-
-        <div className="mode-tabs" role="tablist" aria-label="Pricing save mode">
-          {['new', 'import', 'overwrite'].map((mode) => (
-            <button key={mode} type="button" className={saveMode === mode ? 'active' : ''} onClick={() => setSaveMode(mode)}>
-              {mode === 'new' ? 'New Client Entry' : mode === 'import' ? 'Import' : 'Overwrite'}
-            </button>
-          ))}
-        </div>
-
-        {saveMode === 'new' ? (
-          <div className="form-grid">
-            <Field label="Client Name">
-              <input value={newClient.clientName} onChange={(event) => setNewClient((current) => ({ ...current, clientName: event.target.value }))} />
-            </Field>
-            <Field label="Client Phone">
-              <input value={newClient.contactPhone} onChange={(event) => setNewClient((current) => ({ ...current, contactPhone: event.target.value }))} />
-            </Field>
-            <Field label="Client Email">
-              <input value={newClient.email} onChange={(event) => setNewClient((current) => ({ ...current, email: event.target.value }))} />
-            </Field>
-            <Field label="Date of Event">
-              <input placeholder="MM/DD/YYYY" value={newClient.eventDate} onChange={(event) => setNewClient((current) => ({ ...current, eventDate: event.target.value }))} />
-            </Field>
-            <Field label="Type of Event">
-              <EventTypePicker value={newClient.eventType} onChange={(eventType) => setNewClient((current) => ({ ...current, eventType }))} />
-            </Field>
-          </div>
-        ) : (
-          <Field label="Existing Client Entry">
-            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
-              <option value="">Select existing entry</option>
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.clientName} {event.eventDate ? `- ${event.eventDate}` : ''}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
 
         <div className="panel-actions">
           <button type="button" className="primary-button" onClick={savePricing} disabled={isSaving || (saveMode !== 'new' && !selectedEvent)}>
