@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, Heart, PartyPopper, ScrollText, Users } from 'lucide-react';
+import { BriefcaseBusiness, Check, Heart, PartyPopper, ScrollText, Users } from 'lucide-react';
 
 export const EVENT_TYPE_OPTIONS = [
   { value: 'Private', label: 'Private event', icon: PartyPopper, color: '#b58bff' },
@@ -34,6 +34,7 @@ export function EventTypePicker({ value, onChange, disabled = false }) {
             onClick={() => onChange(option.value)}
           >
             <Icon size={20} aria-hidden="true" />
+            {isSelected ? <Check className="event-type-choice__check" size={11} strokeWidth={3} aria-hidden="true" /> : null}
           </button>
         );
       })}

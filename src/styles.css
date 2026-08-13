@@ -672,6 +672,7 @@ nav button:hover {
   background: color-mix(in srgb, var(--event-type-color) 8%, #211d19);
   color: var(--event-type-color);
   cursor: pointer;
+  position: relative;
 }
 
 .event-type-choice:hover:not(:disabled) {
@@ -681,8 +682,24 @@ nav button:hover {
 
 .event-type-choice.selected {
   border-color: var(--event-type-color);
-  background: color-mix(in srgb, var(--event-type-color) 24%, #211d19);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--event-type-color) 28%, transparent);
+  background: color-mix(in srgb, var(--event-type-color) 58%, #211d19);
+  box-shadow:
+    0 0 0 2px #211d19,
+    0 0 0 4px color-mix(in srgb, var(--event-type-color) 72%, transparent),
+    0 8px 18px color-mix(in srgb, var(--event-type-color) 22%, transparent);
+  color: #fff3e4;
+  transform: translateY(-1px);
+}
+
+.event-type-choice__check {
+  background: #211d19;
+  border: 1px solid var(--event-type-color);
+  border-radius: 50%;
+  bottom: -5px;
+  color: #fff3e4;
+  padding: 1px;
+  position: absolute;
+  right: -5px;
 }
 
 .event-type-choice:focus-visible {
@@ -693,6 +710,10 @@ nav button:hover {
 .event-type-choice:disabled {
   cursor: default;
   opacity: 0.55;
+}
+
+.event-type-choice.selected:disabled {
+  opacity: 1;
 }
 
 .field {

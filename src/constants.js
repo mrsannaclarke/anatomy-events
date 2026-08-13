@@ -2,10 +2,10 @@ import {
   ClipboardList,
   DollarSign,
   FolderOpen,
+  Info,
   LayoutDashboard,
   NotebookPen,
   Settings,
-  UserRound,
   UserRoundCog,
 } from 'lucide-react';
 
@@ -19,7 +19,7 @@ export const navItems = [
 ];
 
 export const cardActions = [
-  { id: 'client', label: 'Client Details', icon: UserRound },
+  { id: 'client', label: 'Client Details', icon: Info },
   { id: 'staff', label: 'Staff Assignments', icon: UserRoundCog },
   { id: 'notes', label: 'Notes', icon: NotebookPen },
   { id: 'files', label: 'Generators & Files', icon: FolderOpen },
