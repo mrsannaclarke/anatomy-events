@@ -26,7 +26,7 @@ const PRICING_SHEET_PUBLIC_URL_BY_YEAR = {
   2026: 'https://drive.google.com/file/d/1RqB2DEuH_AFm1yirkpdhAYQBpCTunSj9/view?usp=drive_link',
 };
 
-export function PricingPage({ events, pricingSource, onSaved }) {
+export function PricingPage({ events, onSaved }) {
   const [selectedId, setSelectedId] = useState('');
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedId || event.entryId === selectedId) || null,
@@ -133,7 +133,6 @@ export function PricingPage({ events, pricingSource, onSaved }) {
             <p>Current base per-artist pricing.</p>
           </div>
           <div className="panel-actions">
-            <span className="status-pill">{pricingSource === 'live' ? 'Pricing Rules live' : 'Offline pricing fallback'}</span>
             <button type="button" className="secondary-button" onClick={() => navigator.clipboard?.writeText(pricingSheetUrl)}>
               <Copy size={16} />
               Share
@@ -160,7 +159,7 @@ export function PricingPage({ events, pricingSource, onSaved }) {
         </div>
       </section>
 
-      <section className="pricing-form pricing-form--single pending-scope">
+      <section className="pricing-form pending-scope">
         <PendingOverlay show={isSaving} label="Saving pricing to Sheet..." />
         <div>
           <h2>Pricing Calculator</h2>

@@ -698,10 +698,6 @@ nav button:hover {
   gap: 14px;
 }
 
-.pricing-form--single {
-  max-width: 820px;
-}
-
 .pricing-card h3,
 .pricing-form h2 {
   margin: 0;
