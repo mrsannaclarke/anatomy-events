@@ -164,6 +164,8 @@ export function EventCard({ event, onAction }) {
 
   return (
     <article className="event-card" style={{ '--event-color': eventColor }}>
+      <span className="event-card__corner event-card__corner--top" aria-hidden="true" />
+      <span className="event-card__corner event-card__corner--bottom" aria-hidden="true" />
       <div className="event-card__main">
         <div className="event-type-dot event-card__medallion" style={{ borderColor: eventColor }}>
           <EventIcon size={28} color="#fff3e4" strokeWidth={1.7} />

@@ -2180,7 +2180,76 @@ nav button:hover {
   border: 1px solid #594a3f;
   border-radius: 16px;
   box-shadow: 0 15px 34px rgb(0 0 0 / 20%);
+  overflow: hidden;
   padding: 26px 30px 20px;
+  position: relative;
+}
+
+.event-card > :not(.event-card__corner) {
+  position: relative;
+  z-index: 1;
+}
+
+.event-card__corner {
+  color: color-mix(in srgb, var(--event-color) 58%, #d9ad62);
+  height: 54px;
+  opacity: 0.38;
+  pointer-events: none;
+  position: absolute;
+  width: 54px;
+  z-index: 0;
+}
+
+.event-card__corner::before,
+.event-card__corner::after {
+  content: '';
+  position: absolute;
+}
+
+.event-card__corner::before {
+  border-color: currentColor;
+  border-style: solid;
+  height: 34px;
+  width: 34px;
+}
+
+.event-card__corner::after {
+  background: currentColor;
+  height: 7px;
+  transform: rotate(45deg);
+  width: 7px;
+}
+
+.event-card__corner--top {
+  right: 9px;
+  top: 9px;
+}
+
+.event-card__corner--top::before {
+  border-width: 1px 1px 0 0;
+  right: 0;
+  top: 0;
+}
+
+.event-card__corner--top::after {
+  right: 30px;
+  top: 30px;
+}
+
+.event-card__corner--bottom {
+  bottom: 9px;
+  left: 9px;
+}
+
+.event-card__corner--bottom::before {
+  border-width: 0 0 1px 1px;
+  bottom: 0;
+  left: 0;
+}
+
+.event-card__corner--bottom::after {
+  bottom: 30px;
+  left: 30px;
 }
 
 .event-card__main {
@@ -2377,6 +2446,32 @@ nav button:hover {
 
   .event-card {
     padding: 17px 18px 15px;
+  }
+
+  .event-card__corner {
+    height: 42px;
+    opacity: 0.3;
+    width: 42px;
+  }
+
+  .event-card__corner::before {
+    height: 27px;
+    width: 27px;
+  }
+
+  .event-card__corner::after {
+    height: 5px;
+    width: 5px;
+  }
+
+  .event-card__corner--top::after {
+    right: 24px;
+    top: 24px;
+  }
+
+  .event-card__corner--bottom::after {
+    bottom: 24px;
+    left: 24px;
   }
 
   .event-card__main {
