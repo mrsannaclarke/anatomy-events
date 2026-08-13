@@ -450,18 +450,38 @@ nav button:hover {
 
 .pending-overlay {
   align-items: center;
-  background: rgba(23, 21, 18, 0.78);
-  border-radius: 8px;
+  background: rgb(23 21 18 / 78%);
+  backdrop-filter: blur(3px);
   color: #f2e6d5;
-  display: grid;
-  gap: 10px;
+  display: flex;
   inset: 0;
-  justify-items: center;
-  min-height: 120px;
-  padding: 18px;
-  position: absolute;
+  justify-content: center;
+  overflow: hidden;
+  padding: 24px;
+  position: fixed;
   text-align: center;
-  z-index: 30;
+  z-index: 100;
+}
+
+.pending-overlay__card {
+  align-items: center;
+  background: linear-gradient(145deg, #342c26, #28221e);
+  border: 1px solid #6b574a;
+  border-radius: 16px;
+  box-shadow: 0 18px 46px rgb(0 0 0 / 38%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+  max-width: 340px;
+  min-height: 150px;
+  padding: 28px 30px;
+  width: min(100%, 340px);
+}
+
+.pending-overlay__card strong {
+  font-size: 0.98rem;
+  line-height: 1.35;
 }
 
 .pending-spinner {
@@ -1795,6 +1815,18 @@ nav button:hover {
 
 .pending-overlay {
   background: rgb(23 21 18 / 82%);
+}
+
+@media (max-width: 760px) {
+  .pending-overlay {
+    padding: 18px;
+  }
+
+  .pending-overlay__card {
+    min-height: 138px;
+    padding: 24px;
+    width: min(100%, 300px);
+  }
 }
 
 @media (max-width: 760px) {
