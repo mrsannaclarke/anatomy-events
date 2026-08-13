@@ -293,6 +293,7 @@ export function formFromEvent(event) {
     radiusFee: raw.radiusFee || '',
     travelDistance: raw.travelDistance || '',
     eventAddress: raw.eventAddress || '',
+    consultationNotes: raw.privateNotes || raw.contractNotes || '',
     staffPriceAdjustment: raw.staffPriceAdjustment || '',
     staffPriceAdjustmentReason: raw.staffPriceAdjustmentReason || '',
   };
@@ -313,6 +314,7 @@ export function buildPricingEvent(baseEvent, form, totals) {
     radiusFee: formatDecimal(totals.radiusFee),
     travelDistance: form.travelDistance,
     eventAddress: form.eventAddress,
+    internalNotes: form.consultationNotes,
     counterStaffCharge: formatDecimal(totals.counterStaffCharge),
     extraHours: totals.extraHours > 0 ? formatDecimal(totals.extraHours) : '0',
     extraHourlyCharge: formatDecimal(totals.extraHourlyCharge),

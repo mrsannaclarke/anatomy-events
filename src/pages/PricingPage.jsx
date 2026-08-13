@@ -208,6 +208,15 @@ export function PricingPage({ events, onSaved }) {
           </Field>
         )}
 
+        <Field label="Client / Consultation Notes">
+          <textarea
+            value={form.consultationNotes}
+            onChange={(event) => updateForm('consultationNotes', event.target.value)}
+            placeholder="Consultation details, client requests, preferences, or follow-up notes"
+          />
+          <span className="field-help">Saved to Client Notes on the Status &amp; Communication page.</span>
+        </Field>
+
         <Field label="Pricing Method">
           <div className="mode-tabs" role="radiogroup" aria-label="Pricing method">
             <button type="button" className={form.pricingMethod === PRICING_METHOD_STANDARD ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_STANDARD)}>
