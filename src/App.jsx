@@ -192,6 +192,11 @@ export function App() {
       ]);
       setPricingSource(pricingRows && configurePricingSchedule(pricingRows) ? 'live' : 'fallback');
       setEvents(sheetEvents);
+      setDetail((current) => {
+        if (!current?.event?.entryId) return current;
+        const refreshedEvent = sheetEvents.find((event) => event.entryId === current.event.entryId);
+        return refreshedEvent ? { ...current, event: refreshedEvent } : current;
+      });
       window.localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(sheetEvents));
       const syncedAt = String(Date.now());
       window.localStorage.setItem(LAST_SHEET_SYNC_KEY, syncedAt);
@@ -253,7 +258,16 @@ export function App() {
     <main className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/apple-touch-icon.png" alt="" />
+          <button
+            type="button"
+            className={syncStatus === 'loading' || syncStatus === 'refreshing' ? 'brand-refresh is-refreshing' : 'brand-refresh'}
+            onClick={loadEvents}
+            disabled={syncStatus === 'loading' || syncStatus === 'refreshing'}
+            title="Refresh current page"
+            aria-label="Refresh current page from Sheet"
+          >
+            <img src="/apple-touch-icon.png" alt="" />
+          </button>
           <div>
             <strong>Events App 3.0</strong>
             <span>{getProjectTitle()}</span>
