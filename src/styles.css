@@ -1363,6 +1363,33 @@ nav button:hover {
   text-align: right;
 }
 
+.event-card__date-group {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.event-card__calendar-link {
+  align-items: center;
+  border: 1px solid #675448;
+  border-radius: 8px;
+  color: #d6c7b9;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  text-decoration: none;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  width: 32px;
+}
+
+.event-card__calendar-link:hover {
+  background: #49332c;
+  border-color: #c77f6b;
+  color: #f6c1b2;
+}
+
 .event-card__time {
   font-size: 13px;
   font-weight: 700;
@@ -2188,8 +2215,22 @@ nav button:hover {
 
   .event-card__date {
     font-size: 0.9rem;
-    margin-left: auto;
     white-space: nowrap;
+  }
+
+  .event-card__date-group {
+    gap: 5px;
+  }
+
+  .event-card__calendar-link {
+    border-radius: 7px;
+    height: 28px;
+    width: 28px;
+  }
+
+  .event-card__calendar-link svg {
+    height: 15px;
+    width: 15px;
   }
 
   .event-card__time {

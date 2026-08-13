@@ -844,7 +844,7 @@
     "The unused Expo/React Native source tree, Expo assets, GitHub Pages scripts, and Expo package snapshots were removed on 2026-08-12 after confirming the Cloudflare production build uses only src/, shared/, functions/, and public/.",
     "ESLint now uses a maintained React/Vite flat configuration and runs through npm run lint.",
     "Manual Upcoming Appointment is persisted in the Events sheet. Adding the first nonblank appointment automatically applies status New; changing an existing appointment preserves the current status.",
-    "The client-card appointment footer and Add to Google Calendar control were removed on 2026-08-12 because the calendar hook was unreliable and added card-face clutter.",
+    "The old client-card appointment footer and synchronized calendar hook were removed on 2026-08-12. A new independent calendar icon beside each event date opens Google Calendar's prefilled event template using the saved client name, date, start/end times, venue/address, event type, assigned staff, and status; it does not create or synchronize appointments inside the app.",
     "Only admin@anatomytattoo.com receives per-entry delete controls for communication entries in the client-card feed; deletion requires confirmation and preserves other notes and event fields.",
     "Staff uses the app; customers do not.",
     "Staff can override customer inputs and pricing outputs before saving.",

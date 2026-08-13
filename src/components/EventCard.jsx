@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react';
+import { CalendarPlus, MapPin } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
 import { computePricing, formFromEvent, PRICING_METHOD_CORPORATE_MODIFIERS } from '../pricingMath.js';
@@ -65,6 +65,68 @@ function formatTime(value) {
   return `${hour24 % 12 || 12}:${match[2]} ${hour24 >= 12 ? 'PM' : 'AM'}`;
 }
 
+function parseCalendarDate(value) {
+  const text = String(value || '').trim();
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return { year: iso[1], month: iso[2], day: iso[3] };
+  const slash = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!slash) return null;
+  return {
+    year: slash[3].length === 2 ? `20${slash[3]}` : slash[3],
+    month: slash[1].padStart(2, '0'),
+    day: slash[2].padStart(2, '0'),
+  };
+}
+
+function parseCalendarTime(value) {
+  const text = String(value || '').trim();
+  const clock = text.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (!clock) return null;
+  let hour = Number(clock[1]);
+  const suffix = clock[3]?.toUpperCase();
+  if (suffix === 'AM' && hour === 12) hour = 0;
+  if (suffix === 'PM' && hour < 12) hour += 12;
+  return { hour, minute: Number(clock[2]) };
+}
+
+function calendarStamp(date, time) {
+  return `${date.year}${date.month}${date.day}T${String(time.hour).padStart(2, '0')}${String(time.minute).padStart(2, '0')}00`;
+}
+
+function addMinutes(time, minutesToAdd) {
+  const total = time.hour * 60 + time.minute + minutesToAdd;
+  return { hour: Math.floor((total % 1440) / 60), minute: total % 60 };
+}
+
+function nextCalendarDate(date) {
+  const next = new Date(Date.UTC(Number(date.year), Number(date.month) - 1, Number(date.day) + 1));
+  return `${next.getUTCFullYear()}${String(next.getUTCMonth() + 1).padStart(2, '0')}${String(next.getUTCDate()).padStart(2, '0')}`;
+}
+
+function buildGoogleCalendarUrl(event, artistNames, counterNames) {
+  const raw = event.raw || {};
+  const date = parseCalendarDate(raw.eventDate || event.eventDate);
+  if (!date) return '';
+  const start = parseCalendarTime(raw.eventStartTime);
+  const end = parseCalendarTime(raw.eventEndTime) || (start ? addMinutes(start, 60) : null);
+  const compactDate = `${date.year}${date.month}${date.day}`;
+  const dates = start && end ? `${calendarStamp(date, start)}/${calendarStamp(date, end)}` : `${compactDate}/${nextCalendarDate(date)}`;
+  const details = [
+    raw.eventType ? `Event type: ${raw.eventType}` : '',
+    artistNames.length ? `Artists: ${artistNames.join(', ')}` : '',
+    counterNames.length ? `Counter: ${counterNames.join(', ')}` : '',
+    event.status ? `Status: ${event.status}` : '',
+  ].filter(Boolean).join('\n');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${event.clientName} — Anatomy Events`,
+    dates,
+    location: [raw.venueName, raw.eventAddress].filter(Boolean).join(', '),
+    details,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 function getAddressLines(raw) {
   const venue = String(raw.venueName || '').trim();
   const addressParts = String(raw.eventAddress || '')
@@ -87,6 +149,7 @@ export function EventCard({ event, onAction }) {
   const addressLines = getAddressLines(raw);
   const artistNames = splitNames(raw.artistNames);
   const counterNames = splitNames(raw.counterNames);
+  const googleCalendarUrl = buildGoogleCalendarUrl(event, artistNames, counterNames);
 
   const staffList = (names, fallback) => (
     <span className="event-card__staff-list">
@@ -111,7 +174,16 @@ export function EventCard({ event, onAction }) {
               <span className="corporate-pricing-symbol" title="Corporate pricing" aria-label="Corporate pricing">$</span>
             ) : null}
             <h2>{event.clientName}</h2>
-            {eventDate ? <span className="event-card__date">{eventDate}</span> : null}
+            {eventDate ? (
+              <span className="event-card__date-group">
+                <span className="event-card__date">{eventDate}</span>
+                {googleCalendarUrl ? (
+                  <a className="event-card__calendar-link" href={googleCalendarUrl} target="_blank" rel="noreferrer" title="Add to Google Calendar" aria-label={`Add ${event.clientName} to Google Calendar`}>
+                    <CalendarPlus size={18} strokeWidth={1.8} />
+                  </a>
+                ) : null}
+              </span>
+            ) : null}
           </div>
           {eventTime ? <p className="event-card__time">Event {eventTime}</p> : null}
           {addressLines.length ? (
