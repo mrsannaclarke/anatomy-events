@@ -176,12 +176,12 @@ export function EventCard({ event, onAction }) {
             <h2>{event.clientName}</h2>
             {eventDate ? (
               <span className="event-card__date-group">
-                <span className="event-card__date">{eventDate}</span>
                 {googleCalendarUrl ? (
                   <a className="event-card__calendar-link" href={googleCalendarUrl} target="_blank" rel="noreferrer" title="Add to Google Calendar" aria-label={`Add ${event.clientName} to Google Calendar`}>
                     <CalendarPlus size={18} strokeWidth={1.8} />
                   </a>
                 ) : null}
+                <span className="event-card__date">{eventDate}</span>
               </span>
             ) : null}
           </div>

@@ -1373,21 +1373,22 @@ nav button:hover {
 
 .event-card__calendar-link {
   align-items: center;
-  border: 1px solid #675448;
-  border-radius: 8px;
-  color: #d6c7b9;
+  color: #c77f6b;
   display: inline-flex;
-  height: 32px;
   justify-content: center;
   text-decoration: none;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-  width: 32px;
+  transition: color 120ms ease, transform 120ms ease;
 }
 
 .event-card__calendar-link:hover {
-  background: #49332c;
-  border-color: #c77f6b;
   color: #f6c1b2;
+  transform: translateY(-1px);
+}
+
+.event-card__calendar-link:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #c77f6b;
+  outline-offset: 3px;
 }
 
 .event-card__time {
@@ -2223,9 +2224,7 @@ nav button:hover {
   }
 
   .event-card__calendar-link {
-    border-radius: 7px;
-    height: 28px;
-    width: 28px;
+    flex: 0 0 auto;
   }
 
   .event-card__calendar-link svg {
