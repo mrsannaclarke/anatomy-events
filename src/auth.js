@@ -38,10 +38,9 @@ export function normalizeKey(value) {
 
 export function getCachedViewer() {
   try {
-    const credential = getGoogleCredential();
-    if (!credential) return null;
-    const storage = getStaySignedInPreference() ? window.localStorage : window.sessionStorage;
-    const cached = JSON.parse(storage.getItem(AUTH_CACHE_KEY) || 'null');
+    const preferredStorage = getStaySignedInPreference() ? window.localStorage : window.sessionStorage;
+    const fallbackStorage = preferredStorage === window.localStorage ? window.sessionStorage : window.localStorage;
+    const cached = JSON.parse(preferredStorage.getItem(AUTH_CACHE_KEY) || fallbackStorage.getItem(AUTH_CACHE_KEY) || 'null');
     return cached?.authSource === 'google' && cached?.email ? normalizeViewer(cached) : null;
   } catch {
     return null;
@@ -70,6 +69,11 @@ export function clearCachedViewer() {
   window.sessionStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
 }
 
+function clearGoogleCredential() {
+  window.localStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
+  window.sessionStorage.removeItem(GOOGLE_CREDENTIAL_KEY);
+}
+
 export function getGoogleCredential() {
   const credential = window.localStorage.getItem(GOOGLE_CREDENTIAL_KEY)
     || window.sessionStorage.getItem(GOOGLE_CREDENTIAL_KEY)
@@ -79,12 +83,12 @@ export function getGoogleCredential() {
   try {
     const payload = decodeJwtPayload(credential);
     if (!payload.exp || Number(payload.exp) * 1000 <= Date.now()) {
-      clearCachedViewer();
+      clearGoogleCredential();
       return '';
     }
     return credential;
   } catch {
-    clearCachedViewer();
+    clearGoogleCredential();
     return '';
   }
 }

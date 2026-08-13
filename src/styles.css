@@ -88,29 +88,44 @@ button {
 
 .auth-screen {
   align-items: center;
-  background: #171512;
+  background:
+    radial-gradient(circle at 50% 22%, rgb(180 111 92 / 14%), transparent 34rem),
+    linear-gradient(145deg, #1c1815, #12110f 72%);
   display: grid;
   min-height: 100vh;
-  padding: 20px;
+  padding: 28px 18px;
 }
 
 .auth-card {
-  background: #211d19;
-  border: 1px solid #51443b;
-  border-radius: 8px;
+  background: linear-gradient(145deg, rgb(49 41 35 / 98%), rgb(36 31 27 / 98%));
+  border: 1px solid #665247;
+  border-radius: 22px;
+  box-shadow: 0 28px 70px rgb(0 0 0 / 42%), inset 0 1px rgb(255 255 255 / 5%);
   display: grid;
-  gap: 14px;
-  justify-items: start;
+  gap: 20px;
+  justify-items: center;
   margin: 0 auto;
-  max-width: 420px;
-  padding: 22px;
+  max-width: 460px;
+  overflow: hidden;
+  padding: 38px 34px 32px;
   width: 100%;
 }
 
-.auth-card img {
+.auth-emblem {
+  background: #201c18;
+  border: 1px solid #8c6658;
   border-radius: 50%;
-  height: 54px;
-  width: 54px;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 30%), 0 0 0 6px rgb(188 119 99 / 7%);
+  display: grid;
+  height: 84px;
+  place-items: center;
+  width: 84px;
+}
+
+.auth-emblem img {
+  border-radius: 50%;
+  height: 72px;
+  width: 72px;
 }
 
 .auth-card h1,
@@ -122,12 +137,54 @@ button {
   color: #bba99a;
 }
 
+.auth-heading {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  text-align: center;
+}
+
+.auth-heading > span {
+  color: #d78f7c;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.auth-heading h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 8vw, 38px);
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.auth-signin-panel {
+  background: rgb(24 21 18 / 58%);
+  border: 1px solid #51443b;
+  border-radius: 15px;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  width: 100%;
+}
+
+.google-signin-button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+  overflow: hidden;
+}
+
 .stay-signed-in-option {
   align-items: flex-start;
   color: #f2e6d5;
   cursor: pointer;
   display: flex;
   gap: 10px;
+  margin: 0 auto;
+  max-width: 300px;
+  width: 100%;
 }
 
 .stay-signed-in-option input {
@@ -141,6 +198,16 @@ button {
 .stay-signed-in-option strong,
 .stay-signed-in-option small {
   display: block;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 30px 20px 24px;
+  }
+
+  .auth-signin-panel {
+    padding: 18px 12px;
+  }
 }
 
 .stay-signed-in-option small {
@@ -1888,8 +1955,7 @@ nav button:hover {
   font-family: ui-rounded, "Avenir Next", "Nunito Sans", system-ui, sans-serif;
 }
 
-body,
-.auth-screen {
+body {
   background: #171512;
 }
 

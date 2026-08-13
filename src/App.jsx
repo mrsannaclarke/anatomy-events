@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react';
 
 import project from '../project.json';
 import { sortLedgerEvents } from './activity.js';
-import { cacheViewer, clearCachedViewer, getCachedViewer, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
+import { cacheViewer, clearCachedViewer, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
@@ -48,12 +48,15 @@ function GoogleSignInGate({ onSignedIn }) {
             }
           },
         });
-        google.accounts.id.renderButton(document.getElementById('google-signin-button'), {
+        const buttonHost = document.getElementById('google-signin-button');
+        if (!buttonHost) return;
+        buttonHost.replaceChildren();
+        google.accounts.id.renderButton(buttonHost, {
           theme: 'outline',
           size: 'large',
           text: 'signin_with',
-          shape: 'rectangular',
-          width: 260,
+          shape: 'pill',
+          width: 300,
         });
         if (staySignedIn) google.accounts.id.prompt();
       } catch (error) {
@@ -69,18 +72,23 @@ function GoogleSignInGate({ onSignedIn }) {
 
   return (
     <main className="auth-screen">
-      <section className="auth-card">
-        <img src="/apple-touch-icon.png" alt="" />
-        <h1>Events App 3.0</h1>
-        <p>Sign in with your allowlisted Google account.</p>
-        <div id="google-signin-button" className="google-signin-button" />
-        <label className="stay-signed-in-option">
-          <input type="checkbox" checked={staySignedIn} onChange={(event) => setStaySignedIn(event.target.checked)} />
-          <span>
-            <strong>Stay signed in</strong>
-            <small>Recommended when this app is installed on your device.</small>
-          </span>
-        </label>
+      <section className="auth-card auth-card--signin">
+        <div className="auth-emblem"><img src="/apple-touch-icon.png" alt="Anatomy Events" /></div>
+        <div className="auth-heading">
+          <span>Anatomy Events</span>
+          <h1>Events App 3.0</h1>
+          <p>Sign in with your approved Google account.</p>
+        </div>
+        <div className="auth-signin-panel">
+          <div id="google-signin-button" className="google-signin-button" />
+          <label className="stay-signed-in-option">
+            <input type="checkbox" checked={staySignedIn} onChange={(event) => setStaySignedIn(event.target.checked)} />
+            <span>
+              <strong>Keep me signed in</strong>
+              <small>Recommended for the installed app.</small>
+            </span>
+          </label>
+        </div>
         {authStatus ? <p className="save-status">{authStatus}</p> : null}
       </section>
     </main>
@@ -157,6 +165,32 @@ export function App() {
   const [isInstalled, setIsInstalled] = useState(
     () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
   );
+
+  useEffect(() => {
+    if (!viewer || !getStaySignedInPreference() || getGoogleCredential() || !GOOGLE_WEB_CLIENT_ID) return undefined;
+    let cancelled = false;
+
+    void loadGoogleIdentityScript().then((google) => {
+      if (cancelled) return;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_WEB_CLIENT_ID,
+        auto_select: true,
+        callback: (response) => {
+          if (cancelled || !response.credential) return;
+          const refreshedViewer = viewerFromGoogleCredential(response.credential);
+          cacheViewer(refreshedViewer, response.credential, true);
+          setViewer(refreshedViewer);
+        },
+      });
+      google.accounts.id.prompt();
+    }).catch(() => {
+      // The remembered viewer can still use the app; saving will request a fresh sign-in if needed.
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewer]);
 
   useEffect(() => {
     function handleInstallPrompt(event) {
@@ -240,6 +274,7 @@ export function App() {
   );
 
   function signOut() {
+    window.google?.accounts?.id?.disableAutoSelect();
     clearCachedViewer();
     setViewer(null);
     setDetail(null);
