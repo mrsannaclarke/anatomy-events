@@ -54,7 +54,12 @@ function formatDate(value) {
 function formatTime(value) {
   const text = String(value || '').trim();
   if (!text) return '';
-  const match = text.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::\d{2})?/) || text.match(/^(\d{1,2}):(\d{2})/);
+  const explicitClock = text.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (explicitClock) {
+    return `${Number(explicitClock[1]) || 12}:${explicitClock[2]} ${explicitClock[3].toUpperCase()}`;
+  }
+
+  const match = text.match(/T(\d{1,2}):(\d{2})(?::\d{2})?/) || text.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (!match) return '';
   const hour24 = Number(match[1]);
   return `${hour24 % 12 || 12}:${match[2]} ${hour24 >= 12 ? 'PM' : 'AM'}`;
