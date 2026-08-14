@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay } from '../payoutMath.js';
+import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay, sortPayoutLedgerCards } from '../payoutMath.js';
 import { pullPricingRulesFromSheet } from '../sheetClient.js';
 
 export function PayoutLedgerPage({ events, onBack }) {
@@ -24,7 +24,8 @@ export function PayoutLedgerPage({ events, onBack }) {
     () =>
       events
         .filter((event) => isCompletedForPay(event) && !isCancelledForPay(event))
-        .map((event) => calculateEventPayout(event, people, pricingPayoutMap)),
+        .map((event) => calculateEventPayout(event, people, pricingPayoutMap))
+        .sort(sortPayoutLedgerCards),
     [events, people, pricingPayoutMap],
   );
   const yearOptions = useMemo(() => {

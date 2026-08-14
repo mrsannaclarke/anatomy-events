@@ -44,6 +44,24 @@ export function getCompletedYear(event) {
   return String(parsed.getFullYear());
 }
 
+function getPayoutLedgerTimestamp(card) {
+  const event = card.event || {};
+  const raw = event.raw || event;
+  const value = raw.eventCompletedAt || raw.eventDate || event.eventDate || '';
+  const slashDate = String(value).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (slashDate) {
+    const year = Number(slashDate[3].length === 2 ? `20${slashDate[3]}` : slashDate[3]);
+    return Date.UTC(year, Number(slashDate[1]) - 1, Number(slashDate[2]));
+  }
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+}
+
+export function sortPayoutLedgerCards(left, right) {
+  return getPayoutLedgerTimestamp(right) - getPayoutLedgerTimestamp(left)
+    || left.event.clientName.localeCompare(right.event.clientName);
+}
+
 export function getPeopleFromEvents(events) {
   const people = [...STAFF_OPTIONS];
   events.forEach((event) => {
