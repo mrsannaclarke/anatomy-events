@@ -17,6 +17,12 @@
     "in_app_asset": "public/app-logo.png",
     "installed_icon_background": "#000000"
   },
+  "build_tooling": {
+    "vite": "8.2.1",
+    "react_plugin": "6.0.5",
+    "bundler": "Rolldown",
+    "upgraded_at": "2026-08-14"
+  },
   "source_links": {
     "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455",
     "script_url": "https://script.google.com/u/0/home/projects/1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK/edit",
