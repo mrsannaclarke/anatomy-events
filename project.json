@@ -13,8 +13,8 @@
     "security": "Cloudflare verifies either a fresh Google credential or the signed app-session cookie before forwarding Sheet mutations. Sign out clears both local viewer state and the server session cookie."
   },
   "branding": {
-    "logo_source": "AppLogo.png",
-    "in_app_asset": "public/app-logo-v2.png",
+    "logo_source": "AppLogo3.png",
+    "in_app_asset": "public/app-logo-v3.png",
     "installed_icon_background": "#000000"
   },
   "build_tooling": {
