@@ -42,7 +42,7 @@ button {
 .brand img {
   width: 42px;
   height: 42px;
-  border-radius: 50%;
+  object-fit: contain;
 }
 
 .brand-refresh {
@@ -123,8 +123,8 @@ button {
 }
 
 .auth-emblem img {
-  border-radius: 50%;
   height: 72px;
+  object-fit: contain;
   width: 72px;
 }
 

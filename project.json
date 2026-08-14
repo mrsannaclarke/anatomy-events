@@ -12,6 +12,11 @@
     "iphone_install": "Safari installation cannot be triggered programmatically. The Admin install card opens an in-app instruction sheet for Share > Add to Home Screen > Add.",
     "security": "Cloudflare verifies either a fresh Google credential or the signed app-session cookie before forwarding Sheet mutations. Sign out clears both local viewer state and the server session cookie."
   },
+  "branding": {
+    "logo_source": "AppLogo.png",
+    "in_app_asset": "public/app-logo.png",
+    "installed_icon_background": "#000000"
+  },
   "source_links": {
     "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455",
     "script_url": "https://script.google.com/u/0/home/projects/1SdEeFXiB9SoTJhncx5b8Sn5fGYT4nwhUE1eA2mD4FtJZ3Xr_E4Z6rjGK/edit",
