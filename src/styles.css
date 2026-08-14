@@ -2596,7 +2596,7 @@ nav button:hover {
   .event-card__actions {
     gap: 8px;
     grid-column: 2;
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 
   .event-card__actions button {
