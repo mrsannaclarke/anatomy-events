@@ -2584,20 +2584,36 @@ nav button:hover {
 
 @media (max-width: 430px) {
   .event-card__meta-row {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .event-card__meta-row > span {
-    padding: 6px 2px;
+    align-content: flex-start;
+    align-items: flex-start;
+    gap: 4px;
+    line-height: 1.25;
+    min-width: 0;
+    padding: 3px 6px;
   }
 
   .event-card__meta-row > span + span {
-    border-left: 0;
-    border-top: 1px solid rgb(89 74 63 / 65%);
+    border-left: 1px solid #594a3f;
+    border-top: 0;
   }
 
-  .event-card__meta-row > span:nth-child(3) {
-    grid-column: auto;
+  .event-card__meta-row > span:first-child {
+    padding-left: 2px;
+  }
+
+  .event-card__staff-list,
+  .event-card__staff-person {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .event-card__status {
+    overflow-wrap: anywhere;
   }
 }
 

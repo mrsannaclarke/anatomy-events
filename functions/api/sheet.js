@@ -9,7 +9,6 @@ const MUTATION_ACTIONS = new Set([
   'deleteEvent',
   'generateContract',
   'generateTfl',
-  'importUploadedArt',
   'uploadEventArt',
 ]);
 

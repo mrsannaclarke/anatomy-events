@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Copy, ExternalLink, Mail, Save, Upload } from 'lucide-react';
+import { Copy, ExternalLink, Mail, Upload } from 'lucide-react';
 
-import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { generateEventFile, importUploadedArt, pullEventByEntryId, uploadEventArt } from '../sheetClient.js';
+import { generateEventFile, pullEventByEntryId, uploadEventArt } from '../sheetClient.js';
 
 export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
-  const [artUrl, setArtUrl] = useState(raw.artImageUrl || '');
   const [fileUrls, setFileUrls] = useState(null);
   const [status, setStatus] = useState('');
   const [pendingLabel, setPendingLabel] = useState('');
@@ -32,7 +30,6 @@ export function FilesPanel({ event, onSaved }) {
         if (cancelled) return;
         if (!refreshed) throw new Error('The latest event record was not returned.');
         setFileUrls(urlsFromEvent(refreshed));
-        setArtUrl(refreshed.raw?.artImageUrl || '');
         setStatus('File links are current with the Sheet.');
       } catch (error) {
         if (cancelled) return;
@@ -101,28 +98,6 @@ export function FilesPanel({ event, onSaved }) {
     }
   }
 
-  async function saveArtUrl() {
-    if (!artUrl.trim()) {
-      setStatus('Paste an image or PDF URL first.');
-      return;
-    }
-    setStatus('Copying uploaded art into Drive...');
-    setPendingLabel('Copying uploaded art into Drive...');
-    try {
-      const result = await importUploadedArt(event.entryId, artUrl.trim());
-      const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
-      if (!refreshed) throw new Error('Art saved to Drive, but the refreshed event was not returned.');
-      setFileUrls(urlsFromEvent(refreshed));
-      setArtUrl(result.artUrl);
-      onSaved(refreshed);
-      setStatus('Uploaded art copied to Drive and connected to this client.');
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Failed to save art URL.');
-    } finally {
-      setPendingLabel('');
-    }
-  }
-
   async function uploadArtFile(input) {
     const file = input.target.files?.[0];
     input.target.value = '';
@@ -138,7 +113,6 @@ export function FilesPanel({ event, onSaved }) {
       const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
       if (!refreshed) throw new Error('Art uploaded, but the refreshed event was not returned.');
       setFileUrls(urlsFromEvent(refreshed));
-      setArtUrl(result.artUrl);
       onSaved(refreshed);
       setStatus('Uploaded art saved to Drive and connected to this client.');
     } catch (error) {
@@ -193,19 +167,12 @@ export function FilesPanel({ event, onSaved }) {
         ))}
       </div>
       <div className="art-upload-actions">
-        <label className="primary-button art-upload-button">
+        <label className="primary-button art-upload-button" aria-label="Upload image or PDF">
           <Upload size={16} />
-          Upload Image or PDF
-          <input type="file" accept="image/*,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel)} />
+          Choose Photo or File
+          <input type="file" accept="image/*,.pdf,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel)} />
         </label>
       </div>
-      <Field label="Or import from a URL">
-        <input placeholder="Paste an image, PDF, or Google Drive file URL" value={artUrl} onChange={(input) => setArtUrl(input.target.value)} />
-      </Field>
-      <button type="button" className="primary-button detail-save" onClick={saveArtUrl} disabled={Boolean(pendingLabel) || !artUrl.trim() || artUrl.trim() === fileUrls?.artImageUrl}>
-        <Save size={16} />
-        Import Art From URL
-      </button>
       {fileUrls?.artImageUrl ? (
         <section className="saved-art-preview">
           <h3>Saved Uploaded Art</h3>

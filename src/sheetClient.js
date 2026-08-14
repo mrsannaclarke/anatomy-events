@@ -14,7 +14,6 @@ const MUTATION_ACTIONS = new Set([
   'deleteEvent',
   'generateContract',
   'generateTfl',
-  'importUploadedArt',
   'uploadEventArt',
 ]);
 
@@ -221,12 +220,6 @@ export async function deleteEventFromSheet(event) {
 export async function generateEventFile(entryId, kind, options = {}) {
   const action = kind === 'tfl' ? 'generateTfl' : 'generateContract';
   return requestSheetJson({ action, entryId, revision: Boolean(options.revision) });
-}
-
-export async function importUploadedArt(entryId, sourceUrl) {
-  const data = await requestSheetJson({ action: 'importUploadedArt', entryId, sourceUrl });
-  if (!data.result?.artUrl) throw new Error('Drive import did not return a saved art link.');
-  return data.result;
 }
 
 export async function uploadEventArt(entryId, file) {
