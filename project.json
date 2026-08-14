@@ -2,9 +2,15 @@
   "project": {
     "name": "Anatomy Events",
     "app_name": "Events App 3.0",
-    "updated_at": "2026-08-12",
+    "updated_at": "2026-08-14",
     "owner": "Anna / Anatomy Tattoo",
     "canonical_rules_file": "docs/app-rules.json"
+  },
+  "session_and_install_behavior": {
+    "status": "implemented_2026-08-14",
+    "stay_signed_in": "Approved Google login creates a secure HttpOnly app session lasting 30 days; disabling Keep me signed in creates a browser-session-only cookie. Cached viewers no longer trigger an automatic Google prompt on launch.",
+    "iphone_install": "Safari installation cannot be triggered programmatically. The Admin install card opens an in-app instruction sheet for Share > Add to Home Screen > Add.",
+    "security": "Cloudflare verifies either a fresh Google credential or the signed app-session cookie before forwarding Sheet mutations. Sign out clears both local viewer state and the server session cookie."
   },
   "source_links": {
     "sheet_url": "https://docs.google.com/spreadsheets/d/1iT9aWn43FgKPKersRoj6LedLmrRCadtg3QrGL0joshs/edit?gid=1068094455#gid=1068094455",
