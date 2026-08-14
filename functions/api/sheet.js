@@ -67,6 +67,10 @@ export async function onRequest(context) {
     return jsonResponse({ ok: false, error: 'Action is not allowed through this endpoint.' }, 403);
   }
 
+  if (payload?.revision && email !== 'admin@anatomytattoo.com') {
+    return jsonResponse({ ok: false, error: 'Only the super admin can generate revised contracts.' }, 403);
+  }
+
   if (email !== 'admin@anatomytattoo.com' && action === 'upsertEvent' && payload?.event) {
     delete payload.event.balanceAddOnAmount;
     delete payload.event.balanceAddOnHistory;

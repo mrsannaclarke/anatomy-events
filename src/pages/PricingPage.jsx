@@ -5,7 +5,7 @@ import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
-import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
+import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
 import {
   ARTIST_COUNTS,
   buildPricingClipboardText,
@@ -57,6 +57,8 @@ export function PricingPage({ events, viewer, onSaved }) {
     && saveMode === 'overwrite'
     && selectedEvent
     && DEPOSIT_PAID_STATUSES.has(String(selectedEvent.raw?.status || selectedEvent.status || '').trim().toLowerCase());
+  const hasBalanceAddOnChanges = Boolean(canAddToPaidBalance)
+    && JSON.stringify(form.balanceAddOns) !== JSON.stringify(formFromEvent(selectedEvent).balanceAddOns);
 
   function updateForm(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -139,8 +141,22 @@ export function PricingPage({ events, viewer, onSaved }) {
         totalCharge: totals.totalCharge,
         balanceAfterDeposit: totals.balanceDue,
       });
-      onSaved(saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved);
-      setSaveStatus(saveMode === 'new' ? `Created ${saved.clientName} in Sheet.` : `Saved ${selectedEvent.clientName} to Sheet.`);
+      let refreshed = saved.entryId ? (await pullEventByEntryId(saved.entryId)) || saved : saved;
+      if (hasBalanceAddOnChanges && refreshed.entryId) {
+        setSaveStatus('Pricing saved. Generating revised contract...');
+        try {
+          await generateEventFile(refreshed.entryId, 'contract', { revision: true });
+          refreshed = (await pullEventByEntryId(refreshed.entryId)) || refreshed;
+          setSaveStatus(`Saved ${selectedEvent.clientName} and linked the revised contract.`);
+        } catch (generationError) {
+          onSaved(refreshed);
+          setSaveStatus(`Pricing was saved, but the revised contract failed: ${generationError instanceof Error ? generationError.message : 'Unknown generation error.'}`);
+          return;
+        }
+      } else {
+        setSaveStatus(saveMode === 'new' ? `Created ${saved.clientName} in Sheet.` : `Saved ${selectedEvent.clientName} to Sheet.`);
+      }
+      onSaved(refreshed);
     } catch (error) {
       setSaveStatus(error instanceof Error ? error.message : 'Failed to save pricing.');
     } finally {
@@ -378,7 +394,7 @@ export function PricingPage({ events, viewer, onSaved }) {
         <div className="panel-actions">
           <button type="button" className="primary-button" onClick={savePricing} disabled={isSaving || (saveMode !== 'new' && !selectedEvent)}>
             <Save size={16} />
-            {isSaving ? 'Saving...' : saveMode === 'import' ? 'Import' : saveMode === 'overwrite' ? 'Overwrite' : 'Save'}
+            {isSaving ? 'Saving...' : hasBalanceAddOnChanges ? 'Save Add-On & Generate Revised Contract' : saveMode === 'import' ? 'Import' : saveMode === 'overwrite' ? 'Overwrite' : 'Save'}
           </button>
         </div>
         {saveStatus ? <p className="save-status">{saveStatus}</p> : null}

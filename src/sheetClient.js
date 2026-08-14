@@ -217,9 +217,9 @@ export async function deleteEventFromSheet(event) {
   });
 }
 
-export async function generateEventFile(entryId, kind) {
+export async function generateEventFile(entryId, kind, options = {}) {
   const action = kind === 'tfl' ? 'generateTfl' : 'generateContract';
-  return requestSheetJson({ action, entryId });
+  return requestSheetJson({ action, entryId, revision: Boolean(options.revision) });
 }
 
 export async function importUploadedArt(entryId, sourceUrl) {
