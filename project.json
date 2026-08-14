@@ -1103,6 +1103,7 @@
           "events.anatomytattoo@gmail.com",
           "ladyshytattoos@gmail.com",
           "tattoosbytomma@gmail.com",
+          "anatomytattoo@gmail.com",
           "admin@anatomytattoo.com",
           "mrs.annaclarke@gmail.com"
         ],
@@ -1110,22 +1111,16 @@
           "events.anatomytattoo@gmail.com": "Shy",
           "ladyshytattoos@gmail.com": "Shy",
           "tattoosbytomma@gmail.com": "Tomma",
+          "anatomytattoo@gmail.com": "Tomma",
           "admin@anatomytattoo.com": "Anna",
           "mrs.annaclarke@gmail.com": "Anna"
         },
-        "delegated_pay_view": {
-          "Megan": [
-            "Jacob"
-          ],
-          "Tomma": [
-            "Kevin",
-            "Jayden",
-            "Veda"
-          ],
-          "Shy": [
-            "Jason"
-          ]
-        }
+        "ordinary_login_visibility": "own payout only",
+        "full_picker_people": [
+          "Anna",
+          "Shy",
+          "Tomma"
+        ]
       },
       "regression_checks": [
         "npm run build",
