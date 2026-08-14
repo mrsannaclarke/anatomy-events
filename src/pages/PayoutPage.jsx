@@ -51,7 +51,10 @@ function modifierItems(row) {
 }
 
 export function PayoutPage({ events, viewer }) {
-  const allPeople = useMemo(() => getPeopleFromEvents(events), [events]);
+  const allPeople = useMemo(
+    () => getPeopleFromEvents(events).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })),
+    [events],
+  );
   const selectablePeople = useMemo(() => getPayoutPeopleForViewer(viewer, allPeople), [allPeople, viewer]);
   const [selectedPerson, setSelectedPerson] = useState('');
   const [selectedYear, setSelectedYear] = useState('All');
@@ -151,7 +154,7 @@ export function PayoutPage({ events, viewer }) {
       <div className="panel-heading">
         <div>
           <h2>Pay Schedule</h2>
-          <p>{canPickPerson ? 'Full payout picker enabled for this login.' : 'Access limited to your own and delegated payout schedules.'}</p>
+          <p>{canPickPerson ? 'Full payout picker enabled for this login.' : 'Access limited to your own payout schedule.'}</p>
         </div>
       </div>
 

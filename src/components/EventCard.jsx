@@ -162,8 +162,26 @@ export function EventCard({ event, onAction }) {
     </span>
   );
 
+  function openClientDetails(inputEvent) {
+    if (inputEvent.target.closest('button, a, input, select, textarea')) return;
+    onAction('client', event);
+  }
+
   return (
-    <article className="event-card" style={{ '--event-color': eventColor }}>
+    <article
+      className="event-card event-card--clickable"
+      style={{ '--event-color': eventColor }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${event.clientName} client details`}
+      onClick={openClientDetails}
+      onKeyDown={(inputEvent) => {
+        if (inputEvent.target !== inputEvent.currentTarget) return;
+        if (inputEvent.key !== 'Enter' && inputEvent.key !== ' ') return;
+        inputEvent.preventDefault();
+        onAction('client', event);
+      }}
+    >
       <div className="event-card__main">
         <div className="event-type-dot event-card__medallion" style={{ borderColor: eventColor }}>
           <EventIcon size={28} color="#fff3e4" strokeWidth={1.7} />

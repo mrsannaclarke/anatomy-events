@@ -436,6 +436,22 @@ nav button:hover {
   padding: 16px;
 }
 
+.event-card--clickable {
+  cursor: pointer;
+}
+
+.event-card--clickable:focus-visible {
+  border-color: #c77f6b;
+  box-shadow: 0 0 0 3px rgb(199 127 107 / 24%), 0 15px 34px rgb(0 0 0 / 20%);
+  outline: 0;
+}
+
+.panel-actions--bottom {
+  border-top: 1px solid #51443b;
+  margin-top: 4px;
+  padding-top: 18px;
+}
+
 .pricing-page {
   display: grid;
   gap: 14px;

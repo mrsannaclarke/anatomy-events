@@ -1274,7 +1274,7 @@
           "id": "oauth_real_role_gates",
           "status": "implemented",
           "title": "OAuth / real role gates",
-          "detail": "2.0 now uses Google Identity Services sign-in, ignores stale local viewer fixtures, enforces the allowlist, gives all allowlisted users shared app/admin/client controls, and keeps full payout dropdown / payout ledger access limited to the configured full-payout email set. Deployed URL origins must still match the Google OAuth web client."
+          "detail": "3.0 uses Google Identity Services sign-in and the shared allowlist. Pay Schedule is own-person only for ordinary logins; Shy, Tomma, and Anna have the alphabetical full-person picker. anatomytattoo@gmail.com maps to Tomma, and admin@anatomytattoo.com maps to Anna. Deployed URL origins must still match the Google OAuth web client."
         },
         {
           "id": "external_calendar_feed_appointment_matching",
@@ -1290,9 +1290,9 @@
         },
         {
           "id": "actual_drive_art_upload",
-          "status": "pending",
+          "status": "implemented",
           "title": "Actual Drive art upload",
-          "detail": "2.0 can save an uploaded art URL, but it does not yet upload a file to Drive like the Expo app did."
+          "detail": "3.0 uploads phone photos, images, and PDFs directly to the shared generated-files Drive folder, writes the Drive URL to the event, and renders the saved art preview below the picker."
         },
         {
           "id": "audit_activity_log",

@@ -147,21 +147,6 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   return (
     <section className="detail-stack pending-scope">
       <PendingOverlay show={isSaving} label="Saving client details to Sheet..." />
-      <div className="panel-actions">
-        <button type="button" className="secondary-button" onClick={() => setIsEditable((value) => !value)}>
-          <Pencil size={16} />
-          {isEditable ? 'Lock' : 'Edit'}
-        </button>
-        <button type="button" className="primary-button" onClick={saveClientDetails} disabled={!isEditable || isSaving}>
-          <Save size={16} />
-          Save
-        </button>
-        <button type="button" className="danger-button" onClick={deleteCurrentEvent}>
-          <Trash2 size={16} />
-          Delete
-        </button>
-      </div>
-
       <section className="picker-section">
         <h3>Event Timing & Hours</h3>
         <div className="form-grid">
@@ -178,6 +163,20 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
           <Field label="Total Event Hours">
             <input disabled value={totalEventHours || 'Enter start and end times'} />
           </Field>
+        </div>
+      </section>
+
+      <section className="picker-section">
+        <h3>Client Information</h3>
+        <div className="detail-grid editable-grid">
+          {CLIENT_FIELD_CONFIG.filter(([key]) => key !== 'eventAddress').map(renderClientField)}
+        </div>
+        <div className="field-with-action">
+          {renderClientField(['eventAddress', 'Event Address'])}
+          <button type="button" className="secondary-button" onClick={lookupMileage} disabled={!isEditable || isLookingUpMileage}>
+            <Route size={16} />
+            {isLookingUpMileage ? 'Looking Up...' : 'Calculate Mileage'}
+          </button>
         </div>
       </section>
 
@@ -233,21 +232,22 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
         </div>
       </section>
 
-      <section className="picker-section">
-        <h3>Client Information</h3>
-        <div className="detail-grid editable-grid">
-          {CLIENT_FIELD_CONFIG.filter(([key]) => key !== 'eventAddress').map(renderClientField)}
-        </div>
-        <div className="field-with-action">
-          {renderClientField(['eventAddress', 'Event Address'])}
-          <button type="button" className="secondary-button" onClick={lookupMileage} disabled={!isEditable || isLookingUpMileage}>
-            <Route size={16} />
-            {isLookingUpMileage ? 'Looking Up...' : 'Calculate Mileage'}
-          </button>
-        </div>
-      </section>
-
       {status ? <p className="save-status">{status}</p> : null}
+
+      <div className="panel-actions panel-actions--bottom">
+        <button type="button" className="secondary-button" onClick={() => setIsEditable((value) => !value)}>
+          <Pencil size={16} />
+          {isEditable ? 'Lock' : 'Edit'}
+        </button>
+        <button type="button" className="primary-button" onClick={saveClientDetails} disabled={!isEditable || isSaving}>
+          <Save size={16} />
+          Save
+        </button>
+        <button type="button" className="danger-button" onClick={deleteCurrentEvent}>
+          <Trash2 size={16} />
+          Delete
+        </button>
+      </div>
     </section>
   );
 }

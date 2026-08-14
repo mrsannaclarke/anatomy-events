@@ -12,6 +12,7 @@ export const FULL_PAYOUT_ACCESS_EMAILS = new Set([
   'events.anatomytattoo@gmail.com',
   'ladyshytattoos@gmail.com',
   'tattoosbytomma@gmail.com',
+  'anatomytattoo@gmail.com',
   'admin@anatomytattoo.com',
   'mrs.annaclarke@gmail.com',
 ]);
@@ -20,14 +21,9 @@ export const PRIMARY_PAYOUT_PERSON_BY_EMAIL = {
   'events.anatomytattoo@gmail.com': 'Shy',
   'ladyshytattoos@gmail.com': 'Shy',
   'tattoosbytomma@gmail.com': 'Tomma',
+  'anatomytattoo@gmail.com': 'Tomma',
   'admin@anatomytattoo.com': 'Anna',
   'mrs.annaclarke@gmail.com': 'Anna',
-};
-
-export const STAFF_DELEGATES = {
-  Megan: ['Jacob'],
-  Tomma: ['Kevin', 'Jayden', 'Veda'],
-  Shy: ['Jason'],
 };
 
 export { ALLOWED_USERS };
@@ -149,8 +145,6 @@ function decodeJwtPayload(token) {
 
 export function getPayoutPeopleForViewer(viewer, allPeople = STAFF_OPTIONS) {
   if (!viewer?.canUsePayoutFramework) return [];
-  if (viewer.canViewFullPayout) return allPeople;
-  const ownName = viewer.name;
-  const delegates = STAFF_DELEGATES[ownName] || [];
-  return [ownName, ...delegates].filter(Boolean);
+  if (viewer.canViewFullPayout) return [...allPeople].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  return viewer.name ? [viewer.name] : [];
 }
