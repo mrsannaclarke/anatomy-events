@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, ExternalLink, Route, Save } from 'lucide-react';
+import { Copy, ExternalLink, Plus, Route, Save, Trash2 } from 'lucide-react';
 
 import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
@@ -26,7 +26,10 @@ const PRICING_SHEET_PUBLIC_URL_BY_YEAR = {
   2026: 'https://drive.google.com/file/d/1RqB2DEuH_AFm1yirkpdhAYQBpCTunSj9/view?usp=drive_link',
 };
 
-export function PricingPage({ events, onSaved }) {
+const BALANCE_ADD_ON_TYPES = ['Custom Flash', 'Temporary Tattoos', 'Extra Hours', 'Radius / Travel', 'Counter Staff', 'Licensing', 'Other'];
+const DEPOSIT_PAID_STATUSES = new Set(['deposit paid', 'temporary license submitted', 'temporary license received', 'awaiting follow up', 'needing changes', 'balance invoice sent', 'invoice paid in full', 'event complete', 'event complete balance late']);
+
+export function PricingPage({ events, viewer, onSaved }) {
   const [selectedId, setSelectedId] = useState('');
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedId || event.entryId === selectedId) || null,
@@ -38,6 +41,7 @@ export function PricingPage({ events, onSaved }) {
   const [saveStatus, setSaveStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLookingUpMileage, setIsLookingUpMileage] = useState(false);
+  const [addOnDraft, setAddOnDraft] = useState({ type: 'Custom Flash', amount: '', reason: '' });
 
   useEffect(() => {
     if (!selectedEvent) return;
@@ -49,9 +53,33 @@ export function PricingPage({ events, onSaved }) {
   const summaryRows = useMemo(() => buildPricingSummaryRows(totals), [totals]);
   const pricingSheetUrl = PRICING_SHEET_PUBLIC_URL_BY_YEAR[2026];
   const planRows = Object.entries(PRICING_SCHEDULE[2026] || {}).sort(([left], [right]) => Number(left) - Number(right));
+  const canAddToPaidBalance = viewer?.email?.toLowerCase() === 'admin@anatomytattoo.com'
+    && saveMode === 'overwrite'
+    && selectedEvent
+    && DEPOSIT_PAID_STATUSES.has(String(selectedEvent.raw?.status || selectedEvent.status || '').trim().toLowerCase());
 
   function updateForm(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function addBalanceAddOn() {
+    const amount = parseMoney(addOnDraft.amount);
+    if (amount <= 0 || !addOnDraft.reason.trim()) {
+      setSaveStatus('Enter an add-on amount and reason.');
+      return;
+    }
+    const lockedDepositAmount = String(form.lockedDepositAmount || selectedEvent?.raw?.depositRequired || '').trim();
+    setForm((current) => ({
+      ...current,
+      lockedDepositAmount,
+      balanceAddOns: [...current.balanceAddOns, { id: crypto.randomUUID(), type: addOnDraft.type, amount: amount.toFixed(2), reason: addOnDraft.reason.trim() }],
+    }));
+    setAddOnDraft({ type: 'Custom Flash', amount: '', reason: '' });
+    setSaveStatus('Add-on added. Click Overwrite to save it to the Sheet.');
+  }
+
+  function removeBalanceAddOn(id) {
+    setForm((current) => ({ ...current, balanceAddOns: current.balanceAddOns.filter((item) => item.id !== id) }));
   }
 
   async function lookupMileage() {
@@ -232,6 +260,42 @@ export function PricingPage({ events, onSaved }) {
               : 'The event client pays the standard tattoo base plus modifiers.'}
           </span>
         </Field>
+
+        {canAddToPaidBalance ? (
+          <section className="picker-section balance-add-on-section">
+            <div>
+              <h3>Balance Add-Ons</h3>
+              <p className="info-line">The paid deposit stays fixed. Add-ons increase only the remaining balance.</p>
+            </div>
+            <div className="form-grid">
+              <Field label="Add-On Type">
+                <select value={addOnDraft.type} onChange={(event) => setAddOnDraft((current) => ({ ...current, type: event.target.value }))}>
+                  {BALANCE_ADD_ON_TYPES.map((type) => <option key={type}>{type}</option>)}
+                </select>
+              </Field>
+              <Field label="Amount">
+                <input inputMode="decimal" placeholder="0.00" value={addOnDraft.amount} onChange={(event) => setAddOnDraft((current) => ({ ...current, amount: event.target.value }))} />
+              </Field>
+            </div>
+            <Field label="Reason">
+              <input placeholder="What changed?" value={addOnDraft.reason} onChange={(event) => setAddOnDraft((current) => ({ ...current, reason: event.target.value }))} />
+            </Field>
+            <button type="button" className="secondary-button" onClick={addBalanceAddOn}>
+              <Plus size={16} /> Add to Balance
+            </button>
+            {form.balanceAddOns.length ? (
+              <div className="feed-list">
+                {form.balanceAddOns.map((item) => (
+                  <div className="feed-row balance-add-on-row" key={item.id}>
+                    <span><strong>{item.type}</strong> — {item.reason}</span>
+                    <strong>{formatMoney(parseMoney(item.amount))}</strong>
+                    <button type="button" className="feed-delete-button" onClick={() => removeBalanceAddOn(item.id)} aria-label={`Remove ${item.type} add-on`}><Trash2 size={15} /></button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         <Field label="Number of Artists">
           <div className="mode-tabs" role="radiogroup" aria-label="Number of artists">

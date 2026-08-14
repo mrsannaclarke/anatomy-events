@@ -79,6 +79,16 @@ export function formatMoney(value) {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
+export function parseBalanceAddOns(value) {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(String(value || '[]'));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function formatDecimal(value) {
   if (!Number.isFinite(value) || Math.abs(value) < 0.000001) return '';
   return `${Number(value.toFixed(2))}`;
@@ -160,10 +170,13 @@ export function computePricing(form) {
       ? Math.ceil((travelDistance - row.freeRadiusMiles) / row.radiusStepMiles) * row.radiusStepFee
       : 0);
   const staffAdjustment = parseMoney(form.staffPriceAdjustment);
+  const balanceAddOns = parseBalanceAddOns(form.balanceAddOns);
+  const balanceAddOnsTotal = balanceAddOns.reduce((sum, item) => sum + parseMoney(item.amount), 0);
   const extrasTotal = counterStaffCharge + extraHourlyCharge + customFlashFee + temporaryTattooFee + tempFacilityLicenseFee + radiusFee;
-  const totalCharge = Math.max(0, baseTotal + extrasTotal + staffAdjustment);
+  const totalCharge = Math.max(0, baseTotal + extrasTotal + staffAdjustment + balanceAddOnsTotal);
   const depositRatePct = isCorporateModifiers ? 0 : row?.depositRatePct || 30;
-  const depositRequired = totalCharge * (depositRatePct / 100);
+  const hasLockedDeposit = String(form.lockedDepositAmount ?? '').trim() !== '';
+  const depositRequired = hasLockedDeposit ? Math.max(0, parseMoney(form.lockedDepositAmount)) : totalCharge * (depositRatePct / 100);
   const balanceDue = Math.max(0, totalCharge - depositRequired);
   const freeRadiusMiles = row?.freeRadiusMiles ?? 20;
   const travelDistanceLabel = travelDistance > 0 ? `${travelDistance.toFixed(1)} mi` : 'Not entered';
@@ -189,6 +202,9 @@ export function computePricing(form) {
     tempFacilityLicenseFee,
     radiusFee,
     staffAdjustment,
+    balanceAddOns,
+    balanceAddOnsTotal,
+    hasLockedDeposit,
     extrasTotal,
     effectiveModifiersTotal: extrasTotal + staffAdjustment,
     totalCharge,
@@ -239,6 +255,7 @@ export function buildPricingSummaryRows(totals) {
 
   rows.push(
     { label: 'Modifiers Total', value: formatMoney(totals.effectiveModifiersTotal), modifier: true },
+    ...totals.balanceAddOns.map((item) => ({ label: `Balance Add-On — ${item.type}${item.reason ? `: ${item.reason}` : ''}`, value: formatMoney(parseMoney(item.amount)), modifier: true })),
     { divider: true },
     { label: 'Total', value: formatMoney(totals.totalCharge), total: true },
   );
@@ -247,7 +264,7 @@ export function buildPricingSummaryRows(totals) {
     rows.push({ label: 'Due in Full', value: formatMoney(totals.balanceDue) });
   } else {
     rows.push(
-      { label: `Deposit (${totals.depositRatePct.toFixed(0)}%)`, value: formatMoney(totals.depositRequired) },
+      { label: totals.hasLockedDeposit ? 'Deposit Paid (locked)' : `Deposit (${totals.depositRatePct.toFixed(0)}%)`, value: formatMoney(totals.depositRequired) },
       { label: 'Balance', value: formatMoney(totals.balanceDue) },
     );
   }
@@ -294,6 +311,8 @@ export function formFromEvent(event) {
     travelDistance: raw.travelDistance || '',
     eventAddress: raw.eventAddress || '',
     consultationNotes: raw.privateNotes || raw.contractNotes || '',
+    balanceAddOns: parseBalanceAddOns(raw.balanceAddOnHistory),
+    lockedDepositAmount: raw.lockedDepositAmount || '',
     staffPriceAdjustment: raw.staffPriceAdjustment || '',
     staffPriceAdjustmentReason: raw.staffPriceAdjustmentReason || '',
   };
@@ -315,6 +334,9 @@ export function buildPricingEvent(baseEvent, form, totals) {
     travelDistance: form.travelDistance,
     eventAddress: form.eventAddress,
     internalNotes: form.consultationNotes,
+    balanceAddOnAmount: formatDecimal(totals.balanceAddOnsTotal),
+    balanceAddOnHistory: JSON.stringify(totals.balanceAddOns),
+    lockedDepositAmount: String(form.lockedDepositAmount ?? '').trim() ? formatDecimal(totals.depositRequired) : '',
     counterStaffCharge: formatDecimal(totals.counterStaffCharge),
     extraHours: totals.extraHours > 0 ? formatDecimal(totals.extraHours) : '0',
     extraHourlyCharge: formatDecimal(totals.extraHourlyCharge),

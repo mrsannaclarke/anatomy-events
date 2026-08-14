@@ -67,6 +67,12 @@ export async function onRequest(context) {
     return jsonResponse({ ok: false, error: 'Action is not allowed through this endpoint.' }, 403);
   }
 
+  if (email !== 'admin@anatomytattoo.com' && action === 'upsertEvent' && payload?.event) {
+    delete payload.event.balanceAddOnAmount;
+    delete payload.event.balanceAddOnHistory;
+    delete payload.event.lockedDepositAmount;
+  }
+
   const upstreamResponse = await fetch(env.SHEET_WEB_APP_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

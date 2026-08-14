@@ -698,6 +698,13 @@ nav button:hover {
   gap: 14px;
 }
 
+.balance-add-on-row {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
 .pricing-card h3,
 .pricing-form h2 {
   margin: 0;

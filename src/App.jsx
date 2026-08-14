@@ -341,7 +341,7 @@ export function App() {
             onChangeMode={(mode) => setDetail((current) => (current ? { ...current, mode } : current))}
           />
         ) : activePage === 'pricing' ? (
-          <PricingPage events={events} onSaved={replaceSavedEvent} />
+          <PricingPage events={events} viewer={viewer} onSaved={replaceSavedEvent} />
         ) : activePage === 'payout' ? (
           <PayoutPage events={events} viewer={viewer} />
         ) : activePage === 'admin' ? (

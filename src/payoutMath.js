@@ -96,14 +96,17 @@ export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
   const radiusShare = payoutRule.radiusArtistSharePct ?? 0.85;
   const extraHourlyShare = payoutRule.extraHourlyArtistSharePct ?? 0.8;
   const temporaryTattooShare = payoutRule.temporaryTattooArtistSharePct ?? 0.5;
+  const addOnAmount = (type) => totals.balanceAddOns
+    .filter((item) => normalizeNameKey(item.type) === normalizeNameKey(type))
+    .reduce((sum, item) => sum + parseMoney(item.amount), 0);
 
   const historical = HISTORICAL_PAYOUT_TRUTH[String(raw.entryId || '').trim()];
   let artistBasePayout = isArtist ? totals.baseTotal / artistCount : 0;
   let artistModifierBreakdown = {
-    customFlash: isArtist ? (totals.customFlashFee * customFlashShare) / artistCount : 0,
-    radius: isArtist ? (totals.radiusFee * radiusShare) / artistCount : 0,
-    temporaryTattoos: isArtist ? (totals.temporaryTattooFee * temporaryTattooShare) / artistCount : 0,
-    extraHourly: isArtist ? (totals.extraHourlyCharge * extraHourlyShare) / artistCount : 0,
+    customFlash: isArtist ? ((totals.customFlashFee + addOnAmount('Custom Flash')) * customFlashShare) / artistCount : 0,
+    radius: isArtist ? ((totals.radiusFee + addOnAmount('Radius / Travel')) * radiusShare) / artistCount : 0,
+    temporaryTattoos: isArtist ? ((totals.temporaryTattooFee + addOnAmount('Temporary Tattoos')) * temporaryTattooShare) / artistCount : 0,
+    extraHourly: isArtist ? ((totals.extraHourlyCharge + addOnAmount('Extra Hours')) * extraHourlyShare) / artistCount : 0,
     licensingSplit: 0,
   };
   if (historical && isArtist) {
@@ -119,7 +122,7 @@ export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
         };
   }
   const artistModifierPayout = Object.values(artistModifierBreakdown).reduce((sum, amount) => sum + amount, 0);
-  const counterPayout = isCounter ? parseMoney(raw.counterStaffCharge) / counterCount || totals.counterStaffCharge / counterCount : 0;
+  const counterPayout = isCounter ? (parseMoney(raw.counterStaffCharge) || totals.counterStaffCharge) / counterCount + addOnAmount('Counter Staff') / counterCount : 0;
   const artistPayout = artistBasePayout + artistModifierPayout;
 
   return {
