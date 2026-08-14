@@ -71,6 +71,17 @@ export async function establishAppSession(credential, staySignedIn = true) {
   return response.ok;
 }
 
+export async function getActiveAppViewer() {
+  const response = await fetch('/api/session', {
+    method: 'GET',
+    credentials: 'same-origin',
+  });
+  if (response.status === 401) return null;
+  if (!response.ok) throw new Error('Unable to verify the app session.');
+  const data = await response.json();
+  return data?.email ? normalizeViewer({ email: data.email }) : null;
+}
+
 export async function clearAppSession() {
   try {
     await fetch('/api/session', { method: 'DELETE', credentials: 'same-origin' });

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 import project from '../project.json';
 import { sortLedgerEvents } from './activity.js';
-import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
+import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, getActiveAppViewer, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
@@ -23,6 +23,11 @@ function getProjectTitle() {
 function GoogleSignInGate({ onSignedIn }) {
   const [authStatus, setAuthStatus] = useState('');
   const [staySignedIn, setStaySignedIn] = useState(() => getStaySignedInPreference());
+  const staySignedInRef = useRef(staySignedIn);
+
+  useEffect(() => {
+    staySignedInRef.current = staySignedIn;
+  }, [staySignedIn]);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,8 +46,10 @@ function GoogleSignInGate({ onSignedIn }) {
           callback: async (response) => {
             try {
               const viewer = viewerFromGoogleCredential(response.credential);
-              cacheViewer(viewer, response.credential, staySignedIn);
-              await establishAppSession(response.credential, staySignedIn);
+              const persistentSession = staySignedInRef.current;
+              const sessionCreated = await establishAppSession(response.credential, persistentSession);
+              if (!sessionCreated) throw new Error('The secure app session could not be created. Please try again.');
+              cacheViewer(viewer, response.credential, persistentSession);
               onSignedIn(viewer);
             } catch (error) {
               setAuthStatus(error instanceof Error ? error.message : 'Google sign-in failed.');
@@ -68,7 +75,7 @@ function GoogleSignInGate({ onSignedIn }) {
     return () => {
       cancelled = true;
     };
-  }, [onSignedIn, staySignedIn]);
+  }, [onSignedIn]);
 
   return (
     <main className="auth-screen">
@@ -160,16 +167,40 @@ export function App() {
   const [pricingSource, setPricingSource] = useState('loading');
   const [activePage, setActivePage] = useState('events');
   const [detail, setDetail] = useState(null);
-  const [viewer, setViewer] = useState(() => getCachedViewer());
+  const [viewer, setViewer] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(
     () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
   );
 
   useEffect(() => {
-    const credential = getGoogleCredential();
-    if (viewer && credential) void establishAppSession(credential, getStaySignedInPreference());
-  }, [viewer]);
+    let cancelled = false;
+
+    async function restoreSession() {
+      const cachedViewer = getCachedViewer();
+      const credential = getGoogleCredential();
+      try {
+        if (cachedViewer && credential) {
+          await establishAppSession(credential, getStaySignedInPreference());
+        }
+        const activeViewer = await getActiveAppViewer();
+        if (cancelled) return;
+        if (activeViewer) setViewer(activeViewer);
+        else clearCachedViewer();
+      } catch {
+        // Preserve the cached read-only experience when the device is offline.
+        if (!cancelled && cachedViewer) setViewer(cachedViewer);
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    }
+
+    void restoreSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function handleInstallPrompt(event) {
@@ -259,6 +290,21 @@ export function App() {
     setViewer(null);
     setDetail(null);
     setActivePage('events');
+  }
+
+  if (!authReady) {
+    return (
+      <main className="auth-screen">
+        <section className="auth-card auth-card--signin">
+          <div className="auth-emblem"><img src="/apple-touch-icon.png" alt="Anatomy Events" /></div>
+          <div className="auth-heading">
+            <span>Anatomy Events</span>
+            <h1>Events App 3.0</h1>
+            <p>Opening your app…</p>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   if (!viewer) {

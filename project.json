@@ -8,7 +8,7 @@
   },
   "session_and_install_behavior": {
     "status": "implemented_2026-08-14",
-    "stay_signed_in": "Approved Google login creates a secure HttpOnly app session lasting 30 days; disabling Keep me signed in creates a browser-session-only cookie. Cached viewers no longer trigger an automatic Google prompt on launch.",
+    "stay_signed_in": "Approved Google login creates a secure HttpOnly app session lasting 30 days; disabling Keep me signed in creates a browser-session-only cookie. Startup verifies that session before enabling the app, while preserving cached read-only access if the device is offline.",
     "iphone_install": "Safari installation cannot be triggered programmatically. The Admin install card opens an in-app instruction sheet for Share > Add to Home Screen > Add.",
     "security": "Cloudflare verifies either a fresh Google credential or the signed app-session cookie before forwarding Sheet mutations. Sign out clears both local viewer state and the server session cookie."
   },
