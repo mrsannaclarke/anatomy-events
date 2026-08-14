@@ -80,7 +80,7 @@ function GoogleSignInGate({ onSignedIn }) {
   return (
     <main className="auth-screen">
       <section className="auth-card auth-card--signin">
-        <div className="auth-emblem"><img src="/app-logo.png" alt="Anatomy Events" /></div>
+        <div className="auth-emblem"><img src="/app-logo-v2.png" alt="Anatomy Events" /></div>
         <div className="auth-heading">
           <span>Anatomy Events</span>
           <h1>Events App 3.0</h1>
@@ -141,7 +141,7 @@ function AccessDenied({ viewer, onSignOut }) {
   return (
     <main className="auth-screen">
       <section className="auth-card">
-        <img src="/app-logo.png" alt="" />
+        <img src="/app-logo-v2.png" alt="" />
         <h1>Access Not Allowed</h1>
         <p>{viewer.email} is not on the Events App allowlist.</p>
         <button type="button" className="secondary-button" onClick={onSignOut}>
@@ -296,7 +296,7 @@ export function App() {
     return (
       <main className="auth-screen">
         <section className="auth-card auth-card--signin">
-          <div className="auth-emblem"><img src="/app-logo.png" alt="Anatomy Events" /></div>
+          <div className="auth-emblem"><img src="/app-logo-v2.png" alt="Anatomy Events" /></div>
           <div className="auth-heading">
             <span>Anatomy Events</span>
             <h1>Events App 3.0</h1>
@@ -327,7 +327,7 @@ export function App() {
             title="Refresh current page"
             aria-label="Refresh current page from Sheet"
           >
-            <img src="/app-logo.png" alt="" />
+            <img src="/app-logo-v2.png" alt="" />
           </button>
           <div>
             <strong>Events App 3.0</strong>

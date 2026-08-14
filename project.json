@@ -14,7 +14,7 @@
   },
   "branding": {
     "logo_source": "AppLogo.png",
-    "in_app_asset": "public/app-logo.png",
+    "in_app_asset": "public/app-logo-v2.png",
     "installed_icon_background": "#000000"
   },
   "build_tooling": {
