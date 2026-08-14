@@ -58,6 +58,27 @@ export function cacheViewer(viewer, credential, staySignedIn = true) {
   storage.setItem(GOOGLE_CREDENTIAL_KEY, String(credential || ''));
 }
 
+export async function establishAppSession(credential, staySignedIn = true) {
+  if (!credential) return false;
+  const response = await fetch('/api/session', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${credential}`,
+      'X-Stay-Signed-In': staySignedIn ? 'true' : 'false',
+    },
+    credentials: 'same-origin',
+  });
+  return response.ok;
+}
+
+export async function clearAppSession() {
+  try {
+    await fetch('/api/session', { method: 'DELETE', credentials: 'same-origin' });
+  } catch {
+    // Local sign-out still completes if the network is unavailable.
+  }
+}
+
 export function clearCachedViewer() {
   window.localStorage.removeItem(AUTH_CACHE_KEY);
   window.localStorage.removeItem(GOOGLE_CREDENTIAL_KEY);

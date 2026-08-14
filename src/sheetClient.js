@@ -118,15 +118,15 @@ async function requestSheetJson(params) {
 
   if (isMutation) {
     const credential = getGoogleCredential();
-    if (!credential) throw new Error('Your Google sign-in expired. Sign out and sign in again before saving.');
 
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${credential}`,
+        ...(credential ? { Authorization: `Bearer ${credential}` } : {}),
         'Content-Type': 'application/json',
       },
+      credentials: 'same-origin',
       body: JSON.stringify(params),
     });
     return parseSheetResponse(response);

@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react';
 
 import project from '../project.json';
 import { sortLedgerEvents } from './activity.js';
-import { cacheViewer, clearCachedViewer, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
+import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
@@ -38,10 +38,11 @@ function GoogleSignInGate({ onSignedIn }) {
         if (cancelled) return;
         google.accounts.id.initialize({
           client_id: GOOGLE_WEB_CLIENT_ID,
-          callback: (response) => {
+          callback: async (response) => {
             try {
               const viewer = viewerFromGoogleCredential(response.credential);
               cacheViewer(viewer, response.credential, staySignedIn);
+              await establishAppSession(response.credential, staySignedIn);
               onSignedIn(viewer);
             } catch (error) {
               setAuthStatus(error instanceof Error ? error.message : 'Google sign-in failed.');
@@ -58,7 +59,6 @@ function GoogleSignInGate({ onSignedIn }) {
           shape: 'pill',
           width: 300,
         });
-        if (staySignedIn) google.accounts.id.prompt();
       } catch (error) {
         if (!cancelled) setAuthStatus(error instanceof Error ? error.message : 'Google sign-in failed to load.');
       }
@@ -167,29 +167,8 @@ export function App() {
   );
 
   useEffect(() => {
-    if (!viewer || !getStaySignedInPreference() || getGoogleCredential() || !GOOGLE_WEB_CLIENT_ID) return undefined;
-    let cancelled = false;
-
-    void loadGoogleIdentityScript().then((google) => {
-      if (cancelled) return;
-      google.accounts.id.initialize({
-        client_id: GOOGLE_WEB_CLIENT_ID,
-        auto_select: true,
-        callback: (response) => {
-          if (cancelled || !response.credential) return;
-          const refreshedViewer = viewerFromGoogleCredential(response.credential);
-          cacheViewer(refreshedViewer, response.credential, true);
-          setViewer(refreshedViewer);
-        },
-      });
-      google.accounts.id.prompt();
-    }).catch(() => {
-      // The remembered viewer can still use the app; saving will request a fresh sign-in if needed.
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    const credential = getGoogleCredential();
+    if (viewer && credential) void establishAppSession(credential, getStaySignedInPreference());
   }, [viewer]);
 
   useEffect(() => {
@@ -275,6 +254,7 @@ export function App() {
 
   function signOut() {
     window.google?.accounts?.id?.disableAutoSelect();
+    void clearAppSession();
     clearCachedViewer();
     setViewer(null);
     setDetail(null);

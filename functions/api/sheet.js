@@ -1,7 +1,4 @@
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-import { ALLOWED_EMAILS } from '../../shared/authPolicy.js';
-
-const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
+import { authenticateAppRequest } from '../_session.js';
 
 const MUTATION_ACTIONS = new Set([
   'upsertEvent',
@@ -22,22 +19,6 @@ function jsonResponse(payload, status) {
   });
 }
 
-async function authenticate(request, clientId) {
-  const authorization = request.headers.get('Authorization') || '';
-  const credential = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
-  if (!credential) throw new Error('Missing Google credential.');
-
-  const { payload } = await jwtVerify(credential, GOOGLE_JWKS, {
-    audience: clientId,
-    issuer: ['https://accounts.google.com', 'accounts.google.com'],
-  });
-  const email = String(payload.email || '').trim().toLowerCase();
-  if (payload.email_verified !== true || !ALLOWED_EMAILS.has(email)) {
-    throw new Error('This Google account is not authorized.');
-  }
-  return email;
-}
-
 export async function onRequest(context) {
   const { request, env } = context;
   if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'Method not allowed.' }, 405);
@@ -50,7 +31,7 @@ export async function onRequest(context) {
 
   let email;
   try {
-    email = await authenticate(request, env.GOOGLE_WEB_CLIENT_ID);
+    email = await authenticateAppRequest(request, env.GOOGLE_WEB_CLIENT_ID, env.APP_SYNC_TOKEN);
   } catch {
     return jsonResponse({ ok: false, error: 'Authentication failed. Sign in again.' }, 401);
   }

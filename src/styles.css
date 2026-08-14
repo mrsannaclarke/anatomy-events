@@ -452,6 +452,68 @@ nav button:hover {
   padding-top: 18px;
 }
 
+.install-help-overlay {
+  align-items: center;
+  background: rgb(16 13 11 / 78%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 200;
+}
+
+.install-help-dialog {
+  background: linear-gradient(145deg, #342b25, #26201c);
+  border: 1px solid #806657;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 45%);
+  color: #f2e6d5;
+  max-width: 430px;
+  padding: 28px;
+  position: relative;
+  width: 100%;
+}
+
+.install-help-dialog > svg {
+  color: #8fc9ad;
+}
+
+.install-help-dialog h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.55rem;
+  margin: 14px 0;
+}
+
+.install-help-dialog ol {
+  color: #dfd0c1;
+  display: grid;
+  gap: 14px;
+  line-height: 1.45;
+  margin: 0 0 22px;
+  padding-left: 24px;
+}
+
+.install-help-dialog li svg {
+  margin: 0 3px -4px;
+}
+
+.install-help-close {
+  align-items: center;
+  background: #28231f;
+  border: 1px solid #5a4b40;
+  border-radius: 9px;
+  color: #eadccc;
+  cursor: pointer;
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 38px;
+}
+
 .pricing-page {
   display: grid;
   gap: 14px;
