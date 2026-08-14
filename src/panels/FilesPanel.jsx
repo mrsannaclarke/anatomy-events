@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Copy, ExternalLink, Mail, Save } from 'lucide-react';
+import { Copy, ExternalLink, Mail, Save, Upload } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { generateEventFile, importUploadedArt, pullEventByEntryId } from '../sheetClient.js';
+import { generateEventFile, importUploadedArt, pullEventByEntryId, uploadEventArt } from '../sheetClient.js';
 
 export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
@@ -123,6 +123,31 @@ export function FilesPanel({ event, onSaved }) {
     }
   }
 
+  async function uploadArtFile(input) {
+    const file = input.target.files?.[0];
+    input.target.value = '';
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      setStatus('Choose an image or PDF smaller than 8 MB.');
+      return;
+    }
+    setStatus('Uploading art to Drive...');
+    setPendingLabel('Uploading art to Drive...');
+    try {
+      const result = await uploadEventArt(event.entryId, file);
+      const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
+      if (!refreshed) throw new Error('Art uploaded, but the refreshed event was not returned.');
+      setFileUrls(urlsFromEvent(refreshed));
+      setArtUrl(result.artUrl);
+      onSaved(refreshed);
+      setStatus('Uploaded art saved to Drive and connected to this client.');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Failed to upload art.');
+    } finally {
+      setPendingLabel('');
+    }
+  }
+
   const links = [
     ['Contract', fileUrls?.contractUrl],
     ['Temporary License', fileUrls?.tflUrl],
@@ -167,12 +192,19 @@ export function FilesPanel({ event, onSaved }) {
           </div>
         ))}
       </div>
-      <Field label="Uploaded Art URL">
+      <div className="art-upload-actions">
+        <label className="primary-button art-upload-button">
+          <Upload size={16} />
+          Upload Image or PDF
+          <input type="file" accept="image/*,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel)} />
+        </label>
+      </div>
+      <Field label="Or import from a URL">
         <input placeholder="Paste an image, PDF, or Google Drive file URL" value={artUrl} onChange={(input) => setArtUrl(input.target.value)} />
       </Field>
       <button type="button" className="primary-button detail-save" onClick={saveArtUrl} disabled={Boolean(pendingLabel) || !artUrl.trim() || artUrl.trim() === fileUrls?.artImageUrl}>
         <Save size={16} />
-        Save Uploaded Art
+        Import Art From URL
       </button>
       {fileUrls?.artImageUrl ? (
         <section className="saved-art-preview">

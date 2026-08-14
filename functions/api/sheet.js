@@ -10,6 +10,7 @@ const MUTATION_ACTIONS = new Set([
   'generateContract',
   'generateTfl',
   'importUploadedArt',
+  'uploadEventArt',
 ]);
 
 function jsonResponse(payload, status) {
@@ -46,7 +47,7 @@ export async function onRequest(context) {
   }
 
   const contentLength = Number(request.headers.get('Content-Length') || 0);
-  if (contentLength > 262144) return jsonResponse({ ok: false, error: 'Request is too large.' }, 413);
+  if (contentLength > 12582912) return jsonResponse({ ok: false, error: 'Upload is too large. Choose a file under 8 MB.' }, 413);
 
   let email;
   try {

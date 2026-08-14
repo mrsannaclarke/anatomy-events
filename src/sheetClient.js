@@ -15,6 +15,7 @@ const MUTATION_ACTIONS = new Set([
   'generateContract',
   'generateTfl',
   'importUploadedArt',
+  'uploadEventArt',
 ]);
 
 function normalizeText(value) {
@@ -225,6 +226,25 @@ export async function generateEventFile(entryId, kind, options = {}) {
 export async function importUploadedArt(entryId, sourceUrl) {
   const data = await requestSheetJson({ action: 'importUploadedArt', entryId, sourceUrl });
   if (!data.result?.artUrl) throw new Error('Drive import did not return a saved art link.');
+  return data.result;
+}
+
+export async function uploadEventArt(entryId, file) {
+  if (!file) throw new Error('Choose an image or PDF first.');
+  const fileData = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.onerror = () => reject(new Error('The selected file could not be read.'));
+    reader.readAsDataURL(file);
+  });
+  const data = await requestSheetJson({
+    action: 'uploadEventArt',
+    entryId,
+    fileName: file.name,
+    mimeType: file.type || 'application/octet-stream',
+    fileData,
+  });
+  if (!data.result?.artUrl) throw new Error('Drive upload did not return a saved art link.');
   return data.result;
 }
 
