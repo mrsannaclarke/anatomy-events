@@ -1,5 +1,5 @@
-const CACHE_NAME = 'anatomy-events-shell-v8';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/app-logo-v3.png', '/apple-touch-icon-v3.png', '/icon-192-v3.png', '/icon-512-v3.png'];
+const CACHE_NAME = 'anatomy-events-shell-v9';
+const APP_SHELL = ['/', '/manifest.webmanifest', '/app-logo-v3.png', '/apple-touch-icon-v4.png', '/icon-192-v4.png', '/icon-512-v4.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
