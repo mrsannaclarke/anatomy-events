@@ -9,6 +9,17 @@ const HISTORICAL_PAYOUT_TRUTH = {
   2: { basePayPerArtist: 1000, clearModifiers: true, forceShopCustomFlashToFullFee: true },
   1513: { basePayPerArtist: 1000, customFlashBonus: 50, licensingSplitPerArtist: 300 },
 };
+const ONE_TIME_PAYOUT_TRUTH = {
+  4181: {
+    reason: 'OPB one-time payout exception: Agnes created three flash designs.',
+    people: {
+      agnes: { customFlash: 160 },
+      'ms. mikki': {},
+      'mav mess': {},
+      jeremy: { counter: 450 },
+    },
+  },
+};
 
 export function normalizeNameKey(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -106,6 +117,35 @@ export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
   const isCounter = counterNames.some((name) => normalizeNameKey(name) === personKey);
   if (!isArtist && !isCounter) return null;
 
+  const oneTimeException = ONE_TIME_PAYOUT_TRUTH[String(raw.entryId || '').trim()];
+  const oneTimePerson = oneTimeException?.people?.[personKey];
+  if (oneTimePerson) {
+    const artistModifierBreakdown = {
+      customFlash: Number(oneTimePerson.customFlash) || 0,
+      radius: 0,
+      temporaryTattoos: 0,
+      extraHourly: 0,
+      licensingSplit: 0,
+    };
+    const artistBasePayout = Number(oneTimePerson.artistBase) || 0;
+    const artistModifierPayout = Object.values(artistModifierBreakdown).reduce((sum, amount) => sum + amount, 0);
+    const counterPayout = Number(oneTimePerson.counter) || 0;
+    const artistPayout = artistBasePayout + artistModifierPayout;
+    return {
+      event,
+      role: isArtist && isCounter ? 'artist+counter' : isArtist ? 'artist' : 'counter',
+      isComplete: isCompletedForPay(event),
+      artistBasePayout,
+      artistModifierPayout,
+      artistModifierBreakdown,
+      artistPayout,
+      counterPayout,
+      totalPayout: artistPayout + counterPayout,
+      payoutSource: 'one_time_exception',
+      payoutReason: oneTimeException.reason,
+    };
+  }
+
   const totals = computePricing(formFromEvent(event));
   const artistCount = artistNames.length || Math.max(1, Number(raw.numberOfArtists) || totals.artistCount || 1);
   const counterCount = counterNames.length || 1;
@@ -169,7 +209,7 @@ export function calculateEventPayout(event, people, pricingPayoutMap = {}) {
   const gross = normalizeCurrency(savedGross > 0 ? savedGross : computed.totalCharge);
   const lines = people
     .map((person) => ({ person, row: getPersonPayRow(event, person, pricingPayoutMap) }))
-    .filter((line) => line.row?.totalPayout > 0);
+    .filter((line) => line.row && (line.row.totalPayout > 0 || line.row.payoutSource === 'one_time_exception'));
 
   const capturedLines = lines.filter((line) => normalizeNameKey(line.person) === 'tomma');
   const paidLines = lines.filter((line) => normalizeNameKey(line.person) !== 'tomma');
