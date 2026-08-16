@@ -29,14 +29,37 @@ const PRICING_SHEET_PUBLIC_URL_BY_YEAR = {
 const BALANCE_ADD_ON_TYPES = ['Custom Flash', 'Temporary Tattoos', 'Extra Hours', 'Radius / Travel', 'Counter Staff', 'Licensing', 'Other'];
 const DEPOSIT_PAID_STATUSES = new Set(['deposit paid', 'temporary license submitted', 'temporary license received', 'awaiting follow up', 'needing changes', 'balance invoice sent', 'invoice paid in full', 'event complete', 'event complete balance late']);
 
+function normalizedEventStatus(event) {
+  return String(event?.status || event?.raw?.status || event?.raw?.payStatus || '').trim().toLowerCase();
+}
+
+function eventDateTimestamp(event) {
+  const value = String(event?.raw?.eventDate || event?.eventDate || '').trim();
+  const dateParts = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dateParts) return new Date(Number(dateParts[3]), Number(dateParts[1]) - 1, Number(dateParts[2])).getTime();
+
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+}
+
+function sortNewestEventFirst(left, right) {
+  return eventDateTimestamp(right) - eventDateTimestamp(left)
+    || left.clientName.localeCompare(right.clientName, undefined, { sensitivity: 'base' });
+}
+
 export function PricingPage({ events, viewer, onSaved }) {
   const [selectedId, setSelectedId] = useState('');
+  const [saveMode, setSaveMode] = useState('new');
+  const importableEvents = useMemo(
+    () => events.filter((event) => normalizedEventStatus(event) !== 'event complete').sort(sortNewestEventFirst),
+    [events],
+  );
+  const selectableEvents = saveMode === 'import' ? importableEvents : events;
   const selectedEvent = useMemo(
-    () => events.find((event) => event.id === selectedId || event.entryId === selectedId) || null,
-    [events, selectedId],
+    () => selectableEvents.find((event) => event.id === selectedId || event.entryId === selectedId) || null,
+    [selectableEvents, selectedId],
   );
   const [form, setForm] = useState(() => formFromEvent(null));
-  const [saveMode, setSaveMode] = useState('new');
   const [newClient, setNewClient] = useState({ clientName: '', contactPhone: '', email: '', eventDate: '', eventType: '', venueName: '' });
   const [saveStatus, setSaveStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -243,7 +266,7 @@ export function PricingPage({ events, viewer, onSaved }) {
           <Field label="Existing Client Entry">
             <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
               <option value="">Select existing entry</option>
-              {events.map((event) => (
+              {selectableEvents.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.clientName} {event.eventDate ? `- ${event.eventDate}` : ''}
                 </option>
