@@ -7,7 +7,7 @@ import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
-import { buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, PLAN_YEARS, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD } from '../pricingMath.js';
+import { ARTIST_COUNTS, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, PLAN_YEARS, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD } from '../pricingMath.js';
 
 export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   const [isEditable, setIsEditable] = useState(true);
@@ -21,6 +21,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       extraHours: raw.extraHours || '',
       customFlash: raw.customFlash || 'NO',
       temporaryTattoos: raw.temporaryTattoos || 'NO',
+      numberOfArtists: String(raw.numberOfArtists || ''),
       pricingMethod: normalizePricingMethod(raw.pricingMethod),
       staffPriceAdjustment: raw.staffPriceAdjustment || '',
       staffPriceAdjustmentReason: raw.staffPriceAdjustmentReason || '',
@@ -76,6 +77,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
         contactEmail: form.email,
         eventAddress: form.eventAddress,
         estimatedGuests: form.estGuestCount,
+        numberOfArtists: form.numberOfArtists,
         setupTime: form.setupTime,
         eventStartTime: form.eventStartTime,
         eventEndTime: form.eventEndTime,
@@ -188,6 +190,21 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
               <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
               <option value={PRICING_METHOD_CORPORATE_MODIFIERS}>Corporate / Walk-Up — Client Pays Modifiers Only</option>
             </select>
+          </Field>
+          <Field label="Number of Artists">
+            <div className="mode-tabs" role="radiogroup" aria-label="Number of artists">
+              {ARTIST_COUNTS.map((count) => (
+                <button
+                  key={count}
+                  type="button"
+                  className={form.numberOfArtists === count ? 'active' : ''}
+                  disabled={!isEditable}
+                  onClick={() => updateField('numberOfArtists', count)}
+                >
+                  {count}
+                </button>
+              ))}
+            </div>
           </Field>
           {[
             ['customFlash', 'Custom Flash?'],

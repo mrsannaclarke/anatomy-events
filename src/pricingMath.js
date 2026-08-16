@@ -1,4 +1,5 @@
 export const BASE_INCLUDED_HOURS = 5;
+export const CORPORATE_ADMIN_FEE = 100;
 export const DEFAULT_BASE_ADDRESS = 'Anatomy Tattoo, Portland, OR';
 export const PRICING_METHOD_STANDARD = 'STANDARD';
 export const PRICING_METHOD_CORPORATE_MODIFIERS = 'CORPORATE_MODIFIERS';
@@ -147,11 +148,12 @@ export function computePricing(form) {
   const row = getScheduleRow(year, artistCount);
   const rawBookedHours = String(form.bookedHours ?? '').trim();
   const bookedHours = Math.max(0, rawBookedHours ? Number(rawBookedHours) || 0 : BASE_INCLUDED_HOURS);
-  const extraHours = Math.max(0, bookedHours - BASE_INCLUDED_HOURS);
   const travelDistance = Math.max(0, Number(form.travelDistance) || 0);
 
   const pricingMethod = normalizePricingMethod(form.pricingMethod);
   const isCorporateModifiers = pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS;
+  const billableHours = isCorporateModifiers ? Math.max(BASE_INCLUDED_HOURS, bookedHours) : bookedHours;
+  const extraHours = Math.max(0, billableHours - BASE_INCLUDED_HOURS);
   const hasBaseInputs = Boolean(row && artistCount > 0 && bookedHours > 0);
   const standardBaseForFiveHours = hasBaseInputs ? row.baseRatePerArtist5h * artistCount : 0;
   const baseForFiveHours = isCorporateModifiers ? 0 : standardBaseForFiveHours;
@@ -164,6 +166,7 @@ export function computePricing(form) {
   const customFlashFee = normalizeFlag(form.customFlash) === 'YES' ? parseMoney(form.customFlashFee) || row?.customFlashFeeEvent || 0 : 0;
   const temporaryTattooFee = normalizeFlag(form.temporaryTattoos) === 'YES' ? parseMoney(form.temporaryTattooFee) || row?.tempTattoosFee || 0 : 0;
   const tempFacilityLicenseFee = artistCount > 0 ? parseMoney(form.tempFacilityLicenseFee) || Math.max(0, (row?.facilityCityFee || 0) + (row?.facilityAdminFee || 0)) : 0;
+  const corporateAdminFee = isCorporateModifiers ? CORPORATE_ADMIN_FEE : 0;
   const radiusFee =
     parseMoney(form.radiusFee) ||
     (row && travelDistance > row.freeRadiusMiles
@@ -172,8 +175,10 @@ export function computePricing(form) {
   const staffAdjustment = parseMoney(form.staffPriceAdjustment);
   const balanceAddOns = parseBalanceAddOns(form.balanceAddOns);
   const balanceAddOnsTotal = balanceAddOns.reduce((sum, item) => sum + parseMoney(item.amount), 0);
-  const extrasTotal = counterStaffCharge + extraHourlyCharge + customFlashFee + temporaryTattooFee + tempFacilityLicenseFee + radiusFee;
-  const totalCharge = Math.max(0, baseTotal + extrasTotal + staffAdjustment + balanceAddOnsTotal);
+  const fixedChargesTotal = counterStaffCharge + tempFacilityLicenseFee + corporateAdminFee;
+  const modifiersTotal = extraHourlyCharge + customFlashFee + temporaryTattooFee + radiusFee + staffAdjustment;
+  const extrasTotal = fixedChargesTotal + modifiersTotal;
+  const totalCharge = Math.max(0, baseTotal + extrasTotal + balanceAddOnsTotal);
   const depositRatePct = isCorporateModifiers ? 0 : row?.depositRatePct || 30;
   const hasLockedDeposit = String(form.lockedDepositAmount ?? '').trim() !== '';
   const depositRequired = hasLockedDeposit ? Math.max(0, parseMoney(form.lockedDepositAmount)) : totalCharge * (depositRatePct / 100);
@@ -188,6 +193,7 @@ export function computePricing(form) {
     isCorporateModifiers,
     artistCount,
     bookedHours,
+    billableHours,
     extraHours,
     hasBaseInputs,
     baseForFiveHours,
@@ -200,13 +206,15 @@ export function computePricing(form) {
     customFlashFee,
     temporaryTattooFee,
     tempFacilityLicenseFee,
+    corporateAdminFee,
     radiusFee,
     staffAdjustment,
     balanceAddOns,
     balanceAddOnsTotal,
     hasLockedDeposit,
     extrasTotal,
-    effectiveModifiersTotal: extrasTotal + staffAdjustment,
+    fixedChargesTotal,
+    effectiveModifiersTotal: modifiersTotal,
     totalCharge,
     depositRatePct,
     depositRequired,
@@ -229,6 +237,8 @@ export function buildPricingSummaryRows(totals) {
       lead: true,
     },
     { label: 'Counter Staff (5 hours)', value: formatMoney(totals.counterBaseCharge), lead: true },
+    { label: 'Temp Facility License', value: formatMoney(totals.tempFacilityLicenseFee) },
+    ...(totals.isCorporateModifiers ? [{ label: 'Corporate Admin Fee', value: formatMoney(totals.corporateAdminFee) }] : []),
     { divider: true },
   ];
 
@@ -241,7 +251,6 @@ export function buildPricingSummaryRows(totals) {
   }
 
   rows.push(
-    { label: 'Temp Facility License', value: formatMoney(totals.tempFacilityLicenseFee), modifier: true },
     { label: `Custom Flash (${totals.customFlashSelection})`, value: formatMoney(totals.customFlashFee), modifier: true },
     { label: `Temporary Tattoos (${totals.temporaryTattoosSelection})`, value: formatMoney(totals.temporaryTattooFee), modifier: true },
     { label: totals.travelDistanceDisplayLabel, value: totals.travelDistanceLabel, modifier: true },
