@@ -118,17 +118,13 @@ function SheetSyncMenu({ syncStatus, syncError, lastSyncAt, onRefresh }) {
       <summary>
         <span className="sheet-sync-indicator" aria-hidden="true" />
         <strong>{statusLabel}</strong>
-        <span>Sheet menu</span>
       </summary>
       <div className="sheet-sync-menu__body">
         <button type="button" className="secondary-button" onClick={onRefresh} disabled={isBusy}>
           <RefreshCw size={16} className={isBusy ? 'is-spinning' : ''} />
           {isBusy ? 'Refreshing…' : 'Refresh Sheet'}
         </button>
-        <div className="sheet-sync-menu__status" aria-live="polite">
-          <strong>{formatSyncTime(lastSyncAt)}</strong>
-          {syncError ? <span>{syncError}</span> : <span>Sheet data is available.</span>}
-        </div>
+        {syncError ? <span className="sheet-sync-menu__error" aria-live="polite">{syncError}</span> : null}
         {syncError ? (
           <a href={SHEET_WEB_APP_URL} target="_blank" rel="noreferrer">Open Apps Script</a>
         ) : null}

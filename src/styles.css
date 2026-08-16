@@ -358,13 +358,6 @@ nav button:hover {
   color: #bba99a;
 }
 
-.sheet-sync-menu summary > span:last-child {
-  color: #bba99a;
-  font-size: 12px;
-  margin-left: auto;
-  text-transform: uppercase;
-}
-
 .sheet-sync-indicator {
   background: #7fd29a;
   border-radius: 50%;
@@ -384,12 +377,7 @@ nav button:hover {
   padding: 12px 18px 16px;
 }
 
-.sheet-sync-menu__status {
-  display: grid;
-  gap: 2px;
-}
-
-.sheet-sync-menu__status span {
+.sheet-sync-menu__error {
   color: #bba99a;
 }
 
@@ -2217,7 +2205,7 @@ body {
 .field span,
 .detail-field span,
 .readonly-block span,
-.sheet-sync-menu__status span,
+.sheet-sync-menu__error,
 .empty-state span,
 .admin-action span,
 .link-row > span,
