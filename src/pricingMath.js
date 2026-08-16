@@ -1,5 +1,5 @@
 export const BASE_INCLUDED_HOURS = 5;
-export const CORPORATE_ADMIN_FEE = 100;
+export const CORPORATE_ADMIN_FEE = 300;
 export const DEFAULT_BASE_ADDRESS = 'Anatomy Tattoo, Portland, OR';
 export const PRICING_METHOD_STANDARD = 'STANDARD';
 export const PRICING_METHOD_CORPORATE_MODIFIERS = 'CORPORATE_MODIFIERS';
