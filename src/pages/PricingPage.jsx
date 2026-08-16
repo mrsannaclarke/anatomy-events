@@ -199,7 +199,7 @@ export function PricingPage({ events, viewer, onSaved }) {
             <h2>Pricing</h2>
             <p>Current base per-artist pricing.</p>
           </div>
-          <div className="panel-actions">
+          <div className="panel-actions pricing-card__actions">
             <button type="button" className="secondary-button" onClick={() => navigator.clipboard?.writeText(pricingSheetUrl)}>
               <Copy size={16} />
               Share
