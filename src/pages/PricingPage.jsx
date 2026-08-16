@@ -197,7 +197,7 @@ export function PricingPage({ events, viewer, onSaved }) {
         <div className="panel-heading">
           <div>
             <h2>Pricing</h2>
-            <p>Current base per-artist pricing.</p>
+            <p>Five-hour event pricing with required counter staff and licensing included.</p>
           </div>
           <div className="panel-actions pricing-card__actions">
             <button type="button" className="secondary-button" onClick={() => navigator.clipboard?.writeText(pricingSheetUrl)}>
@@ -213,14 +213,16 @@ export function PricingPage({ events, viewer, onSaved }) {
         <div className="plan-table" role="table" aria-label="Current pricing">
           <div className="plan-table__row plan-table__row--head" role="row">
             <span role="columnheader">Artists</span>
-            <span role="columnheader">Per Artist</span>
-            <span role="columnheader">Base Total</span>
+            <span role="columnheader">5-Hour Event Price</span>
           </div>
           {planRows.map(([artistCount, row]) => (
             <div key={artistCount} className="plan-table__row" role="row">
               <span role="cell">{artistCount}</span>
-              <span role="cell">{formatMoney(row.baseRatePerArtist5h)}</span>
-              <span role="cell">{formatMoney(row.baseRatePerArtist5h * Number(artistCount))}</span>
+              <span role="cell">{formatMoney(
+                (row.baseRatePerArtist5h + row.counterPerArtist) * Number(artistCount)
+                  + row.facilityCityFee
+                  + row.facilityAdminFee,
+              )}</span>
             </div>
           ))}
         </div>
@@ -295,7 +297,7 @@ export function PricingPage({ events, viewer, onSaved }) {
           </div>
           <span className="field-help">
             {form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
-              ? 'The event client pays modifiers only. Walk-up tattoo sales are not tracked in this app.'
+              ? 'The event client pays required counter, licensing, and admin charges plus selected modifiers. Walk-up tattoo sales are not tracked in this app.'
               : 'The event client pays the standard tattoo base plus modifiers.'}
           </span>
         </Field>

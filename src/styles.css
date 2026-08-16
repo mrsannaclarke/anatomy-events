@@ -795,7 +795,7 @@ nav button:hover {
 
 .plan-table__row {
   display: grid;
-  grid-template-columns: 0.8fr 1fr 1fr;
+  grid-template-columns: 0.8fr 2fr;
 }
 
 .plan-table__row span {

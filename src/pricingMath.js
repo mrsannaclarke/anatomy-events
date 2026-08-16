@@ -230,25 +230,18 @@ export function computePricing(form) {
 }
 
 export function buildPricingSummaryRows(totals) {
+  const requiredEventPrice = totals.baseTotal + totals.counterStaffCharge + totals.tempFacilityLicenseFee + totals.corporateAdminFee;
+  const requiredPriceLabel = totals.isCorporateModifiers
+    ? 'Required Event Price (counter, license & admin)'
+    : `Required Event Price (${formatDecimal(totals.bookedHours) || '5'} hours; counter & license included)`;
   const rows = [
     {
-      label: totals.isCorporateModifiers ? 'Tattoo Pricing (paid by walk-up clients)' : 'Base Price (5 hours)',
-      value: formatMoney(totals.baseForFiveHours),
+      label: requiredPriceLabel,
+      value: formatMoney(requiredEventPrice),
       lead: true,
     },
-    { label: 'Counter Staff (5 hours)', value: formatMoney(totals.counterBaseCharge), lead: true },
-    { label: 'Temp Facility License', value: formatMoney(totals.tempFacilityLicenseFee) },
-    ...(totals.isCorporateModifiers ? [{ label: 'Corporate Admin Fee', value: formatMoney(totals.corporateAdminFee) }] : []),
     { divider: true },
   ];
-
-  if (totals.shouldProrateBase) {
-    rows.push(
-      { label: `Prorated Base Price (${totals.bookedHours.toFixed(2)} hours)`, value: formatMoney(totals.baseTotal) },
-      { label: `Prorated Counter Staff (${totals.bookedHours.toFixed(2)} hours)`, value: formatMoney(totals.counterStaffCharge) },
-      { divider: true },
-    );
-  }
 
   rows.push(
     { label: `Custom Flash (${totals.customFlashSelection})`, value: formatMoney(totals.customFlashFee), modifier: true },
