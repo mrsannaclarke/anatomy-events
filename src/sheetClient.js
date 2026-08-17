@@ -113,36 +113,21 @@ export function normalizeEvent(raw, index = 0) {
 
 async function requestSheetJson(params) {
   const action = String(params.action || '');
-  const isMutation = MUTATION_ACTIONS.has(action);
-  const url = new URL(isMutation || viteEnv.DEV ? DEV_SHEET_PROXY_URL : SHEET_WEB_APP_URL, window.location.origin);
-
-  if (isMutation) {
-    const credential = getGoogleCredential();
-
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        ...(credential ? { Authorization: `Bearer ${credential}` } : {}),
-        'Content-Type': 'application/json',
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify(params),
-    });
-    return parseSheetResponse(response);
+  if (!MUTATION_ACTIONS.has(action) && !['events', 'event', 'pricing'].includes(action)) {
+    throw new Error('Sheet action is not supported by the app proxy.');
   }
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
-  });
-  url.searchParams.set('_ts', String(Date.now()));
+  const url = new URL(DEV_SHEET_PROXY_URL, window.location.origin);
+  const credential = getGoogleCredential();
   const response = await fetch(url.toString(), {
-    method: 'GET',
+    method: 'POST',
     headers: {
       Accept: 'application/json',
+      ...(credential ? { Authorization: `Bearer ${credential}` } : {}),
+      'Content-Type': 'application/json',
     },
+    credentials: 'same-origin',
+    body: JSON.stringify(params),
   });
-
   return parseSheetResponse(response);
 }
 
@@ -245,9 +230,8 @@ export async function pullPricingRulesFromSheet() {
   if (!pullPricingRulesFromSheet.pending) {
     pullPricingRulesFromSheet.pending = requestSheetJson({ action: 'pricing' })
       .then((data) => data.pricing || [])
-      .catch((error) => {
+      .finally(() => {
         pullPricingRulesFromSheet.pending = null;
-        throw error;
       });
   }
   return pullPricingRulesFromSheet.pending;

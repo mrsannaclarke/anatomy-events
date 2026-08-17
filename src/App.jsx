@@ -254,7 +254,10 @@ export function App() {
 
   function replaceSavedEvent(savedEvent) {
     setEvents((current) => {
-      const next = current.map((event) => (event.entryId && event.entryId === savedEvent.entryId ? savedEvent : event));
+      const exists = current.some((event) => event.entryId && event.entryId === savedEvent.entryId);
+      const next = exists
+        ? current.map((event) => (event.entryId === savedEvent.entryId ? savedEvent : event))
+        : [...current, savedEvent];
       window.localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(next));
       return next;
     });
@@ -357,6 +360,7 @@ export function App() {
           <DetailPanel
             detail={detail}
             viewerEmail={viewer.email}
+            viewerName={viewer.name}
             onBack={() => setDetail(null)}
             onSaved={replaceSavedEvent}
             onDeleted={removeDeletedEvent}

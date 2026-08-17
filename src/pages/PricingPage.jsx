@@ -13,6 +13,7 @@ import {
   buildPricingSummaryRows,
   computePricing,
   DEFAULT_BASE_ADDRESS,
+  deriveEventHours,
   formFromEvent,
   formatMoney,
   parseMoney,
@@ -87,6 +88,13 @@ export function PricingPage({ events, viewer, onSaved }) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function updateEventTime(key, value) {
+    setForm((current) => {
+      const next = { ...current, [key]: value };
+      return { ...next, bookedHours: deriveEventHours(next.eventStartTime, next.eventEndTime) };
+    });
+  }
+
   function addBalanceAddOn() {
     const amount = parseMoney(addOnDraft.amount);
     if (amount <= 0 || !addOnDraft.reason.trim()) {
@@ -154,8 +162,8 @@ export function PricingPage({ events, viewer, onSaved }) {
               raw: {
                 ...newClient,
                 clientName: newClient.clientName || `Hypothetical ${new Date().toLocaleDateString()}`,
-                status: 'Open',
-                payStatus: 'Open',
+                status: 'New',
+                payStatus: 'New',
               },
             }
           : selectedEvent;
@@ -257,6 +265,12 @@ export function PricingPage({ events, viewer, onSaved }) {
             <Field label="Date of Event">
               <input placeholder="MM/DD/YYYY" value={newClient.eventDate} onChange={(event) => setNewClient((current) => ({ ...current, eventDate: event.target.value }))} />
             </Field>
+            <Field label="Event Start Time">
+              <input type="time" value={form.eventStartTime} onChange={(event) => updateEventTime('eventStartTime', event.target.value)} />
+            </Field>
+            <Field label="Event End Time">
+              <input type="time" value={form.eventEndTime} onChange={(event) => updateEventTime('eventEndTime', event.target.value)} />
+            </Field>
             <Field label="Venue Name">
               <input value={newClient.venueName} onChange={(event) => setNewClient((current) => ({ ...current, venueName: event.target.value }))} />
             </Field>
@@ -265,16 +279,24 @@ export function PricingPage({ events, viewer, onSaved }) {
             </Field>
           </div>
         ) : (
-          <Field label="Existing Client Entry">
-            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
-              <option value="">Select existing entry</option>
-              {selectableEvents.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.clientName} {event.eventDate ? `- ${event.eventDate}` : ''}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <div className="form-grid">
+            <Field label="Existing Client Entry">
+              <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
+                <option value="">Select existing entry</option>
+                {selectableEvents.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.clientName} {event.eventDate ? `- ${event.eventDate}` : ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Event Start Time">
+              <input type="time" value={form.eventStartTime} onChange={(event) => updateEventTime('eventStartTime', event.target.value)} />
+            </Field>
+            <Field label="Event End Time">
+              <input type="time" value={form.eventEndTime} onChange={(event) => updateEventTime('eventEndTime', event.target.value)} />
+            </Field>
+          </div>
         )}
 
         <Field label="Client / Consultation Notes">

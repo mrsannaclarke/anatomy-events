@@ -17,7 +17,7 @@ export function getCommunicationEntries(notes) {
   }));
 }
 
-export function NotesPanel({ event, viewerEmail, onSaved }) {
+export function NotesPanel({ event, viewerEmail, viewerName, onSaved }) {
   const raw = event.raw || {};
   const [statusValue, setStatusValue] = useState(raw.status || raw.payStatus || '');
   const [privateNotes, setPrivateNotes] = useState(raw.privateNotes || '');
@@ -57,23 +57,22 @@ export function NotesPanel({ event, viewerEmail, onSaved }) {
     setStatus('Saving notes to Sheet...');
     setIsSaving(true);
     const timestamp = new Date().toLocaleString();
+    const author = String(viewerName || viewerEmail || 'Staff').trim();
     const communicationBlock = communicationEntry.trim()
-      ? `\n\nCOMMUNICATION ENTRY[Anna | ${timestamp}]: ${communicationEntry.trim()}`
+      ? `\n\nCOMMUNICATION ENTRY[${author} | ${timestamp}]: ${communicationEntry.trim()}`
       : '';
     try {
       const notes = `${privateNotes || ''}${communicationBlock}`.trim();
-      const hadAppointment = Boolean(String(raw.manualUpcomingAppointment || '').trim());
-      const nextStatus = !hadAppointment && manualAppointment.trim() ? 'New' : statusValue;
       const saved = await upsertEventPartialToSheet({
         entryId: raw.entryId,
-        status: nextStatus,
+        status: statusValue,
         internalNotes: notes,
         manualUpcomingAppointment: manualAppointment,
       });
       const refreshed = (await pullEventByEntryId(saved.entryId)) || event;
       onSaved(refreshed);
       setPrivateNotes(refreshed.raw?.privateNotes || notes);
-      setStatusValue(refreshed.raw?.status || refreshed.raw?.payStatus || nextStatus);
+      setStatusValue(refreshed.raw?.status || refreshed.raw?.payStatus || statusValue);
       setCommunicationEntry('');
       setStatus('Saved notes.');
     } catch (error) {

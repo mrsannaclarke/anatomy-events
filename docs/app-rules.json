@@ -253,7 +253,7 @@
     "historical_lock": "Completed, Event Complete Balance Late, Cancelled, and Canceled rows use legacy pricing interpretation.",
     "open_forward_pricing": "Open-forward rows allow travel distance pricing without requiring a full valid address.",
     "deposit_rule": "Deposit paid/later statuses use 30% deposit behavior for balance/addition displays.",
-    "booked_hours_rule": "Base includes 5 hours. Booked hours are derived first from Event Start Time to Event End Time when both are present, then from legacy hour-scaling adjustment reason text, then from extraHours. Under 5 hours prorates base and counter through dedicated prorated rows; over 5 hours scales counter and extra hourly charge.",
+    "booked_hours_rule": "Base includes 5 hours. Booked hours are derived first from Event Start Time to Event End Time when both are present, then from legacy hour-scaling adjustment reason text, then from extraHours. Standard events under 5 hours prorate base and counter; Corporate / Walk-Up events use a five-hour minimum. Hours above 5 add the configured extra-hour charge.",
     "staff_adjustment": "Admin-only section for explicit manual staff price adjustments only. Legacy prorate/hour-scaling reason text may restore Booked Hours, but must display through dedicated prorated pricing rows, not as Staff Adjustment. Staff Adjustment rows are hidden when the amount is zero and imports must not seed staffPriceAdjustment from optionalFee.",
     "delete_event": "Requires confirmation and sends deleteEvent by Entry ID or Source Row."
   },
@@ -278,8 +278,8 @@
     ],
     "status_edit_access": "Only admin and super_admin effective auth types can edit status.",
     "invoice_paid_in_full_rule": "Invoice Paid in Full means the client invoice has been fully paid. It is treated as deposit-paid-or-later for pricing displays, but does not mark the event complete or make it payout-eligible.",
-    "activity_log": "Staff communication entries store actor, timestamp, and message; Discord actor entries are removed from visible local log.",
-    "manual_upcoming_appointment": "Notes can save a manual upcoming appointment timestamp used by event ledger sorting and display.",
+    "activity_log": "Staff communication entries store the signed-in viewer name (falling back to email), timestamp, and message; Discord actor entries are removed from visible local log.",
+    "manual_upcoming_appointment": "Notes can save a manual upcoming appointment timestamp without changing event status. Appointment/calendar hooks are not displayed on client cards.",
     "discord": "Specific Entry IDs can post to configured Discord event channels."
   },
   "pricing": {
@@ -298,14 +298,17 @@
     "included_hours": 5,
     "deposit_rate": "30%",
     "default_input_state": "New/blank Pricing Calculator starts with no Number of Artists selected and Booked Hours visually blank with 5-hour fallback math.",
-    "booked_hours_display_rule": "Pricing tables show Base Price (5 hours) and Counter Staff (5 hours) first. If booked hours are under 5, show Prorated Base Price (X hours) and Prorated Counter Staff (X hours), then a divider. Hours above 5 scale counter staff in math and show Extra Hourly Charge as a modifier.",
+    "booked_hours_display_rule": "The customer-facing calculator combines base service, counter staff, and licensing into Required Event Price. Standard events under five hours prorate base and counter. Corporate / Walk-Up events never prorate and use a five-hour minimum. Hours above five show Extra Hourly Charge as a modifier.",
     "counter_charge": "counterPerArtist * Number of Artists from pricing schedule for the 5-hour row; effective counter staff scales by bookedHours / 5 when booked hours are not 5.",
     "radius_fee": "No fee through freeRadiusMiles; over free radius, ceil((miles - freeRadiusMiles) / radiusStepMiles) * radiusStepFee.",
     "mileage_lookup": "Pricing page supports Lookup Radius from Address using Anatomy Tattoo, Portland, OR as base address. It writes Travel Distance miles, and radius fee recomputes from travel distance. Manual travel distance remains supported.",
     "page_order": [
-      "Price Plan card with Share/View actions and plan-year chips",
-      "Plan {year} base pricing table with Artists, Per Artist, Base Total",
+      "Pricing card with equal-size Share/View actions",
+      "2026 pricing table with Artists and 5-Hour Event Price; 2025 remains legacy-only",
       "Pricing Calculator heading",
+      "New Client Entry / Import / Overwrite mode chips",
+      "Client name, phone, email, date, start time, end time, venue, event type, and consultation notes",
+      "Pricing Method chips",
       "Number of Artists chips",
       "Booked Hours (Base Covers 5)",
       "Custom Flash? chips",
@@ -316,8 +319,6 @@
       "Staff Adjustment (+/-)",
       "Staff Adjustment Reason",
       "Calculated Total pricing breakdown with compact copy control",
-      "New Client Entry / Import / Overwrite mode chips",
-      "New client or existing client fields",
       "Save / Import / Overwrite action"
     ],
     "pricing_table_order": [
@@ -341,11 +342,12 @@
     "computed_total": "max(0, baseTotal + fixed charges + modifiers + balance add-ons). Credit is currently 0 in app math."
   },
     "sync": {
-    "pull_events": "GET action=events&limit=1000 with cache-bust timestamp.",
-    "pull_event": "GET action=event by Entry ID.",
-    "save_event_web": "GET action=upsertEvent with event and computed JSON to avoid CORS preflight problems.",
-    "save_event_native": "POST JSON action=upsertEvent.",
-    "delete_event": "deleteEvent supports web GET and native POST.",
+    "pull_events": "Authenticated POST action=events through same-origin Cloudflare /api/sheet.",
+    "pull_event": "Authenticated POST action=event by Entry ID through same-origin Cloudflare /api/sheet.",
+    "pull_pricing": "Authenticated POST action=pricing through same-origin Cloudflare /api/sheet.",
+    "save_event": "Authenticated POST JSON action=upsertEvent through same-origin Cloudflare /api/sheet.",
+    "delete_event": "Authenticated POST action=deleteEvent through same-origin Cloudflare /api/sheet.",
+    "security_boundary": "Apps Script version 92 requires APP_SYNC_TOKEN for reads and writes. The token is injected only by Cloudflare after session/Google-credential allowlist verification; direct anonymous Apps Script reads and mutations are rejected.",
     "normalization": [
       "Imported dates/times are normalized.",
       "Artist names normalize to ED entry values.",

@@ -8,6 +8,8 @@ const MUTATION_ACTIONS = new Set([
   'generateTfl',
   'uploadEventArt',
 ]);
+const READ_ACTIONS = new Set(['events', 'event', 'pricing']);
+const ALLOWED_ACTIONS = new Set([...READ_ACTIONS, ...MUTATION_ACTIONS]);
 
 function jsonResponse(payload, status) {
   return Response.json(payload, {
@@ -44,7 +46,7 @@ export async function onRequest(context) {
   }
 
   const action = String(payload?.action || '');
-  if (!MUTATION_ACTIONS.has(action)) {
+  if (!ALLOWED_ACTIONS.has(action)) {
     return jsonResponse({ ok: false, error: 'Action is not allowed through this endpoint.' }, 403);
   }
 
@@ -57,6 +59,17 @@ export async function onRequest(context) {
     delete payload.event.balanceAddOnHistory;
     delete payload.event.lockedDepositAmount;
   }
+  if (email !== 'admin@anatomytattoo.com' && action === 'upsertEventPartialJson' && payload?.eventJson) {
+    try {
+      const eventPatch = JSON.parse(payload.eventJson);
+      delete eventPatch.balanceAddOnAmount;
+      delete eventPatch.balanceAddOnHistory;
+      delete eventPatch.lockedDepositAmount;
+      payload.eventJson = JSON.stringify(eventPatch);
+    } catch {
+      return jsonResponse({ ok: false, error: 'Invalid partial event payload.' }, 400);
+    }
+  }
 
   const upstreamResponse = await fetch(env.SHEET_WEB_APP_URL, {
     method: 'POST',
@@ -65,7 +78,7 @@ export async function onRequest(context) {
     redirect: 'follow',
   });
 
-  console.log(JSON.stringify({ event: 'sheet_mutation', action, email, status: upstreamResponse.status }));
+  console.log(JSON.stringify({ event: MUTATION_ACTIONS.has(action) ? 'sheet_mutation' : 'sheet_read', action, email, status: upstreamResponse.status }));
   return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
     headers: {

@@ -1,9 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const SHEET_WEB_APP_URL =
-  process.env.VITE_SHEET_WEB_APP_URL ||
-  'https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec';
+const PRODUCTION_SHEET_PROXY_URL = 'https://anatomy-events.pages.dev/api/sheet';
 
 export default defineConfig({
   plugins: [
@@ -13,22 +11,26 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use('/api/sheet', async (req, res) => {
           try {
-            const requestUrl = new URL(req.url || '', 'http://localhost');
-            const targetUrl = new URL(SHEET_WEB_APP_URL);
-            requestUrl.searchParams.forEach((value, key) => {
-              targetUrl.searchParams.set(key, value);
+            const requestBody = await new Promise((resolve, reject) => {
+              const chunks = [];
+              req.on('data', (chunk) => chunks.push(chunk));
+              req.on('end', () => resolve(Buffer.concat(chunks)));
+              req.on('error', reject);
             });
-
-            const response = await fetch(targetUrl.toString(), {
+            const response = await fetch(PRODUCTION_SHEET_PROXY_URL, {
+              method: req.method,
               headers: {
                 Accept: 'application/json',
+                ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}),
+                'Content-Type': req.headers['content-type'] || 'application/json',
               },
+              body: req.method === 'GET' || req.method === 'HEAD' ? undefined : requestBody,
             });
-            const body = await response.text();
+            const responseBody = await response.text();
 
             res.statusCode = response.status;
             res.setHeader('content-type', response.headers.get('content-type') || 'application/json');
-            res.end(body);
+            res.end(responseBody);
           } catch (error) {
             res.statusCode = 502;
             res.setHeader('content-type', 'application/json');

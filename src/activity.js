@@ -7,6 +7,7 @@ export function getLatestCommunication(raw) {
 }
 
 const CONFIRMED_STATUSES = new Set([
+  'new',
   'need to send contract/deposit invoice',
   'contract signed',
   'deposit sent',

@@ -128,6 +128,13 @@ function parseClockMinutes(value) {
   return hours * 60 + minutes;
 }
 
+export function timeInputValue(value) {
+  const minutes = parseClockMinutes(value);
+  if (minutes === null) return '';
+  const normalized = ((minutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+  return `${String(Math.floor(normalized / 60)).padStart(2, '0')}:${String(normalized % 60).padStart(2, '0')}`;
+}
+
 export function deriveEventHours(startTime, endTime) {
   const startMinutes = parseClockMinutes(startTime);
   const endMinutes = parseClockMinutes(endTime);
@@ -304,6 +311,8 @@ export function formFromEvent(event) {
     pricingMethod: normalizePricingMethod(raw.pricingMethod),
     numberOfArtists: String(raw.numberOfArtists || ''),
     bookedHours: hasEvent ? bookedHoursFromTimes || bookedHoursFromReason || String(BASE_INCLUDED_HOURS + extraHours) : '',
+    eventStartTime: timeInputValue(raw.eventStartTime),
+    eventEndTime: timeInputValue(raw.eventEndTime),
     customFlash: normalizeFlag(raw.customFlash),
     customFlashFee: raw.customFlashFee || '',
     temporaryTattoos: normalizeFlag(raw.temporaryTattoos),
@@ -335,6 +344,8 @@ export function buildPricingEvent(baseEvent, form, totals) {
     radiusFee: formatDecimal(totals.radiusFee),
     travelDistance: form.travelDistance,
     eventAddress: form.eventAddress,
+    eventStartTime: form.eventStartTime,
+    eventEndTime: form.eventEndTime,
     internalNotes: form.consultationNotes,
     balanceAddOnAmount: formatDecimal(totals.balanceAddOnsTotal),
     balanceAddOnHistory: JSON.stringify(totals.balanceAddOns),
