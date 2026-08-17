@@ -2582,6 +2582,33 @@ nav button:hover {
   color: #f6c1b2;
 }
 
+.event-card__actions .event-card__action {
+  --card-action-accent: #c77f6b;
+  background: color-mix(in srgb, var(--card-action-accent) 28%, #28231f);
+  border-color: color-mix(in srgb, var(--card-action-accent) 58%, #5a4b40);
+}
+
+.event-card__actions .event-card__action--client { --card-action-accent: #c77f6b; }
+.event-card__actions .event-card__action--staff { --card-action-accent: #d9ad62; }
+.event-card__actions .event-card__action--notes { --card-action-accent: #8fc9ad; }
+.event-card__actions .event-card__action--files { --card-action-accent: #d77f98; }
+
+.event-card__actions .event-card__action:hover {
+  background: color-mix(in srgb, var(--card-action-accent) 42%, #28231f);
+  border-color: var(--card-action-accent);
+  color: #fff3e4;
+}
+
+.event-card__created {
+  color: #75685f;
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin: 7px 2px -2px auto;
+  text-align: right;
+}
+
 .event-card__meta-row {
   align-items: center;
   border-top: 1px solid #594a3f;
@@ -2758,6 +2785,10 @@ nav button:hover {
   .event-card__actions button svg {
     height: 19px;
     width: 19px;
+  }
+
+  .event-card__created {
+    font-size: 0.52rem;
   }
 
   .event-card__meta-row {

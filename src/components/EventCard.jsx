@@ -150,6 +150,7 @@ export function EventCard({ event, onAction }) {
   const artistNames = splitNames(raw.artistNames);
   const counterNames = splitNames(raw.counterNames);
   const googleCalendarUrl = buildGoogleCalendarUrl(event, artistNames, counterNames);
+  const createdDate = formatDate(raw.createdAt || raw.gravityImportedAt);
 
   const staffList = (names, fallback) => (
     <span className="event-card__staff-list">
@@ -220,7 +221,7 @@ export function EventCard({ event, onAction }) {
         </div>
         <div className="event-card__actions" aria-label="Event ledger client card actions">
           {cardActions.map((action) => (
-            <button key={action.label} type="button" title={action.label} aria-label={action.label} onClick={() => onAction(action.id, event)}>
+            <button className={`event-card__action event-card__action--${action.id}`} key={action.label} type="button" title={action.label} aria-label={action.label} onClick={() => onAction(action.id, event)}>
               <action.icon size={22} strokeWidth={1.7} />
             </button>
           ))}
@@ -234,6 +235,7 @@ export function EventCard({ event, onAction }) {
       </div>
 
       {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
+      {createdDate ? <small className="event-card__created">Created: {createdDate}</small> : null}
     </article>
   );
 }
