@@ -160,8 +160,15 @@ export function PricingPage({ events, viewer, onSaved }) {
         saveMode === 'new'
           ? {
               raw: {
-                ...newClient,
                 clientName: newClient.clientName || `Hypothetical ${new Date().toLocaleDateString()}`,
+                contactPhone: newClient.contactPhone,
+                email: newClient.email,
+                eventDate: newClient.eventDate,
+                eventType: newClient.eventType,
+                venueName: newClient.venueName,
+                estGuestCount: '',
+                estimatedGuests: '',
+                createdAt: new Date().toISOString(),
                 status: 'New',
                 payStatus: 'New',
               },

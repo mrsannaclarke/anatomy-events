@@ -6,12 +6,15 @@ import { calculateEventPayout, getPersonPayRow, sortPayoutLedgerCards } from '..
 import {
   PRICING_METHOD_CORPORATE_MODIFIERS,
   buildPricingEvent,
+  buildPricingSummaryRows,
   computePricing,
   deriveEventHours,
   formFromEvent,
   timeInputValue,
 } from '../src/pricingMath.js';
 import { ALLOWED_USERS } from '../shared/authPolicy.js';
+import { STAFF_OPTIONS, STATUS_OPTIONS } from '../src/constants.js';
+import { getStaffColor } from '../src/staffColors.js';
 
 function pricingForm(overrides = {}) {
   return {
@@ -29,6 +32,17 @@ function pricingForm(overrides = {}) {
 test('allowlist contains no duplicate email addresses', () => {
   const emails = ALLOWED_USERS.map(({ email }) => email.toLowerCase());
   assert.equal(new Set(emails).size, emails.length);
+});
+
+test('Sienna is an active green artist with both approved login emails', () => {
+  assert.ok(STAFF_OPTIONS.includes('Sienna'));
+  assert.equal(getStaffColor('Sienna'), '#228b22');
+  const siennaEmails = ALLOWED_USERS.filter(({ name }) => name === 'Sienna').map(({ email }) => email).sort();
+  assert.deepEqual(siennaEmails, ['siennarosey@gmail.com', 'thundermadetattoos@gmail.com']);
+});
+
+test('Consult Booked/Pending is available as an event status', () => {
+  assert.ok(STATUS_OPTIONS.includes('Consult Booked/Pending'));
 });
 
 test('event times parse 12-hour, 24-hour, and overnight ranges', () => {
@@ -56,6 +70,13 @@ test('standard pricing prorates under five hours and uses a deposit', () => {
   assert.equal(totals.tempFacilityLicenseFee, 200);
   assert.equal(totals.totalCharge, 1600);
   assert.equal(totals.depositRequired, 480);
+});
+
+test('pricing breakdown lists artist, counter, and license charges separately', () => {
+  const rows = buildPricingSummaryRows(computePricing(pricingForm()));
+  assert.equal(rows.find(({ label }) => label?.startsWith('Artist Price'))?.value, '$1,600.00');
+  assert.equal(rows.find(({ label }) => label?.startsWith('Counter Staff'))?.value, '$150.00');
+  assert.equal(rows.find(({ label }) => label === 'Temporary Facility License')?.value, '$200.00');
 });
 
 test('corporate pricing has a five-hour minimum, $300 admin fee, and no deposit', () => {

@@ -22,10 +22,18 @@ const CONFIRMED_STATUSES = new Set([
   'event complete balance late',
 ]);
 
+const PENDING_STATUSES = new Set([
+  'consult booked/pending',
+  'post consult decision',
+  'deposit late',
+]);
+
 function getFeedGroup(event) {
   const raw = event.raw || event;
   const status = String(event.status || raw.payStatus || '').trim().toLowerCase();
-  return CONFIRMED_STATUSES.has(status) ? 0 : 1;
+  if (CONFIRMED_STATUSES.has(status)) return 0;
+  if (PENDING_STATUSES.has(status)) return 1;
+  return 1;
 }
 
 function getEventDateTimestamp(event) {

@@ -237,16 +237,14 @@ export function computePricing(form) {
 }
 
 export function buildPricingSummaryRows(totals) {
-  const requiredEventPrice = totals.baseTotal + totals.counterStaffCharge + totals.tempFacilityLicenseFee + totals.corporateAdminFee;
-  const requiredPriceLabel = totals.isCorporateModifiers
-    ? 'Required Event Price (counter, license & admin)'
-    : `Required Event Price (${formatDecimal(totals.bookedHours) || '5'} hours; counter & license included)`;
+  const artistPriceLabel = totals.isCorporateModifiers
+    ? 'Artist Price (paid by walk-up clients)'
+    : `Artist Price (${formatDecimal(totals.bookedHours) || '5'} hours)`;
   const rows = [
-    {
-      label: requiredPriceLabel,
-      value: formatMoney(requiredEventPrice),
-      lead: true,
-    },
+    { label: artistPriceLabel, value: formatMoney(totals.baseTotal), lead: true },
+    { label: `Counter Staff (${formatDecimal(totals.billableHours) || '5'} hours)`, value: formatMoney(totals.counterStaffCharge) },
+    { label: 'Temporary Facility License', value: formatMoney(totals.tempFacilityLicenseFee) },
+    ...(totals.isCorporateModifiers ? [{ label: 'Corporate Admin Fee', value: formatMoney(totals.corporateAdminFee) }] : []),
     { divider: true },
   ];
 

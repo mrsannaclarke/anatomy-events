@@ -3,6 +3,7 @@ export const ALLOWED_USERS = [
   { email: 'ladyshytattoos@gmail.com', name: 'Shy' },
   { email: 'events.anatomytattoo@gmail.com', name: 'Shy' },
   { email: 'thundermadetattoos@gmail.com', name: 'Sienna' },
+  { email: 'siennarosey@gmail.com', name: 'Sienna' },
   { email: 'sketchu2@gmail.com', name: 'Summer' },
   { email: 'sailorsisilia@gmail.com', name: 'Sisi' },
   { email: 'info@agneshamilton.com', name: 'Agnes' },

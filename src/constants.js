@@ -27,6 +27,7 @@ export const cardActions = [
 
 export const STATUS_OPTIONS = [
   'New',
+  'Consult Booked/Pending',
   'Post Consult Decision',
   'Need To Send Contract/Deposit Invoice',
   'Contract Signed',
@@ -60,6 +61,7 @@ export const STAFF_OPTIONS = [
   'Lucky',
   'Anne',
   'Jazz',
+  'Sienna',
 ];
 
 export const COUNTER_OPTIONS = [...STAFF_OPTIONS, 'Jacob', 'Jason', 'Kevin', 'Veda', 'None', 'Other'];

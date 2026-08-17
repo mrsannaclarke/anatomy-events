@@ -126,7 +126,7 @@
     "sort_order": [
       "Confirmed statuses appear first, sorted by event date from soonest to latest.",
       "Confirmed: Need To Send Contract/Deposit Invoice, Contract Signed, Deposit Sent, Deposit Paid, Temporary License Submitted/Received, Awaiting Follow Up, Needing Changes, Balance Invoice Sent, Invoice Paid in Full, and Event Complete Balance Late.",
-      "Pending statuses appear below confirmed, sorted by event date from soonest to latest; pending includes Post Consult Decision, Deposit Late, Open/blank, and any unclassified legacy status.",
+      "Pending statuses appear below confirmed, sorted by event date from soonest to latest; pending includes Consult Booked/Pending, Post Consult Decision, Deposit Late, Open/blank, and any unclassified legacy status.",
       "Undated cards sort last within their group by client name."
     ],
     "card_money_visibility": "Computed Total and Balance are visible only to admin-money viewers and only when status/pay status is not Open/blank.",
