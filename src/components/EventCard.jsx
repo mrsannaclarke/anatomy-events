@@ -1,4 +1,4 @@
-import { CalendarPlus, MapPin } from 'lucide-react';
+import { CalendarPlus, MapPin, TriangleAlert } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
 import { computePricing, formFromEvent } from '../pricingMath.js';
@@ -202,7 +202,9 @@ export function EventCard({ event, onAction }) {
               </span>
             ) : null}
           </div>
-          {eventTime ? <p className="event-card__time">Event {eventTime}</p> : null}
+          <p className="event-card__time">
+            Event {eventTime || <TriangleAlert size={16} strokeWidth={2.2} aria-label="Missing event start time" />}
+          </p>
           {addressLines.length ? (
             <a
               className={isUsableLocation(location) ? 'event-card__venue event-card__venue--link' : 'event-card__venue'}
