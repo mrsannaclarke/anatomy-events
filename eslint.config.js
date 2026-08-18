@@ -5,7 +5,7 @@ export default [
   { ignores: ['dist/**', 'node_modules/**'] },
   js.configs.recommended,
   {
-    files: ['src/**/*.{js,jsx}', 'functions/**/*.js', 'shared/**/*.js', 'vite.config.js'],
+    files: ['src/**/*.{js,jsx}', 'functions/**/*.js', 'shared/**/*.js', 'workers/**/*.js', 'vite.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       globals: {

@@ -20,5 +20,13 @@
       "database_id": "8a5f49a3-4dd3-4956-a882-129ab81f348d",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  "queues": {
+    "producers": [
+      {
+        "queue": "anatomy-events-documents",
+        "binding": "DOCUMENT_JOBS"
+      }
+    ]
+  }
 }
