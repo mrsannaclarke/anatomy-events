@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsheet, Share, ShieldCheck, Smartphone, WalletCards, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsheet, History, RefreshCw, Share, ShieldCheck, Smartphone, WalletCards, X } from 'lucide-react';
 
 import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
@@ -15,6 +15,72 @@ const COUNTER_PAYOUT_LINKS = [
   { name: 'Marissa', service: 'Venmo', url: 'https://account.venmo.com/u/Marissa-Berlin-1' },
   { name: 'Veda', service: 'Venmo', url: 'https://venmo.com/u/Veda-mueller-2' },
 ];
+
+const AUDIT_ADMIN_EMAILS = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']);
+const AUDIT_ACTION_LABELS = {
+  upsertEvent: 'Saved event',
+  upsertEventPartialJson: 'Updated event fields',
+  deleteEvent: 'Deleted event',
+  generateContract: 'Generated contract',
+  generateTfl: 'Generated temporary license',
+  uploadEventArt: 'Uploaded event art',
+};
+
+function AuditHistory() {
+  const [records, setRecords] = useState([]);
+  const [status, setStatus] = useState('loading');
+
+  async function loadAudit() {
+    setStatus('loading');
+    try {
+      const response = await fetch('/api/audit?limit=50', { credentials: 'same-origin' });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Audit history could not be loaded.');
+      setRecords(data.records || []);
+      setStatus('ready');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Audit history could not be loaded.');
+    }
+  }
+
+  useEffect(() => {
+    void loadAudit();
+  }, []);
+
+  return (
+    <section className="audit-panel" aria-labelledby="audit-history-title">
+      <div className="audit-heading">
+        <div>
+          <span>Cloudflare D1</span>
+          <h3 id="audit-history-title">Change History</h3>
+          <p>Successful Sheet changes made through this app.</p>
+        </div>
+        <button type="button" className="secondary-button" onClick={loadAudit} disabled={status === 'loading'}>
+          <RefreshCw size={16} className={status === 'loading' ? 'is-spinning' : ''} />
+          Refresh
+        </button>
+      </div>
+      {status === 'loading' ? <p className="audit-empty">Loading change history…</p> : null}
+      {status !== 'loading' && status !== 'ready' ? <p className="audit-empty">{status}</p> : null}
+      {status === 'ready' && records.length === 0 ? <p className="audit-empty">No changes have been recorded yet.</p> : null}
+      {status === 'ready' && records.length > 0 ? (
+        <div className="audit-list">
+          {records.map((record) => (
+            <article className="audit-entry" key={record.id}>
+              <History size={18} aria-hidden="true" />
+              <div>
+                <strong>{AUDIT_ACTION_LABELS[record.action] || record.action}</strong>
+                <span>{record.actorEmail}{record.entryId ? ` · Entry ${record.entryId}` : ''}</span>
+                {record.changedFields?.length ? <small>Fields: {record.changedFields.join(', ')}</small> : null}
+              </div>
+              <time dateTime={record.createdAt}>{new Date(record.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</time>
+            </article>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
 
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
@@ -38,6 +104,7 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
   const canOpenPayoutLedger = FULL_PAYOUT_ACCESS_EMAILS.has(normalizeKey(viewer.email));
   const sheetUrl = EVENT_SHEET_URL;
   const scriptUrl = APPS_SCRIPT_PROJECT_URL;
+  const canViewAudit = AUDIT_ADMIN_EMAILS.has(normalizeKey(viewer.email));
 
   return (
     <section className="page-stack admin-page">
@@ -112,6 +179,8 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
           })}
         </div>
       </section>
+
+      {canViewAudit ? <AuditHistory /> : null}
 
       <section className="counter-payout-panel" aria-labelledby="counter-payout-title">
         <div className="counter-payout-heading">
