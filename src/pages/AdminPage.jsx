@@ -29,6 +29,7 @@ function AuditHistory() {
   const [records, setRecords] = useState([]);
   const [documentJobs, setDocumentJobs] = useState(null);
   const [uploadJobs, setUploadJobs] = useState(null);
+  const [operationsHealth, setOperationsHealth] = useState(null);
   const [status, setStatus] = useState('loading');
 
   async function loadAudit() {
@@ -40,6 +41,7 @@ function AuditHistory() {
       setRecords(data.records || []);
       setDocumentJobs(data.documentJobs || null);
       setUploadJobs(data.uploadJobs || null);
+      setOperationsHealth(data.operationsHealth || null);
       setStatus('ready');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Audit history could not be loaded.');
@@ -63,6 +65,15 @@ function AuditHistory() {
           Refresh
         </button>
       </div>
+      {operationsHealth ? (
+        <div className={operationsHealth.healthy ? 'job-health' : 'job-health has-warning'}>
+          <div>
+            <strong>{operationsHealth.healthy ? 'Cloudflare monitoring healthy' : 'Cloudflare monitoring needs attention'}</strong>
+            <span>{operationsHealth.lastSuccessAt ? `Last hourly check ${new Date(operationsHealth.lastSuccessAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : 'Waiting for the first hourly check'}</span>
+          </div>
+          {operationsHealth.warnings.length > 0 ? <ul>{operationsHealth.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}
+        </div>
+      ) : null}
       {documentJobs ? (
         <div className={documentJobs.counts.failed || documentJobs.counts.retrying ? 'job-health has-warning' : 'job-health'}>
           <div>

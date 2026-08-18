@@ -1,4 +1,5 @@
 import { cleanupFailedUpload, cleanupStaleUploads } from './uploadCleanup.js';
+import { recordMonitorFailure, recordMonitorSuccess } from '../../../shared/operationsHealth.js';
 
 async function updateJob(db, jobId, status, attempts, result = null, error = '') {
   await db.prepare(`
@@ -109,9 +110,14 @@ export default {
   async scheduled(_controller, env) {
     try {
       const result = await cleanupStaleUploads(env);
+      await recordMonitorSuccess(env.AUDIT_DB, result);
       console.log(JSON.stringify({ event: 'stale_upload_cleanup', ...result }));
     } catch (error) {
-      console.error(JSON.stringify({ event: 'stale_upload_cleanup_error', reason: error instanceof Error ? error.message : 'unknown' }));
+      const reason = error instanceof Error ? error.message : 'unknown';
+      await recordMonitorFailure(env.AUDIT_DB, reason).catch((monitorError) => {
+        console.error(JSON.stringify({ event: 'monitor_write_error', reason: monitorError instanceof Error ? monitorError.message : 'unknown' }));
+      });
+      console.error(JSON.stringify({ event: 'stale_upload_cleanup_error', reason }));
       throw error;
     }
   },
