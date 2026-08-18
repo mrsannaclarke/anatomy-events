@@ -179,6 +179,20 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
         </div>
       </section>
 
+      <section className="picker-section event-classification-section">
+        <h3>Event Classification</h3>
+        <div className="detail-grid editable-grid">
+          <Field label="Pricing Method">
+            <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
+              <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
+              <option value={PRICING_METHOD_CORPORATE_MODIFIERS}>Corporate / Walk-Up — Client Pays Modifiers Only</option>
+              <option value={PRICING_METHOD_ZERO_WALK_UP}>Walk-Up Sales Only — No Artist or Counter Event Pay</option>
+            </select>
+          </Field>
+          {form.pricingMethod === PRICING_METHOD_STANDARD ? renderClientField(['eventType', 'Event Type']) : null}
+        </div>
+      </section>
+
       <section className="picker-section">
         <h3>Client Information</h3>
         <div className="detail-grid editable-grid">
@@ -190,24 +204,6 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
             <Route size={16} />
             {isLookingUpMileage ? 'Looking Up...' : 'Calculate Mileage'}
           </button>
-        </div>
-      </section>
-
-      <section className="picker-section event-classification-section">
-        <h3>Event Classification</h3>
-        <div className="form-grid">
-          <Field label="Pricing Method">
-            <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
-              <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
-              <option value={PRICING_METHOD_CORPORATE_MODIFIERS}>Corporate / Walk-Up — Client Pays Modifiers Only</option>
-              <option value={PRICING_METHOD_ZERO_WALK_UP}>Walk-Up Sales Only — No Artist or Counter Event Pay</option>
-            </select>
-          </Field>
-          {form.pricingMethod === PRICING_METHOD_STANDARD ? (
-            <Field label="Type of Event">
-              <EventTypePicker value={form.eventType} onChange={(value) => updateField('eventType', value)} disabled={!isEditable} />
-            </Field>
-          ) : null}
         </div>
       </section>
 

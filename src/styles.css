@@ -2875,9 +2875,13 @@ nav button:hover {
 
 .event-card {
   background:
-    radial-gradient(circle at 88% 12%, rgb(199 127 107 / 7%), transparent 32%),
-    linear-gradient(135deg, #302923, #27211d);
-  border: 1px solid #594a3f;
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--event-color) 16%, transparent), transparent 38%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--event-color) 13%, #302923),
+      color-mix(in srgb, var(--event-color) 4%, #27211d)
+    );
+  border: 1px solid color-mix(in srgb, var(--event-color) 34%, #594a3f);
   border-radius: 16px;
   box-shadow: 0 15px 34px rgb(0 0 0 / 20%);
   padding: 26px 30px 20px;
