@@ -1,3 +1,5 @@
+import { cleanupFailedUpload, cleanupStaleUploads } from './uploadCleanup.js';
+
 async function updateJob(db, jobId, status, attempts, result = null, error = '') {
   await db.prepare(`
     UPDATE document_jobs
@@ -76,6 +78,11 @@ export default {
         } else {
           if (isUpload) await updateUploadJob(env.AUDIT_DB, jobId, 'failed', message.attempts, null, data.error || 'Upload failed.');
           else await updateJob(env.AUDIT_DB, jobId, 'failed', message.attempts, null, data.error || 'Document generation failed.');
+          if (isUpload) {
+            await cleanupFailedUpload(env, jobId).catch((error) => {
+              console.error(JSON.stringify({ event: 'failed_upload_cleanup_error', jobId, reason: error instanceof Error ? error.message : 'unknown' }));
+            });
+          }
           message.ack();
         }
       } catch (error) {
@@ -88,9 +95,24 @@ export default {
         } else {
           const update = isUpload ? updateUploadJob : updateJob;
           await update(env.AUDIT_DB, jobId, 'failed', message.attempts, null, messageText).catch(() => {});
+          if (isUpload) {
+            await cleanupFailedUpload(env, jobId).catch((cleanupError) => {
+              console.error(JSON.stringify({ event: 'failed_upload_cleanup_error', jobId, reason: cleanupError instanceof Error ? cleanupError.message : 'unknown' }));
+            });
+          }
           message.ack();
         }
       }
+    }
+  },
+
+  async scheduled(_controller, env) {
+    try {
+      const result = await cleanupStaleUploads(env);
+      console.log(JSON.stringify({ event: 'stale_upload_cleanup', ...result }));
+    } catch (error) {
+      console.error(JSON.stringify({ event: 'stale_upload_cleanup_error', reason: error instanceof Error ? error.message : 'unknown' }));
+      throw error;
     }
   },
 };

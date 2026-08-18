@@ -3,6 +3,7 @@
   "name": "anatomy-events-document-worker",
   "main": "src/index.js",
   "compatibility_date": "2026-08-18",
+  "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "APP_ORIGIN": "https://anatomy-events.pages.dev"
   },
@@ -17,6 +18,15 @@
       "database_id": "8a5f49a3-4dd3-4956-a882-129ab81f348d"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "UPLOAD_STAGING",
+      "bucket_name": "anatomy-events-upload-staging"
+    }
+  ],
+  "triggers": {
+    "crons": ["17 * * * *"]
+  },
   "queues": {
     "consumers": [
       {

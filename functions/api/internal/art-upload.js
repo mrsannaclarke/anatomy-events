@@ -71,7 +71,13 @@ export async function onRequest({ request, env, waitUntil }) {
     await env.AUDIT_DB.prepare(`
       UPDATE upload_jobs SET status = 'completed', result_json = ?, error = NULL, updated_at = ? WHERE id = ?
     `).bind(JSON.stringify(uploadResult), new Date().toISOString(), jobId).run();
-    waitUntil(env.UPLOAD_STAGING.delete(job.objectKey));
+    waitUntil((async () => {
+      const deletedAt = new Date().toISOString();
+      await env.UPLOAD_STAGING.delete(job.objectKey);
+      await env.AUDIT_DB.prepare(`
+        UPDATE upload_jobs SET staging_deleted_at = ? WHERE id = ? AND staging_deleted_at IS NULL
+      `).bind(deletedAt, jobId).run();
+    })());
     return response({ ok: true, result: uploadResult });
   } catch (error) {
     console.error(JSON.stringify({ event: 'art_upload_error', jobId, reason: error instanceof Error ? error.message : 'unknown' }));
