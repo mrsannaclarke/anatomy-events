@@ -1,4 +1,6 @@
 import { authenticateAppRequest } from '../_session.js';
+import { sheetMutationInvalidationKeys, sheetReadCacheKey } from '../_sheetCache.js';
+import { auditRecord, writeAuditRecord } from '../_audit.js';
 
 const MUTATION_ACTIONS = new Set([
   'upsertEvent',
@@ -10,6 +12,8 @@ const MUTATION_ACTIONS = new Set([
 ]);
 const READ_ACTIONS = new Set(['events', 'event', 'pricing']);
 const ALLOWED_ACTIONS = new Set([...READ_ACTIONS, ...MUTATION_ACTIONS]);
+const UPSTREAM_TIMEOUT_MS = 20_000;
+const CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 function jsonResponse(payload, status) {
   return Response.json(payload, {
@@ -21,8 +25,28 @@ function jsonResponse(payload, status) {
   });
 }
 
+function upstreamJsonResponse(body, status, contentType, source = 'apps-script') {
+  return new Response(body, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      'Content-Type': contentType || 'application/json; charset=utf-8',
+      'X-Anatomy-Data-Source': source,
+      'X-Content-Type-Options': 'nosniff',
+      ...(source === 'cloudflare-kv-fallback' ? { Warning: '110 - "Apps Script unavailable; serving last known good data"' } : {}),
+    },
+  });
+}
+
+async function cachedReadResponse(env, cacheKey) {
+  if (!env.EVENTS_CACHE || !cacheKey) return null;
+  const cached = await env.EVENTS_CACHE.get(cacheKey, { type: 'json' });
+  if (!cached?.body) return null;
+  return upstreamJsonResponse(cached.body, 200, cached.contentType, 'cloudflare-kv-fallback');
+}
+
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request, env, waitUntil } = context;
   if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'Method not allowed.' }, 405);
   if (!env.APP_SYNC_TOKEN || !env.GOOGLE_WEB_CLIENT_ID || !env.SHEET_WEB_APP_URL) {
     return jsonResponse({ ok: false, error: 'Server configuration is incomplete.' }, 503);
@@ -71,20 +95,51 @@ export async function onRequest(context) {
     }
   }
 
-  const upstreamResponse = await fetch(env.SHEET_WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, token: env.APP_SYNC_TOKEN, actorEmail: email }),
-    redirect: 'follow',
-  });
+  const cacheKey = sheetReadCacheKey(payload);
+  try {
+    const upstreamResponse = await fetch(env.SHEET_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, token: env.APP_SYNC_TOKEN, actorEmail: email }),
+      redirect: 'follow',
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+    const responseBody = await upstreamResponse.text();
+    const contentType = upstreamResponse.headers.get('Content-Type') || 'application/json; charset=utf-8';
 
-  console.log(JSON.stringify({ event: MUTATION_ACTIONS.has(action) ? 'sheet_mutation' : 'sheet_read', action, email, status: upstreamResponse.status }));
-  return new Response(upstreamResponse.body, {
-    status: upstreamResponse.status,
-    headers: {
-      'Cache-Control': 'no-store',
-      'Content-Type': upstreamResponse.headers.get('Content-Type') || 'application/json; charset=utf-8',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
+    if (READ_ACTIONS.has(action) && upstreamResponse.ok && env.EVENTS_CACHE && cacheKey) {
+      waitUntil(env.EVENTS_CACHE.put(cacheKey, JSON.stringify({ body: responseBody, contentType }), {
+        expirationTtl: CACHE_TTL_SECONDS,
+      }));
+    }
+    if (MUTATION_ACTIONS.has(action) && upstreamResponse.ok && env.EVENTS_CACHE) {
+      waitUntil(Promise.all(sheetMutationInvalidationKeys(payload).map((key) => env.EVENTS_CACHE.delete(key))));
+    }
+    if (MUTATION_ACTIONS.has(action) && upstreamResponse.ok && env.AUDIT_DB) {
+      const record = auditRecord(payload, email, upstreamResponse.status);
+      waitUntil(writeAuditRecord(env.AUDIT_DB, record).catch((error) => {
+        console.error(JSON.stringify({ event: 'audit_write_error', action, email, reason: error instanceof Error ? error.message : 'unknown' }));
+      }));
+    }
+
+    console.log(JSON.stringify({ event: MUTATION_ACTIONS.has(action) ? 'sheet_mutation' : 'sheet_read', action, email, status: upstreamResponse.status, source: 'apps-script' }));
+    if (!upstreamResponse.ok && READ_ACTIONS.has(action)) {
+      const fallback = await cachedReadResponse(env, cacheKey);
+      if (fallback) {
+        console.warn(JSON.stringify({ event: 'sheet_read_fallback', action, email, upstreamStatus: upstreamResponse.status }));
+        return fallback;
+      }
+    }
+    return upstreamJsonResponse(responseBody, upstreamResponse.status, contentType);
+  } catch (error) {
+    if (READ_ACTIONS.has(action)) {
+      const fallback = await cachedReadResponse(env, cacheKey);
+      if (fallback) {
+        console.warn(JSON.stringify({ event: 'sheet_read_fallback', action, email, reason: error instanceof Error ? error.name : 'fetch_error' }));
+        return fallback;
+      }
+    }
+    console.error(JSON.stringify({ event: 'sheet_upstream_error', action, email, reason: error instanceof Error ? error.name : 'fetch_error' }));
+    return jsonResponse({ ok: false, error: 'The Sheet service is temporarily unavailable. Please try again.' }, 503);
+  }
 }

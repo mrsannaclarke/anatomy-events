@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { mutationEntryId, sheetMutationInvalidationKeys, sheetReadCacheKey } from '../functions/_sheetCache.js';
+import { auditRecord, isAuditAdmin } from '../functions/_audit.js';
 
 import { sortLedgerEvents } from '../src/activity.js';
 import { isExpiredStaffingOnlyEvent } from '../src/eventVisibility.js';
@@ -30,6 +32,39 @@ function pricingForm(overrides = {}) {
     ...overrides,
   };
 }
+
+test('Sheet read cache keys isolate ledgers, pricing, and individual events', () => {
+  assert.equal(sheetReadCacheKey({ action: 'events', limit: '1000' }), 'sheet-read:v1:events:1000');
+  assert.equal(sheetReadCacheKey({ action: 'pricing' }), 'sheet-read:v1:pricing');
+  assert.equal(sheetReadCacheKey({ action: 'event', entryId: '1513' }), 'sheet-read:v1:event:1513');
+  assert.equal(sheetReadCacheKey({ action: 'deleteEvent', entryId: '1513' }), '');
+});
+
+test('Sheet mutations invalidate the ledger and affected event cache', () => {
+  const partial = { action: 'upsertEventPartialJson', eventJson: JSON.stringify({ entryId: '1513', status: 'Deposit Paid' }) };
+  assert.equal(mutationEntryId(partial), '1513');
+  assert.deepEqual(sheetMutationInvalidationKeys(partial), [
+    'sheet-read:v1:events:1000',
+    'sheet-read:v1:event:1513',
+  ]);
+});
+
+test('audit records capture mutation fields without storing uploaded file contents', () => {
+  const record = auditRecord({
+    action: 'uploadEventArt',
+    entryId: '1513',
+    fileName: 'flash.pdf',
+    mimeType: 'application/pdf',
+    fileData: 'sensitive-binary-data',
+  }, 'mrs.annaclarke@gmail.com', 200);
+
+  assert.equal(record.entryId, '1513');
+  assert.equal(record.metadata.fileName, 'flash.pdf');
+  assert.equal(record.metadata.encodedBytes, 21);
+  assert.ok(!JSON.stringify(record).includes('sensitive-binary-data'));
+  assert.equal(isAuditAdmin('MRS.ANNACLARKE@GMAIL.COM'), true);
+  assert.equal(isAuditAdmin('tattoosbytomma@gmail.com'), false);
+});
 
 test('allowlist contains no duplicate email addresses', () => {
   const emails = ALLOWED_USERS.map(({ email }) => email.toLowerCase());

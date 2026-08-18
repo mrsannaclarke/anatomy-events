@@ -6,5 +6,19 @@
   "pages_build_output_dir": "./dist",
   "vars": {
     "SHEET_WEB_APP_URL": "https://script.google.com/macros/s/AKfycbz475VzSvNesTsCuU2CdvFEX7zskQ0uyJf17CqjmYaWrMZ5vePbBpBrI-cNaYsoZQ55eA/exec"
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "EVENTS_CACHE",
+      "id": "5350b4be3846489c903f97db44d27a3d"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "AUDIT_DB",
+      "database_name": "anatomy-events-audit",
+      "database_id": "8a5f49a3-4dd3-4956-a882-129ab81f348d",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
