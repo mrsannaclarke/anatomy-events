@@ -26,7 +26,17 @@
       {
         "queue": "anatomy-events-documents",
         "binding": "DOCUMENT_JOBS"
+      },
+      {
+        "queue": "anatomy-events-uploads",
+        "binding": "UPLOAD_JOBS"
       }
     ]
-  }
+  },
+  "r2_buckets": [
+    {
+      "binding": "UPLOAD_STAGING",
+      "bucket_name": "anatomy-events-upload-staging"
+    }
+  ]
 }

@@ -1,5 +1,7 @@
 import { isAuditAdmin, listAuditRecords } from '../_audit.js';
 import { authenticateAppRequest } from '../_session.js';
+import { getDocumentJobHealth } from '../_documentJobs.js';
+import { getUploadJobHealth } from '../_uploadJobs.js';
 
 function response(payload, status = 200) {
   return Response.json(payload, {
@@ -27,8 +29,12 @@ export async function onRequest({ request, env }) {
 
   try {
     const url = new URL(request.url);
-    const records = await listAuditRecords(env.AUDIT_DB, url.searchParams.get('limit'));
-    return response({ ok: true, records });
+    const [records, documentJobs, uploadJobs] = await Promise.all([
+      listAuditRecords(env.AUDIT_DB, url.searchParams.get('limit')),
+      getDocumentJobHealth(env.AUDIT_DB),
+      getUploadJobHealth(env.AUDIT_DB),
+    ]);
+    return response({ ok: true, records, documentJobs, uploadJobs });
   } catch (error) {
     console.error(JSON.stringify({ event: 'audit_read_error', email, reason: error instanceof Error ? error.message : 'unknown' }));
     return response({ ok: false, error: 'Audit history is temporarily unavailable.' }, 503);

@@ -27,6 +27,8 @@ const AUDIT_ACTION_LABELS = {
 
 function AuditHistory() {
   const [records, setRecords] = useState([]);
+  const [documentJobs, setDocumentJobs] = useState(null);
+  const [uploadJobs, setUploadJobs] = useState(null);
   const [status, setStatus] = useState('loading');
 
   async function loadAudit() {
@@ -36,6 +38,8 @@ function AuditHistory() {
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'Audit history could not be loaded.');
       setRecords(data.records || []);
+      setDocumentJobs(data.documentJobs || null);
+      setUploadJobs(data.uploadJobs || null);
       setStatus('ready');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Audit history could not be loaded.');
@@ -59,6 +63,33 @@ function AuditHistory() {
           Refresh
         </button>
       </div>
+      {documentJobs ? (
+        <div className={documentJobs.counts.failed || documentJobs.counts.retrying ? 'job-health has-warning' : 'job-health'}>
+          <div>
+            <strong>{documentJobs.counts.failed || documentJobs.counts.retrying ? 'Background jobs need attention' : 'Background jobs healthy'}</strong>
+            <span>
+              {documentJobs.counts.queued} queued · {documentJobs.counts.processing} processing · {documentJobs.counts.completed} completed
+              {documentJobs.counts.retrying ? ` · ${documentJobs.counts.retrying} retrying` : ''}
+              {documentJobs.counts.failed ? ` · ${documentJobs.counts.failed} failed` : ''}
+            </span>
+          </div>
+          {documentJobs.needsAttention.length > 0 ? (
+            <ul>
+              {documentJobs.needsAttention.map((job) => (
+                <li key={job.id}>Entry {job.entryId} {job.kind === 'tfl' ? 'temporary license' : 'contract'}: {job.error || job.status}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+      {uploadJobs ? (
+        <div className={uploadJobs.failed || uploadJobs.retrying ? 'job-health has-warning' : 'job-health'}>
+          <div>
+            <strong>{uploadJobs.failed || uploadJobs.retrying ? 'Artwork uploads need attention' : 'Artwork uploads healthy'}</strong>
+            <span>{uploadJobs.queued} queued · {uploadJobs.processing} processing · {uploadJobs.completed} completed{uploadJobs.retrying ? ` · ${uploadJobs.retrying} retrying` : ''}{uploadJobs.failed ? ` · ${uploadJobs.failed} failed` : ''}</span>
+          </div>
+        </div>
+      ) : null}
       {status === 'loading' ? <p className="audit-empty">Loading change history…</p> : null}
       {status !== 'loading' && status !== 'ready' ? <p className="audit-empty">{status}</p> : null}
       {status === 'ready' && records.length === 0 ? <p className="audit-empty">No changes have been recorded yet.</p> : null}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Copy, ExternalLink, Mail, Upload } from 'lucide-react';
 
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { getDocumentJob, pullEventByEntryId, queueEventFile, uploadEventArt } from '../sheetClient.js';
+import { getArtUploadJob, getDocumentJob, pullEventByEntryId, queueEventArt, queueEventFile } from '../sheetClient.js';
 
 function documentJobStorageKey(entryId, kind) {
   return `anatomy-events:document-job:${entryId}:${kind}`;
@@ -16,12 +16,17 @@ function storedDocumentJobs(entryId) {
   }, {});
 }
 
+function artUploadStorageKey(entryId) {
+  return `anatomy-events:art-upload-job:${entryId}`;
+}
+
 export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
   const [fileUrls, setFileUrls] = useState(null);
   const [status, setStatus] = useState('');
   const [pendingLabel, setPendingLabel] = useState('');
   const [documentJobs, setDocumentJobs] = useState(() => storedDocumentJobs(event.entryId));
+  const [artUploadJob, setArtUploadJob] = useState(() => window.localStorage.getItem(artUploadStorageKey(event.entryId)) || '');
 
   function urlsFromEvent(sourceEvent) {
     const source = sourceEvent?.raw || {};
@@ -59,6 +64,7 @@ export function FilesPanel({ event, onSaved }) {
 
   useEffect(() => {
     setDocumentJobs(storedDocumentJobs(event.entryId));
+    setArtUploadJob(window.localStorage.getItem(artUploadStorageKey(event.entryId)) || '');
   }, [event.entryId]);
 
   useEffect(() => {
@@ -114,6 +120,46 @@ export function FilesPanel({ event, onSaved }) {
     };
   }, [documentJobs, event.entryId, onSaved]);
 
+  useEffect(() => {
+    if (!artUploadJob) return undefined;
+    let cancelled = false;
+    let timer;
+
+    async function checkUpload() {
+      try {
+        const job = await getArtUploadJob(artUploadJob);
+        if (cancelled) return;
+        if (job.status === 'completed') {
+          window.localStorage.removeItem(artUploadStorageKey(event.entryId));
+          setArtUploadJob('');
+          const refreshed = await pullEventByEntryId(event.entryId);
+          if (!cancelled && refreshed) {
+            setFileUrls(urlsFromEvent(refreshed));
+            onSaved(refreshed);
+            setStatus('Uploaded art saved to Drive and connected to this client.');
+          }
+          return;
+        }
+        if (job.status === 'failed') {
+          window.localStorage.removeItem(artUploadStorageKey(event.entryId));
+          setArtUploadJob('');
+          setStatus(`Artwork upload failed: ${job.error || 'Please try again.'}`);
+          return;
+        }
+        setStatus('Artwork is copying to Drive in the background. You can continue using the app.');
+      } catch {
+        if (!cancelled) setStatus('Artwork is queued; its status will be checked again automatically.');
+      }
+      if (!cancelled) timer = window.setTimeout(checkUpload, 2500);
+    }
+
+    void checkUpload();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [artUploadJob, event.entryId, onSaved]);
+
   function mailtoLink(label, url) {
     const subjectByLabel = {
       Contract: `${event.clientName} ${raw.eventType || ''} ${raw.eventDate || ''} Contract`,
@@ -159,15 +205,13 @@ export function FilesPanel({ event, onSaved }) {
       setStatus('Choose an image or PDF smaller than 8 MB.');
       return;
     }
-    setStatus('Uploading art to Drive...');
-    setPendingLabel('Uploading art to Drive...');
+    setStatus('Uploading artwork securely to Cloudflare...');
+    setPendingLabel('Uploading artwork securely...');
     try {
-      const result = await uploadEventArt(event.entryId, file);
-      const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
-      if (!refreshed) throw new Error('Art uploaded, but the refreshed event was not returned.');
-      setFileUrls(urlsFromEvent(refreshed));
-      onSaved(refreshed);
-      setStatus('Uploaded art saved to Drive and connected to this client.');
+      const job = await queueEventArt(event.entryId, file);
+      window.localStorage.setItem(artUploadStorageKey(event.entryId), job.id);
+      setArtUploadJob(job.id);
+      setStatus('Artwork received. It is copying to Drive in the background.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to upload art.');
     } finally {
@@ -222,8 +266,8 @@ export function FilesPanel({ event, onSaved }) {
       <div className="art-upload-actions">
         <label className="primary-button art-upload-button" aria-label="Upload image or PDF">
           <Upload size={16} />
-          Choose Photo or File
-          <input type="file" accept="image/*,.pdf,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel)} />
+          {artUploadJob ? 'Artwork Processing…' : 'Choose Photo or File'}
+          <input type="file" accept="image/*,.pdf,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel) || Boolean(artUploadJob)} />
         </label>
       </div>
       {fileUrls?.artImageUrl ? (

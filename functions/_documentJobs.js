@@ -41,6 +41,37 @@ export async function getDocumentJob(db, id) {
   };
 }
 
+export async function getDocumentJobHealth(db) {
+  const [countsResult, attentionResult] = await db.batch([
+    db.prepare(`
+      SELECT status, COUNT(*) AS count
+      FROM document_jobs
+      GROUP BY status
+    `),
+    db.prepare(`
+      SELECT id, entry_id, kind, status, attempts, error, updated_at
+      FROM document_jobs
+      WHERE status IN ('retrying', 'failed')
+      ORDER BY updated_at DESC
+      LIMIT 10
+    `),
+  ]);
+  const counts = { queued: 0, processing: 0, retrying: 0, completed: 0, failed: 0 };
+  for (const row of countsResult.results) counts[row.status] = Number(row.count || 0);
+  return {
+    counts,
+    needsAttention: attentionResult.results.map((row) => ({
+      id: row.id,
+      entryId: row.entry_id,
+      kind: row.kind,
+      status: row.status,
+      attempts: row.attempts,
+      error: row.error || '',
+      updatedAt: row.updated_at,
+    })),
+  };
+}
+
 export async function signDocumentJob(jobId, secret) {
   const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(jobId));

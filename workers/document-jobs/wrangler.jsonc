@@ -6,6 +6,10 @@
   "vars": {
     "APP_ORIGIN": "https://anatomy-events.pages.dev"
   },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
   "d1_databases": [
     {
       "binding": "AUDIT_DB",
@@ -22,6 +26,14 @@
         "max_retries": 5,
         "retry_delay": 30,
         "dead_letter_queue": "anatomy-events-documents-dlq"
+      },
+      {
+        "queue": "anatomy-events-uploads",
+        "max_batch_size": 3,
+        "max_batch_timeout": 2,
+        "max_retries": 5,
+        "retry_delay": 30,
+        "dead_letter_queue": "anatomy-events-uploads-dlq"
       }
     ]
   }
