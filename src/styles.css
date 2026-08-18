@@ -1398,7 +1398,23 @@ nav button:hover {
 .admin-action--script { --admin-accent: #d9ad62; }
 .admin-action--history { --admin-accent: #8fc9ad; }
 .admin-action--ledger { --admin-accent: #d77f98; }
+.admin-action--payments { --admin-accent: #8faac9; }
 .admin-action--signout { --admin-accent: #d56b66; }
+
+.counter-payment-page .panel-heading > div {
+  align-items: flex-start;
+  display: grid;
+  gap: 10px;
+}
+
+.counter-payment-page .panel-heading .secondary-button {
+  justify-self: start;
+}
+
+.counter-payment-page .panel-heading > svg {
+  color: #8faac9;
+  flex: 0 0 auto;
+}
 
 .change-history-page .panel-heading > div {
   align-items: flex-start;

@@ -8,6 +8,7 @@ import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
 import { ChangeHistoryPage } from './pages/ChangeHistoryPage.jsx';
+import { CounterPaymentLinksPage } from './pages/CounterPaymentLinksPage.jsx';
 import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
@@ -379,6 +380,8 @@ export function App() {
           />
         ) : activePage === 'history' ? (
           <ChangeHistoryPage onBack={() => setActivePage('admin')} />
+        ) : activePage === 'counterPayments' ? (
+          <CounterPaymentLinksPage onBack={() => setActivePage('admin')} />
         ) : activePage === 'payoutLedger' ? (
           <PayoutLedgerPage events={events} viewer={viewer} onBack={() => setActivePage('admin')} />
         ) : activePage === 'events' ? (
