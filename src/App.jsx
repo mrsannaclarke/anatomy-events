@@ -11,13 +11,27 @@ import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
 import { DetailPanel } from './panels/DetailPanel.jsx';
-import { configurePricingSchedule } from './pricingMath.js';
+import { configurePricingSchedule, isZeroWalkUpPricing } from './pricingMath.js';
 import { pullEventsFromSheet, pullPricingRulesFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
 
 const LAST_SHEET_SYNC_KEY = 'events-app-2.0:last-sheet-sync-at';
 
 function getProjectTitle() {
   return project?.project?.name || project?.name || 'Events App 3.0';
+}
+
+function isExpiredStaffingOnlyEvent(event, now = new Date()) {
+  if (!isZeroWalkUpPricing(event.raw || event)) return false;
+
+  const value = String(event.raw?.eventDate || event.eventDate || '').trim();
+  const match = value.match(/^(?:(\d{4})-(\d{1,2})-(\d{1,2})|(\d{1,2})\/(\d{1,2})\/(\d{2,4}))/);
+  if (!match) return false;
+
+  const year = Number(match[1] || (match[6].length === 2 ? `20${match[6]}` : match[6]));
+  const month = Number(match[2] || match[4]);
+  const day = Number(match[3] || match[5]);
+  const hideAt = new Date(year, month - 1, day + 1);
+  return now >= hideAt;
 }
 
 function GoogleSignInGate({ onSignedIn }) {
@@ -149,6 +163,7 @@ function AccessDenied({ viewer, onSignOut }) {
 }
 
 export function App() {
+  const [rosterClock, setRosterClock] = useState(() => new Date());
   const [events, setEvents] = useState(() => {
     try {
       const cached = window.localStorage.getItem(EVENTS_CACHE_KEY);
@@ -196,6 +211,22 @@ export function App() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    let timer;
+
+    function scheduleNextRosterRefresh() {
+      const now = new Date();
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      timer = window.setTimeout(() => {
+        setRosterClock(new Date());
+        scheduleNextRosterRefresh();
+      }, nextMidnight.getTime() - now.getTime() + 1000);
+    }
+
+    scheduleNextRosterRefresh();
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -278,8 +309,8 @@ export function App() {
     return navItems;
   }, [viewer?.isAllowlisted]);
   const visibleLedgerEvents = useMemo(
-    () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event))),
-    [events],
+    () => sortLedgerEvents(events.filter((event) => !isHiddenLedgerStatus(event) && !isExpiredStaffingOnlyEvent(event, rosterClock))),
+    [events, rosterClock],
   );
 
   function signOut() {
