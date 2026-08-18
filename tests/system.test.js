@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { sortLedgerEvents } from '../src/activity.js';
+import { isExpiredStaffingOnlyEvent } from '../src/eventVisibility.js';
 import { calculateEventPayout, getPersonPayRow, sortPayoutLedgerCards } from '../src/payoutMath.js';
 import {
   PRICING_METHOD_CORPORATE_MODIFIERS,
@@ -133,6 +134,14 @@ test('$0 walk-up pricing saves an explicit method and produces no charges or pay
   const payout = calculateEventPayout(event, ['Agnes', 'Jeremy']);
   assert.equal(payout.gross, 0);
   assert.equal(payout.lines.length, 0);
+});
+
+test('$0 walk-up event remains visible on its event day and expires the following day', () => {
+  const event = { raw: { eventDate: '09/13/2026', pricingMethod: '$0 Walk-Up Event' } };
+  assert.equal(isExpiredStaffingOnlyEvent(event, new Date(2026, 8, 13, 23, 59, 59)), false);
+  assert.equal(isExpiredStaffingOnlyEvent(event, new Date(2026, 8, 14, 0, 0, 0)), true);
+  assert.equal(isExpiredStaffingOnlyEvent({ raw: { ...event.raw, pricingMethod: 'Standard' } }, new Date(2026, 8, 14)), false);
+  assert.equal(isExpiredStaffingOnlyEvent({ raw: { eventDate: 'not-a-date', pricingMethod: '$0 Walk-Up Event' } }, new Date(2026, 8, 14)), false);
 });
 
 test('standard discount protects licensing and counter while reducing artist payout first', () => {
