@@ -1,5 +1,5 @@
 import { STAFF_OPTIONS } from './constants.js';
-import { computePricing, formFromEvent, formatMoney, parseMoney } from './pricingMath.js';
+import { computePricing, formFromEvent, formatMoney, isZeroWalkUpPricing, parseMoney } from './pricingMath.js';
 
 const COMPLETED_STATUSES = new Set(['event complete', 'event complete balance late']);
 const CANCELLED_STATUSES = new Set(['cancelled', 'canceled']);
@@ -107,7 +107,7 @@ export function buildPricingPayoutMap(pricingRows) {
 }
 
 function getBasePersonPayRow(event, personName, pricingPayoutMap = {}) {
-  if (isCancelledForPay(event)) return null;
+  if (isCancelledForPay(event) || isZeroWalkUpPricing(event)) return null;
 
   const raw = event.raw || event;
   const artistNames = parseNames(raw.artistNames);
@@ -300,7 +300,7 @@ export function calculateEventPayout(event, people, pricingPayoutMap = {}) {
   const raw = event?.raw || event || {};
   const computed = computePricing(formFromEvent(event));
   const savedGross = parseMoney(raw.totalCharge || raw.computedTotal);
-  const gross = normalizeCurrency(savedGross > 0 ? savedGross : computed.totalCharge);
+  const gross = isZeroWalkUpPricing(event) ? 0 : normalizeCurrency(savedGross > 0 ? savedGross : computed.totalCharge);
   const lines = people
     .map((person) => ({ person, row: getPersonPayRow(event, person, pricingPayoutMap) }))
     .filter((line) => line.row && (line.row.totalPayout > 0 || line.row.payoutSource === 'one_time_exception'));

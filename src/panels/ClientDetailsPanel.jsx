@@ -7,7 +7,7 @@ import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
-import { ARTIST_COUNTS, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, PLAN_YEARS, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD } from '../pricingMath.js';
+import { ARTIST_COUNTS, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, PLAN_YEARS, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD, PRICING_METHOD_ZERO_WALK_UP } from '../pricingMath.js';
 
 export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   const [isEditable, setIsEditable] = useState(true);
@@ -189,6 +189,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
             <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
               <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
               <option value={PRICING_METHOD_CORPORATE_MODIFIERS}>Corporate / Walk-Up — Client Pays Modifiers Only</option>
+              <option value={PRICING_METHOD_ZERO_WALK_UP}>$0 Walk-Up Event — No Charge or Payout</option>
             </select>
           </Field>
           <Field label="Number of Artists">

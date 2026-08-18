@@ -5,6 +5,7 @@ import { sortLedgerEvents } from '../src/activity.js';
 import { calculateEventPayout, getPersonPayRow, sortPayoutLedgerCards } from '../src/payoutMath.js';
 import {
   PRICING_METHOD_CORPORATE_MODIFIERS,
+  PRICING_METHOD_ZERO_WALK_UP,
   buildPricingEvent,
   buildPricingSummaryRows,
   computePricing,
@@ -96,6 +97,42 @@ test('corporate pricing has a five-hour minimum, $300 admin fee, and no deposit'
   assert.equal(totals.totalCharge, 650);
   assert.equal(totals.depositRequired, 0);
   assert.equal(totals.balanceDue, 650);
+});
+
+test('$0 walk-up pricing saves an explicit method and produces no charges or payouts', () => {
+  const form = pricingForm({
+    pricingMethod: PRICING_METHOD_ZERO_WALK_UP,
+    customFlash: 'YES',
+    temporaryTattoos: 'YES',
+    balanceAddOns: [{ type: 'Other', amount: '500' }],
+  });
+  const totals = computePricing(form);
+  assert.equal(totals.totalCharge, 0);
+  assert.equal(totals.counterStaffCharge, 0);
+  assert.equal(totals.tempFacilityLicenseFee, 0);
+  assert.equal(totals.customFlashFee, 0);
+  assert.equal(totals.temporaryTattooFee, 0);
+  assert.equal(totals.balanceAddOnsTotal, 0);
+  assert.equal(totals.depositRequired, 0);
+  assert.equal(totals.balanceDue, 0);
+  const saved = buildPricingEvent({}, form, totals);
+  assert.equal(saved.pricingMethod, '$0 Walk-Up Event');
+  assert.equal(saved.totalCharge, '');
+  const event = {
+    raw: {
+      ...saved,
+      status: 'Event Complete',
+      artistNames: 'Agnes',
+      counterNames: 'Jeremy',
+      counterStaffCharge: '150',
+      totalCharge: '1850',
+    },
+  };
+  assert.equal(getPersonPayRow(event, 'Agnes'), null);
+  assert.equal(getPersonPayRow(event, 'Jeremy'), null);
+  const payout = calculateEventPayout(event, ['Agnes', 'Jeremy']);
+  assert.equal(payout.gross, 0);
+  assert.equal(payout.lines.length, 0);
 });
 
 test('standard discount protects licensing and counter while reducing artist payout first', () => {

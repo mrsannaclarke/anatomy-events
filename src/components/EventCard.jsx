@@ -138,6 +138,7 @@ function getAddressLines(raw) {
 
 export function EventCard({ event, onAction }) {
   const totals = computePricing(formFromEvent(event));
+  const isStaffingOnly = totals.isZeroWalkUp;
   const raw = event.raw || {};
   const location = raw.eventAddress || raw.venueName || '';
   const latestCommunication = getLatestCommunication(raw);
@@ -165,7 +166,7 @@ export function EventCard({ event, onAction }) {
 
   function openClientDetails(inputEvent) {
     if (inputEvent.target.closest('button, a, input, select, textarea')) return;
-    onAction('client', event);
+    onAction(isStaffingOnly ? 'staff' : 'client', event);
   }
 
   return (
@@ -174,13 +175,13 @@ export function EventCard({ event, onAction }) {
       style={{ '--event-color': eventColor }}
       role="button"
       tabIndex={0}
-      aria-label={`Open ${event.clientName} client details`}
+      aria-label={`Open ${event.clientName} ${isStaffingOnly ? 'staff assignments' : 'client details'}`}
       onClick={openClientDetails}
       onKeyDown={(inputEvent) => {
         if (inputEvent.target !== inputEvent.currentTarget) return;
         if (inputEvent.key !== 'Enter' && inputEvent.key !== ' ') return;
         inputEvent.preventDefault();
-        onAction('client', event);
+        onAction(isStaffingOnly ? 'staff' : 'client', event);
       }}
     >
       <div className="event-card__main">
@@ -220,7 +221,7 @@ export function EventCard({ event, onAction }) {
           ) : null}
         </div>
         <div className="event-card__actions" aria-label="Event ledger client card actions">
-          {cardActions.map((action) => (
+          {cardActions.filter((action) => !isStaffingOnly || action.id === 'staff').map((action) => (
             <button className={`event-card__action event-card__action--${action.id}`} key={action.label} type="button" title={action.label} aria-label={action.label} onClick={() => onAction(action.id, event)}>
               <action.icon size={22} strokeWidth={1.7} />
             </button>
@@ -231,10 +232,10 @@ export function EventCard({ event, onAction }) {
       <div className="event-card__meta-row">
         <span className="event-card__staff-group">{staffList(artistNames, raw.numberOfArtists || '0')}</span>
         <span className="event-card__staff-group"><strong>Counter:</strong>{staffList(counterNames, 'Unassigned')}</span>
-        <span className="event-card__status"><span style={{ background: eventColor }} />{event.status}</span>
+        {!isStaffingOnly ? <span className="event-card__status"><span style={{ background: eventColor }} />{event.status}</span> : null}
       </div>
 
-      {latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
+      {!isStaffingOnly && latestCommunication ? <div className="communication-preview">{latestCommunication}</div> : null}
       {createdDate ? <small className="event-card__created">Created: {createdDate}</small> : null}
     </article>
   );

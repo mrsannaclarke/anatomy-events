@@ -19,6 +19,7 @@ import {
   parseMoney,
   PRICING_METHOD_CORPORATE_MODIFIERS,
   PRICING_METHOD_STANDARD,
+  PRICING_METHOD_ZERO_WALK_UP,
   PRICING_SCHEDULE,
 } from '../pricingMath.js';
 
@@ -323,9 +324,14 @@ export function PricingPage({ events, viewer, onSaved }) {
             <button type="button" className={form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_CORPORATE_MODIFIERS)}>
               Corporate / Walk-Up
             </button>
+            <button type="button" className={form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_ZERO_WALK_UP)}>
+              $0 Walk-Up Event
+            </button>
           </div>
           <span className="field-help">
-            {form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
+            {form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP
+              ? 'No client charges, deposits, invoices, or staff payouts are tracked. Any walk-up payments happen outside this app.'
+              : form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
               ? 'The event client pays required counter, licensing, and admin charges plus selected modifiers. Walk-up tattoo sales are not tracked in this app.'
               : 'The event client pays the standard tattoo base plus modifiers.'}
           </span>

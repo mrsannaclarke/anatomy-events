@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay, sortPayoutLedgerCards } from '../payoutMath.js';
+import { isZeroWalkUpPricing } from '../pricingMath.js';
 import { pullPricingRulesFromSheet } from '../sheetClient.js';
 
 export function PayoutLedgerPage({ events, onBack }) {
@@ -23,7 +24,7 @@ export function PayoutLedgerPage({ events, onBack }) {
   const cards = useMemo(
     () =>
       events
-        .filter((event) => isCompletedForPay(event) && !isCancelledForPay(event))
+        .filter((event) => isCompletedForPay(event) && !isCancelledForPay(event) && !isZeroWalkUpPricing(event))
         .map((event) => calculateEventPayout(event, people, pricingPayoutMap))
         .sort(sortPayoutLedgerCards),
     [events, people, pricingPayoutMap],

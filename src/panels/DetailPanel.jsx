@@ -1,6 +1,7 @@
 import { MoveLeft } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
+import { isZeroWalkUpPricing } from '../pricingMath.js';
 import { ClientDetailsPanel } from './ClientDetailsPanel.jsx';
 import { FilesPanel } from './FilesPanel.jsx';
 import { NotesPanel } from './NotesPanel.jsx';
@@ -9,7 +10,10 @@ import { StaffAssignmentsPanel } from './StaffAssignmentsPanel.jsx';
 export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, onDeleted, onChangeMode }) {
   if (!detail) return null;
   const { mode, event } = detail;
-  const activeAction = cardActions.find((action) => action.id === mode);
+  const isStaffingOnly = isZeroWalkUpPricing(event);
+  const availableActions = isStaffingOnly ? cardActions.filter((action) => action.id === 'staff') : cardActions;
+  const effectiveMode = isStaffingOnly ? 'staff' : mode;
+  const activeAction = availableActions.find((action) => action.id === effectiveMode);
 
   return (
     <section className="detail-panel">
@@ -22,14 +26,14 @@ export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, 
           <span>{activeAction?.label || 'Client Card'}</span>
         </div>
         <div className="detail-page-actions">
-          {cardActions.map((action) => (
+          {availableActions.map((action) => (
             <button
               key={action.id}
               type="button"
-              className={mode === action.id ? 'active' : ''}
+              className={effectiveMode === action.id ? 'active' : ''}
               title={action.label}
               aria-label={action.label}
-              aria-current={mode === action.id ? 'page' : undefined}
+              aria-current={effectiveMode === action.id ? 'page' : undefined}
               onClick={() => onChangeMode(action.id)}
             >
               <action.icon size={21} strokeWidth={1.8} />
@@ -38,10 +42,10 @@ export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, 
         </div>
       </div>
 
-      {mode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSaved} onDeleted={onDeleted} /> : null}
-      {mode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSaved} /> : null}
-      {mode === 'notes' ? <NotesPanel event={event} viewerEmail={viewerEmail} viewerName={viewerName} onSaved={onSaved} /> : null}
-      {mode === 'files' ? <FilesPanel event={event} onSaved={onSaved} /> : null}
+      {effectiveMode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSaved} onDeleted={onDeleted} /> : null}
+      {effectiveMode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSaved} /> : null}
+      {effectiveMode === 'notes' ? <NotesPanel event={event} viewerEmail={viewerEmail} viewerName={viewerName} onSaved={onSaved} /> : null}
+      {effectiveMode === 'files' ? <FilesPanel event={event} onSaved={onSaved} /> : null}
     </section>
   );
 }

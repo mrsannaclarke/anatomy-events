@@ -3,16 +3,28 @@ export const CORPORATE_ADMIN_FEE = 300;
 export const DEFAULT_BASE_ADDRESS = 'Anatomy Tattoo, Portland, OR';
 export const PRICING_METHOD_STANDARD = 'STANDARD';
 export const PRICING_METHOD_CORPORATE_MODIFIERS = 'CORPORATE_MODIFIERS';
+export const PRICING_METHOD_ZERO_WALK_UP = 'ZERO_WALK_UP';
 
 export function normalizePricingMethod(value) {
   const normalized = String(value || '').trim().toUpperCase();
-  return normalized === PRICING_METHOD_CORPORATE_MODIFIERS || normalized === 'CORPORATE / WALK-UP'
-    ? PRICING_METHOD_CORPORATE_MODIFIERS
-    : PRICING_METHOD_STANDARD;
+  if (normalized === PRICING_METHOD_ZERO_WALK_UP || normalized === '$0 WALK-UP EVENT' || normalized === '0$ WALK-UP EVENT') {
+    return PRICING_METHOD_ZERO_WALK_UP;
+  }
+  if (normalized === PRICING_METHOD_CORPORATE_MODIFIERS || normalized === 'CORPORATE / WALK-UP') {
+    return PRICING_METHOD_CORPORATE_MODIFIERS;
+  }
+  return PRICING_METHOD_STANDARD;
 }
 
 export function pricingMethodToSheetValue(value) {
-  return normalizePricingMethod(value) === PRICING_METHOD_CORPORATE_MODIFIERS ? 'Corporate / Walk-Up' : 'Standard';
+  const normalized = normalizePricingMethod(value);
+  if (normalized === PRICING_METHOD_ZERO_WALK_UP) return '$0 Walk-Up Event';
+  return normalized === PRICING_METHOD_CORPORATE_MODIFIERS ? 'Corporate / Walk-Up' : 'Standard';
+}
+
+export function isZeroWalkUpPricing(value) {
+  const raw = value?.raw || value || {};
+  return normalizePricingMethod(typeof raw === 'object' ? raw.pricingMethod : raw) === PRICING_METHOD_ZERO_WALK_UP;
 }
 
 export const PRICING_SCHEDULE = {
@@ -159,33 +171,35 @@ export function computePricing(form) {
 
   const pricingMethod = normalizePricingMethod(form.pricingMethod);
   const isCorporateModifiers = pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS;
+  const isZeroWalkUp = pricingMethod === PRICING_METHOD_ZERO_WALK_UP;
   const billableHours = isCorporateModifiers ? Math.max(BASE_INCLUDED_HOURS, bookedHours) : bookedHours;
   const extraHours = Math.max(0, billableHours - BASE_INCLUDED_HOURS);
   const hasBaseInputs = Boolean(row && artistCount > 0 && bookedHours > 0);
   const standardBaseForFiveHours = hasBaseInputs ? row.baseRatePerArtist5h * artistCount : 0;
-  const baseForFiveHours = isCorporateModifiers ? 0 : standardBaseForFiveHours;
-  const counterBaseCharge = hasBaseInputs ? row.counterPerArtist * artistCount : 0;
+  const baseForFiveHours = isCorporateModifiers || isZeroWalkUp ? 0 : standardBaseForFiveHours;
+  const counterBaseCharge = !isZeroWalkUp && hasBaseInputs ? row.counterPerArtist * artistCount : 0;
   const shouldProrateBase = !isCorporateModifiers && hasBaseInputs && bookedHours < BASE_INCLUDED_HOURS;
   const shouldScaleCounterWithHours = !isCorporateModifiers && hasBaseInputs && bookedHours !== BASE_INCLUDED_HOURS;
   const baseTotal = shouldProrateBase ? (baseForFiveHours / BASE_INCLUDED_HOURS) * bookedHours : baseForFiveHours;
   const counterStaffCharge = shouldScaleCounterWithHours ? (counterBaseCharge / BASE_INCLUDED_HOURS) * bookedHours : counterBaseCharge;
-  const extraHourlyCharge = row ? row.extraHourlyPerArtist * artistCount * extraHours : 0;
-  const customFlashFee = normalizeFlag(form.customFlash) === 'YES' ? parseMoney(form.customFlashFee) || row?.customFlashFeeEvent || 0 : 0;
-  const temporaryTattooFee = normalizeFlag(form.temporaryTattoos) === 'YES' ? parseMoney(form.temporaryTattooFee) || row?.tempTattoosFee || 0 : 0;
-  const tempFacilityLicenseFee = artistCount > 0 ? parseMoney(form.tempFacilityLicenseFee) || Math.max(0, (row?.facilityCityFee || 0) + (row?.facilityAdminFee || 0)) : 0;
-  const corporateAdminFee = isCorporateModifiers ? CORPORATE_ADMIN_FEE : 0;
-  const radiusFee =
-    parseMoney(form.radiusFee) ||
-    (row && travelDistance > row.freeRadiusMiles
-      ? Math.ceil((travelDistance - row.freeRadiusMiles) / row.radiusStepMiles) * row.radiusStepFee
-      : 0);
-  const staffAdjustment = parseMoney(form.staffPriceAdjustment);
+  const extraHourlyCharge = !isZeroWalkUp && row ? row.extraHourlyPerArtist * artistCount * extraHours : 0;
+  const customFlashFee = !isZeroWalkUp && normalizeFlag(form.customFlash) === 'YES' ? parseMoney(form.customFlashFee) || row?.customFlashFeeEvent || 0 : 0;
+  const temporaryTattooFee = !isZeroWalkUp && normalizeFlag(form.temporaryTattoos) === 'YES' ? parseMoney(form.temporaryTattooFee) || row?.tempTattoosFee || 0 : 0;
+  const tempFacilityLicenseFee = !isZeroWalkUp && artistCount > 0 ? parseMoney(form.tempFacilityLicenseFee) || Math.max(0, (row?.facilityCityFee || 0) + (row?.facilityAdminFee || 0)) : 0;
+  const corporateAdminFee = isCorporateModifiers && !isZeroWalkUp ? CORPORATE_ADMIN_FEE : 0;
+  const radiusFee = isZeroWalkUp
+    ? 0
+    : parseMoney(form.radiusFee) ||
+      (row && travelDistance > row.freeRadiusMiles
+        ? Math.ceil((travelDistance - row.freeRadiusMiles) / row.radiusStepMiles) * row.radiusStepFee
+        : 0);
+  const staffAdjustment = isZeroWalkUp ? 0 : parseMoney(form.staffPriceAdjustment);
   const balanceAddOns = parseBalanceAddOns(form.balanceAddOns);
-  const balanceAddOnsTotal = balanceAddOns.reduce((sum, item) => sum + parseMoney(item.amount), 0);
+  const balanceAddOnsTotal = isZeroWalkUp ? 0 : balanceAddOns.reduce((sum, item) => sum + parseMoney(item.amount), 0);
   const fixedChargesTotal = counterStaffCharge + tempFacilityLicenseFee + corporateAdminFee;
   const modifiersTotal = extraHourlyCharge + customFlashFee + temporaryTattooFee + radiusFee + staffAdjustment;
   const extrasTotal = fixedChargesTotal + modifiersTotal;
-  const totalCharge = Math.max(0, baseTotal + extrasTotal + balanceAddOnsTotal);
+  const totalCharge = isZeroWalkUp ? 0 : Math.max(0, baseTotal + extrasTotal + balanceAddOnsTotal);
   const depositRatePct = isCorporateModifiers ? 0 : row?.depositRatePct || 30;
   const hasLockedDeposit = String(form.lockedDepositAmount ?? '').trim() !== '';
   const depositRequired = hasLockedDeposit ? Math.max(0, parseMoney(form.lockedDepositAmount)) : totalCharge * (depositRatePct / 100);
@@ -198,6 +212,7 @@ export function computePricing(form) {
     year,
     pricingMethod,
     isCorporateModifiers,
+    isZeroWalkUp,
     artistCount,
     bookedHours,
     billableHours,
@@ -237,6 +252,14 @@ export function computePricing(form) {
 }
 
 export function buildPricingSummaryRows(totals) {
+  if (totals.isZeroWalkUp) {
+    return [
+      { label: '$0 Walk-Up Event', value: '$0.00', lead: true },
+      { label: 'Client Charge', value: '$0.00' },
+      { label: 'Deposit', value: '$0.00' },
+      { label: 'Balance', value: '$0.00' },
+    ];
+  }
   const artistPriceLabel = totals.isCorporateModifiers
     ? 'Artist Price (paid by walk-up clients)'
     : `Artist Price (${formatDecimal(totals.bookedHours) || '5'} hours)`;

@@ -339,6 +339,7 @@
     "temporary_tattoos": "YES applies manual fee if entered, otherwise schedule tempTattoosFee; NO/TBD applies 0.",
     "tfl_fee": "Fixed charge, not a modifier. Manual fee if entered, otherwise facilityCityFee + facilityAdminFee; not applied until artist count is selected. Apps Script upsert also defaults a blank Temporary Facility License Fee to 200 when Event Address contains OR or Oregon.",
     "corporate_pricing": "Corporate / Walk-Up bills no tattoo base to the event client, applies a five-hour minimum to counter pricing, charges extra hourly only above five hours, and adds a fixed $300 corporate admin fee to cover furniture wear, supplies, and staffing required to keep the tattoo shop open. It requires no deposit and is due in full.",
+    "zero_walk_up_pricing": "$0 Walk-Up Event is a staffing-only relationship-building event. It appears in the Events feed as a client card, but exposes only Staff Assignments: no Client Details, Status/Communication, or Generators/Files workflow. It forces total, deposit, balance, and staff payouts to zero; outside walk-up payments are not recorded; and completed events using this method are excluded from Payout Ledger.",
     "computed_total": "max(0, baseTotal + fixed charges + modifiers + balance add-ons). Credit is currently 0 in app math."
   },
     "sync": {
