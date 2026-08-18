@@ -49,12 +49,14 @@ export function EventTypePicker({ value, onChange, disabled = false }) {
               className={isSelected ? 'event-type-choice selected' : 'event-type-choice'}
               style={{ '--event-type-color': option.color }}
               aria-label={option.label}
+              title={option.label}
               aria-pressed={isSelected}
               disabled={disabled}
               onClick={() => onChange(option.value)}
             >
-              <Icon size={20} aria-hidden="true" />
+              <Icon size={30} strokeWidth={2} aria-hidden="true" />
               {isSelected ? <Check className="event-type-choice__check" size={11} strokeWidth={3} aria-hidden="true" /> : null}
+              <span className="event-type-choice__tooltip" role="tooltip">{option.label}</span>
             </button>
           );
         })}
