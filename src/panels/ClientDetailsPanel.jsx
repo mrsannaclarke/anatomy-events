@@ -7,7 +7,7 @@ import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
-import { ARTIST_COUNTS, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, PLAN_YEARS, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD, PRICING_METHOD_ZERO_WALK_UP } from '../pricingMath.js';
+import { ARTIST_COUNTS, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD, PRICING_METHOD_ZERO_WALK_UP } from '../pricingMath.js';
 
 export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   const [isEditable, setIsEditable] = useState(true);
@@ -130,19 +130,11 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
     }
   }
 
-  function renderClientField([key, label, type]) {
+  function renderClientField([key, label]) {
     return (
       <Field key={key} label={label}>
         {key === 'eventType' ? (
           <EventTypePicker value={form[key]} onChange={(value) => updateField(key, value)} disabled={!isEditable} />
-        ) : type === 'select-year' ? (
-          <select disabled={!isEditable} value={form[key]} onChange={(input) => updateField(key, input.target.value)}>
-            {PLAN_YEARS.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
         ) : key === 'email' ? (
           <div className="email-copy-control">
             <input disabled={!isEditable} type="email" value={form[key]} onChange={(input) => updateField(key, input.target.value)} />
@@ -189,7 +181,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       <section className="picker-section">
         <h3>Client Information</h3>
         <div className="detail-grid editable-grid">
-          {CLIENT_FIELD_CONFIG.filter(([key]) => key !== 'eventAddress' && key !== 'eventType').map(renderClientField)}
+          {CLIENT_FIELD_CONFIG.filter(([key]) => key !== 'eventAddress' && key !== 'eventType' && key !== 'year').map(renderClientField)}
         </div>
         <div className="field-with-action">
           {renderClientField(['eventAddress', 'Event Address'])}
@@ -203,9 +195,6 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       <section className="picker-section event-classification-section">
         <h3>Event Classification</h3>
         <div className="form-grid">
-          <Field label="Type of Event">
-            <EventTypePicker value={form.eventType} onChange={(value) => updateField('eventType', value)} disabled={!isEditable} />
-          </Field>
           <Field label="Pricing Method">
             <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
               <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
@@ -213,6 +202,11 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
               <option value={PRICING_METHOD_ZERO_WALK_UP}>Walk-Up Sales Only — No Artist or Counter Event Pay</option>
             </select>
           </Field>
+          {form.pricingMethod === PRICING_METHOD_STANDARD ? (
+            <Field label="Type of Event">
+              <EventTypePicker value={form.eventType} onChange={(value) => updateField('eventType', value)} disabled={!isEditable} />
+            </Field>
+          ) : null}
         </div>
       </section>
 
