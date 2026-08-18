@@ -1,5 +1,4 @@
 import { BriefcaseBusiness, Check, Handshake, Heart, PartyPopper, ScrollText } from 'lucide-react';
-
 import { normalizePricingMethod, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_ZERO_WALK_UP } from '../pricingMath.js';
 import { CurrencyExchangeIcon, MoneyOffIcon } from './PricingMethodIcons.jsx';
 
