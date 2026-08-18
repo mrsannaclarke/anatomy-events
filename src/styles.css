@@ -39,6 +39,16 @@ button {
 }
 
 
+.brand img,
+.auth-emblem img {
+  filter:
+    sepia(0.16)
+    saturate(1.12)
+    hue-rotate(338deg)
+    brightness(1.08)
+    drop-shadow(0 5px 8px rgb(0 0 0 / 24%));
+}
+
 .brand img {
   width: 42px;
   height: 42px;
@@ -2822,8 +2832,6 @@ nav button:hover {
   }
 
   .brand img {
-    border: 1px solid #c77f6b;
-    box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
     height: 88px;
     margin-bottom: 10px;
     width: 88px;
