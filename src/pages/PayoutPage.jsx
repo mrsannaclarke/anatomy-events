@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, ChevronDown, Heart, PartyPopper, ScrollText, Sparkles, Users } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 
 import { getPayoutPeopleForViewer, normalizeKey } from '../auth.js';
+import { getEventVisual } from '../components/EventTypePicker.jsx';
 import {
   buildPricingPayoutMap,
   formatPayout,
@@ -16,15 +17,6 @@ function roleLabel(role) {
   if (role === 'artist+counter') return 'Artist + Counter';
   if (role === 'counter') return 'Counter';
   return 'Artist';
-}
-
-function getEventTypeVisual(eventType) {
-  const normalized = String(eventType || '').trim().toLowerCase();
-  if (normalized.includes('private')) return { icon: PartyPopper, color: '#b58bff' };
-  if (normalized.includes('corporate')) return { icon: BriefcaseBusiness, color: '#6ab7ff' };
-  if (normalized.includes('wedding')) return { icon: Heart, color: '#ff7fb8' };
-  if (normalized.includes('fundraiser')) return { icon: Users, color: '#7fd29a' };
-  return { icon: ScrollText, color: '#f1b56f' };
 }
 
 function formatEventDate(value) {
@@ -228,7 +220,7 @@ export function PayoutPage({ events, viewer }) {
           </section>
         ) : null}
         {visibleRows.map((row) => {
-          const eventVisual = getEventTypeVisual(row.event.raw?.eventType);
+          const eventVisual = getEventVisual(row.event.raw?.eventType, row.event.raw?.pricingMethod);
           const EventIcon = eventVisual.icon || Sparkles;
           return (
             <article key={`${row.event.entryId}-${normalizeKey(effectivePerson)}`} className="ledger-card payout-event-card">
