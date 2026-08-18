@@ -6,7 +6,17 @@ const GOOGLE_CREDENTIAL_KEY = 'events-app-2.0:google-credential';
 const STAY_SIGNED_IN_KEY = 'events-app-2.0:stay-signed-in';
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 
-export const GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || '';
+const BUILD_TIME_GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || '';
+
+export async function getGoogleWebClientId() {
+  if (BUILD_TIME_GOOGLE_WEB_CLIENT_ID) return BUILD_TIME_GOOGLE_WEB_CLIENT_ID;
+
+  const response = await fetch('/api/config', { credentials: 'same-origin' });
+  if (!response.ok) throw new Error('Google sign-in is not configured for this app.');
+  const config = await response.json();
+  if (!config?.googleWebClientId) throw new Error('Google sign-in is not configured for this app.');
+  return config.googleWebClientId;
+}
 
 export const FULL_PAYOUT_ACCESS_EMAILS = new Set([
   'events.anatomytattoo@gmail.com',

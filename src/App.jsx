@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react';
 
 import { sortLedgerEvents } from './activity.js';
 import { APP_PROJECT_NAME } from './appConfig.js';
-import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, getActiveAppViewer, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
+import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, getActiveAppViewer, getCachedViewer, getGoogleCredential, getGoogleWebClientId, getStaySignedInPreference, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
@@ -35,16 +35,12 @@ function GoogleSignInGate({ onSignedIn }) {
     let cancelled = false;
 
     async function bootGoogleSignIn() {
-      if (!GOOGLE_WEB_CLIENT_ID) {
-        setAuthStatus('Google sign-in requires VITE_GOOGLE_WEB_CLIENT_ID in the app environment.');
-        return;
-      }
-
       try {
+        const googleWebClientId = await getGoogleWebClientId();
         const google = await loadGoogleIdentityScript();
         if (cancelled) return;
         google.accounts.id.initialize({
-          client_id: GOOGLE_WEB_CLIENT_ID,
+          client_id: googleWebClientId,
           callback: async (response) => {
             try {
               const viewer = viewerFromGoogleCredential(response.credential);
