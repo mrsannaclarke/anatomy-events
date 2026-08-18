@@ -7,7 +7,7 @@ import { FilesPanel } from './FilesPanel.jsx';
 import { NotesPanel } from './NotesPanel.jsx';
 import { StaffAssignmentsPanel } from './StaffAssignmentsPanel.jsx';
 
-export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, onDeleted, onChangeMode }) {
+export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, onSavedAndBack, onDeleted, onChangeMode }) {
   if (!detail) return null;
   const { mode, event } = detail;
   const isStaffingOnly = isZeroWalkUpPricing(event);
@@ -42,9 +42,9 @@ export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, 
         </div>
       </div>
 
-      {effectiveMode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSaved} onDeleted={onDeleted} /> : null}
-      {effectiveMode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSaved} /> : null}
-      {effectiveMode === 'notes' ? <NotesPanel event={event} viewerEmail={viewerEmail} viewerName={viewerName} onSaved={onSaved} /> : null}
+      {effectiveMode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSavedAndBack} onDeleted={onDeleted} /> : null}
+      {effectiveMode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSavedAndBack} /> : null}
+      {effectiveMode === 'notes' ? <NotesPanel event={event} viewerEmail={viewerEmail} viewerName={viewerName} onSaved={onSaved} onSavedAndBack={onSavedAndBack} /> : null}
       {effectiveMode === 'files' ? <FilesPanel event={event} viewerEmail={viewerEmail} onSaved={onSaved} /> : null}
     </section>
   );

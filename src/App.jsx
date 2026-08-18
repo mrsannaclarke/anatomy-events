@@ -261,6 +261,12 @@ export function App() {
     setDetail((current) => (current ? { ...current, event: savedEvent } : current));
   }
 
+  function returnSavedEventToFeed(savedEvent) {
+    replaceSavedEvent(savedEvent);
+    setDetail(null);
+    setActivePage('events');
+  }
+
   function removeDeletedEvent(deletedEvent) {
     setEvents((current) => {
       const next = current.filter((event) => event.entryId !== deletedEvent.entryId);
@@ -357,6 +363,7 @@ export function App() {
             viewerName={viewer.name}
             onBack={() => setDetail(null)}
             onSaved={replaceSavedEvent}
+            onSavedAndBack={returnSavedEventToFeed}
             onDeleted={removeDeletedEvent}
             onChangeMode={(mode) => setDetail((current) => (current ? { ...current, mode } : current))}
           />

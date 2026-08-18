@@ -17,7 +17,7 @@ export function getCommunicationEntries(notes) {
   }));
 }
 
-export function NotesPanel({ event, viewerEmail, viewerName, onSaved }) {
+export function NotesPanel({ event, viewerEmail, viewerName, onSaved, onSavedAndBack }) {
   const raw = event.raw || {};
   const [statusValue, setStatusValue] = useState(raw.status || raw.payStatus || '');
   const [privateNotes, setPrivateNotes] = useState(raw.privateNotes || '');
@@ -68,7 +68,7 @@ export function NotesPanel({ event, viewerEmail, viewerName, onSaved }) {
         internalNotes: notes,
       });
       const refreshed = (await pullEventByEntryId(saved.entryId)) || event;
-      onSaved(refreshed);
+      onSavedAndBack(refreshed);
       setPrivateNotes(refreshed.raw?.privateNotes || notes);
       setStatusValue(refreshed.raw?.status || refreshed.raw?.payStatus || statusValue);
       setCommunicationEntry('');

@@ -29,6 +29,7 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
   const [pendingLabel, setPendingLabel] = useState('');
   const [documentJobs, setDocumentJobs] = useState(() => storedDocumentJobs(event.entryId));
   const [artUploadJob, setArtUploadJob] = useState(() => window.localStorage.getItem(artUploadStorageKey(event.entryId)) || '');
+  const [localArtPreview, setLocalArtPreview] = useState(null);
 
   function urlsFromEvent(sourceEvent) {
     const source = sourceEvent?.raw || {};
@@ -37,6 +38,18 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
       tflUrl: source.tflUrl || '',
       artImageUrl: source.artImageUrl || '',
     };
+  }
+
+  function findResultUrl(value, keys) {
+    if (!value || typeof value !== 'object') return '';
+    for (const key of keys) {
+      if (typeof value[key] === 'string' && value[key]) return value[key];
+    }
+    for (const nested of Object.values(value)) {
+      const match = findResultUrl(nested, keys);
+      if (match) return match;
+    }
+    return '';
   }
 
   useEffect(() => {
@@ -50,7 +63,7 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
         if (cancelled) return;
         if (!refreshed) throw new Error('The latest event record was not returned.');
         setFileUrls(urlsFromEvent(refreshed));
-        setStatus('File links are current with the Sheet.');
+        setStatus('');
       } catch (error) {
         if (cancelled) return;
         setFileUrls(urlsFromEvent(event));
@@ -68,6 +81,10 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
     setDocumentJobs(storedDocumentJobs(event.entryId));
     setArtUploadJob(window.localStorage.getItem(artUploadStorageKey(event.entryId)) || '');
   }, [event.entryId]);
+
+  useEffect(() => () => {
+    if (localArtPreview?.url) URL.revokeObjectURL(localArtPreview.url);
+  }, [localArtPreview]);
 
   useEffect(() => {
     const activeEntries = Object.entries(documentJobs);
@@ -98,11 +115,23 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
       }
       if (completedKinds.length > 0) {
         try {
+          const completedUrls = {};
+          for (const kind of completedKinds) {
+            const job = await getDocumentJob(documentJobs[kind]);
+            const key = kind === 'tfl' ? 'tflUrl' : 'contractUrl';
+            completedUrls[key] = findResultUrl(job.result, [key, 'existingUrl', 'url']);
+          }
           const refreshed = await pullEventByEntryId(event.entryId);
           if (!cancelled && refreshed) {
-            setFileUrls(urlsFromEvent(refreshed));
+            const refreshedUrls = urlsFromEvent(refreshed);
+            setFileUrls((current) => ({
+              ...current,
+              ...refreshedUrls,
+              contractUrl: refreshedUrls.contractUrl || completedUrls.contractUrl || current?.contractUrl || '',
+              tflUrl: refreshedUrls.tflUrl || completedUrls.tflUrl || current?.tflUrl || '',
+            }));
             onSaved(refreshed);
-            setStatus(`${completedKinds.map((kind) => kind === 'tfl' ? 'Temporary license' : 'Contract').join(' and ')} generated and linked.`);
+            setStatus(`${completedKinds.map((kind) => kind === 'tfl' ? 'Temporary license' : 'Contract').join(' and ')} generated. Open it below.`);
           }
         } catch (error) {
           if (!cancelled) setStatus(error instanceof Error ? error.message : 'Document generated; refresh the Sheet to see its link.');
@@ -136,7 +165,14 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
           setArtUploadJob('');
           const refreshed = await pullEventByEntryId(event.entryId);
           if (!cancelled && refreshed) {
-            setFileUrls(urlsFromEvent(refreshed));
+            const refreshedUrls = urlsFromEvent(refreshed);
+            const completedArtUrl = findResultUrl(job.result, ['artImageUrl', 'artUrl', 'existingUrl', 'url']);
+            setFileUrls((current) => ({
+              ...current,
+              ...refreshedUrls,
+              artImageUrl: refreshedUrls.artImageUrl || completedArtUrl || current?.artImageUrl || '',
+            }));
+            setLocalArtPreview(null);
             onSaved(refreshed);
             setStatus('Uploaded art saved to Drive and connected to this client.');
           }
@@ -249,6 +285,11 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
       setStatus('Choose an image or PDF smaller than 8 MB.');
       return;
     }
+    setLocalArtPreview({
+      name: file.name,
+      type: file.type,
+      url: URL.createObjectURL(file),
+    });
     setStatus('Uploading artwork securely to Cloudflare...');
     setPendingLabel('Uploading artwork securely...');
     try {
@@ -322,6 +363,16 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
           <input type="file" accept="image/*,.pdf,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel) || Boolean(artUploadJob)} />
         </label>
       </div>
+      {localArtPreview ? (
+        <section className="saved-art-preview saved-art-preview--local">
+          <h3>{artUploadJob ? 'Uploading Preview' : 'Selected Upload'}</h3>
+          {localArtPreview.type === 'application/pdf' ? (
+            <iframe title={`${localArtPreview.name} preview`} src={localArtPreview.url} />
+          ) : (
+            <img src={localArtPreview.url} alt={`${localArtPreview.name} preview`} />
+          )}
+        </section>
+      ) : null}
       {fileUrls?.artImageUrl ? (
         <section className="saved-art-preview">
           <h3>Saved Uploaded Art</h3>
