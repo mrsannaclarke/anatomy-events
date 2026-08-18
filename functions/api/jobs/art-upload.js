@@ -62,8 +62,10 @@ export async function onRequest({ request, env }) {
     return response({ ok: true, job }, 202);
   } catch (error) {
     await env.UPLOAD_STAGING.delete(objectKey);
-    await env.AUDIT_DB.prepare(`UPDATE upload_jobs SET status = 'failed', error = ?, updated_at = ? WHERE id = ?`)
-      .bind('The upload could not be queued.', new Date().toISOString(), job.id).run();
+    const failedAt = new Date().toISOString();
+    await env.AUDIT_DB.prepare(`
+      UPDATE upload_jobs SET status = 'failed', error = ?, updated_at = ?, staging_deleted_at = ? WHERE id = ?
+    `).bind('The upload could not be queued.', failedAt, failedAt, job.id).run();
     console.error(JSON.stringify({ event: 'upload_queue_error', jobId: job.id, reason: error instanceof Error ? error.message : 'unknown' }));
     return response({ ok: false, error: 'The upload could not be queued. Please try again.' }, 503);
   }
