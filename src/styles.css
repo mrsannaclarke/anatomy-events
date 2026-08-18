@@ -2330,14 +2330,6 @@ nav button:hover {
   margin: 1px 0 0;
 }
 
-.event-card__venue-row {
-  align-items: flex-end;
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-  margin-top: 2px;
-}
-
 .event-card__venue {
   color: #bba99a;
   display: grid;
@@ -2421,15 +2413,6 @@ nav button:hover {
   line-height: 1.45;
   margin: 8px 0 0;
   padding: 8px 10px;
-}
-
-.event-card__bottom-row {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: space-between;
-  margin-top: 8px;
 }
 
 .map-compact-link {
@@ -2603,11 +2586,6 @@ nav button:hover {
     width: 100%;
   }
 
-  .event-card__venue-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .pricing-layout,
   .form-grid,
   .detail-grid,
@@ -2724,11 +2702,6 @@ nav button:hover {
   width: 42px;
 }
 
-.event-card__venue-row,
-.event-card__bottom-row {
-  border-color: #51443b;
-}
-
 .status-pill,
 .role-chip,
 .choice-chip,
@@ -2830,29 +2803,6 @@ nav button:hover {
 
 .pending-overlay {
   background: rgb(23 21 18 / 82%);
-}
-
-@media (max-width: 760px) {
-  .pending-overlay {
-    padding: 18px;
-  }
-
-  .pending-overlay__card {
-    min-height: 138px;
-    padding: 24px;
-    width: min(100%, 300px);
-  }
-}
-
-@media (max-width: 760px) {
-  .event-card {
-    padding: 16px;
-  }
-
-  .event-card__title-row h2,
-  .event-card__date {
-    font-size: 1.28rem;
-  }
 }
 
 /* Render-inspired roster composition: real app fields, no decorative imagery. */
@@ -3148,6 +3098,16 @@ nav button:hover {
 }
 
 @media (max-width: 760px) {
+  .pending-overlay {
+    padding: 18px;
+  }
+
+  .pending-overlay__card {
+    min-height: 138px;
+    padding: 24px;
+    width: min(100%, 300px);
+  }
+
   .event-list {
     min-width: 0;
     width: 100%;
