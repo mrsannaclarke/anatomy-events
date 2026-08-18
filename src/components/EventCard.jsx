@@ -171,7 +171,7 @@ export function EventCard({ event, onAction }) {
 
   return (
     <article
-      className="event-card event-card--clickable"
+      className={`event-card event-card--clickable${isStaffingOnly ? ' event-card--complimentary' : ''}`}
       style={{ '--event-color': eventColor }}
       role="button"
       tabIndex={0}

@@ -153,7 +153,7 @@ test('corporate pricing has a five-hour minimum, $300 admin fee, and no deposit'
   assert.equal(totals.balanceDue, 650);
 });
 
-test('$0 walk-up pricing saves an explicit method and produces no charges or payouts', () => {
+test('complimentary walk-up pricing saves an explicit method and produces no charges or payouts', () => {
   const form = pricingForm({
     pricingMethod: PRICING_METHOD_ZERO_WALK_UP,
     customFlash: 'YES',
@@ -170,7 +170,7 @@ test('$0 walk-up pricing saves an explicit method and produces no charges or pay
   assert.equal(totals.depositRequired, 0);
   assert.equal(totals.balanceDue, 0);
   const saved = buildPricingEvent({}, form, totals);
-  assert.equal(saved.pricingMethod, '$0 Walk-Up Event');
+  assert.equal(saved.pricingMethod, 'Complimentary Walk-Up');
   assert.equal(saved.totalCharge, '');
   const event = {
     raw: {
@@ -189,7 +189,7 @@ test('$0 walk-up pricing saves an explicit method and produces no charges or pay
   assert.equal(payout.lines.length, 0);
 });
 
-test('$0 walk-up event remains visible on its event day and expires the following day', () => {
+test('complimentary walk-up event remains visible on its event day and expires the following day', () => {
   const event = { raw: { eventDate: '09/13/2026', pricingMethod: '$0 Walk-Up Event' } };
   assert.equal(isExpiredStaffingOnlyEvent(event, new Date(2026, 8, 13, 23, 59, 59)), false);
   assert.equal(isExpiredStaffingOnlyEvent(event, new Date(2026, 8, 14, 0, 0, 0)), true);
@@ -255,8 +255,10 @@ test('event feed places confirmed events first and sorts each group soonest-firs
     { clientName: 'Pending', status: 'Post Consult Decision', eventDate: '01/01/2026' },
     { clientName: 'Later', status: 'Contract Signed', eventDate: '06/01/2026' },
     { clientName: 'Sooner', status: 'New', eventDate: '05/01/2026' },
+    { clientName: 'Same Day Later', status: 'New', eventDate: '05/01/2026', raw: { eventDate: '05/01/2026', eventStartTime: '8:00 PM' } },
+    { clientName: 'Same Day Sooner', status: 'New', eventDate: '05/01/2026', raw: { eventDate: '05/01/2026', eventStartTime: '2:00 PM' } },
   ];
-  assert.deepEqual(sortLedgerEvents(events).map(({ clientName }) => clientName), ['Sooner', 'Later', 'Pending']);
+  assert.deepEqual(sortLedgerEvents(events).map(({ clientName }) => clientName), ['Sooner', 'Same Day Sooner', 'Same Day Later', 'Later', 'Pending']);
 });
 
 test('event feed sorts same-day events by start time within the same status group', () => {
