@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsheet, History, RefreshCw, Share, ShieldCheck, Smartphone, WalletCards, X } from 'lucide-react';
+import { useState } from 'react';
+import { Check, ClipboardList, Code2, Copy, ExternalLink, FileSpreadsheet, History, LogOut, ShieldCheck, WalletCards } from 'lucide-react';
 
 import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
@@ -15,114 +15,6 @@ const COUNTER_PAYOUT_LINKS = [
   { name: 'Marissa', service: 'Venmo', url: 'https://account.venmo.com/u/Marissa-Berlin-1' },
   { name: 'Veda', service: 'Venmo', url: 'https://venmo.com/u/Veda-mueller-2' },
 ];
-
-const AUDIT_ADMIN_EMAILS = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']);
-const AUDIT_ACTION_LABELS = {
-  upsertEvent: 'Saved event',
-  upsertEventPartialJson: 'Updated event fields',
-  deleteEvent: 'Deleted event',
-  generateContract: 'Generated contract',
-  generateTfl: 'Generated temporary license',
-  uploadEventArt: 'Uploaded event art',
-};
-
-function AuditHistory() {
-  const [records, setRecords] = useState([]);
-  const [documentJobs, setDocumentJobs] = useState(null);
-  const [uploadJobs, setUploadJobs] = useState(null);
-  const [operationsHealth, setOperationsHealth] = useState(null);
-  const [status, setStatus] = useState('loading');
-
-  async function loadAudit() {
-    setStatus('loading');
-    try {
-      const response = await fetch('/api/audit?limit=50', { credentials: 'same-origin' });
-      const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Audit history could not be loaded.');
-      setRecords(data.records || []);
-      setDocumentJobs(data.documentJobs || null);
-      setUploadJobs(data.uploadJobs || null);
-      setOperationsHealth(data.operationsHealth || null);
-      setStatus('ready');
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Audit history could not be loaded.');
-    }
-  }
-
-  useEffect(() => {
-    void loadAudit();
-  }, []);
-
-  return (
-    <section className="audit-panel" aria-labelledby="audit-history-title">
-      <div className="audit-heading">
-        <div>
-          <span>Cloudflare D1</span>
-          <h3 id="audit-history-title">Change History</h3>
-          <p>Successful Sheet changes made through this app.</p>
-        </div>
-        <button type="button" className="secondary-button" onClick={loadAudit} disabled={status === 'loading'}>
-          <RefreshCw size={16} className={status === 'loading' ? 'is-spinning' : ''} />
-          Refresh
-        </button>
-      </div>
-      {operationsHealth ? (
-        <div className={operationsHealth.healthy ? 'job-health' : 'job-health has-warning'}>
-          <div>
-            <strong>{operationsHealth.healthy ? 'Cloudflare monitoring healthy' : 'Cloudflare monitoring needs attention'}</strong>
-            <span>{operationsHealth.lastSuccessAt ? `Last hourly check ${new Date(operationsHealth.lastSuccessAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : 'Waiting for the first hourly check'}</span>
-          </div>
-          {operationsHealth.warnings.length > 0 ? <ul>{operationsHealth.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}
-        </div>
-      ) : null}
-      {documentJobs ? (
-        <div className={documentJobs.counts.failed || documentJobs.counts.retrying ? 'job-health has-warning' : 'job-health'}>
-          <div>
-            <strong>{documentJobs.counts.failed || documentJobs.counts.retrying ? 'Background jobs need attention' : 'Background jobs healthy'}</strong>
-            <span>
-              {documentJobs.counts.queued} queued · {documentJobs.counts.processing} processing · {documentJobs.counts.completed} completed
-              {documentJobs.counts.retrying ? ` · ${documentJobs.counts.retrying} retrying` : ''}
-              {documentJobs.counts.failed ? ` · ${documentJobs.counts.failed} failed` : ''}
-            </span>
-          </div>
-          {documentJobs.needsAttention.length > 0 ? (
-            <ul>
-              {documentJobs.needsAttention.map((job) => (
-                <li key={job.id}>Entry {job.entryId} {job.kind === 'tfl' ? 'temporary license' : 'contract'}: {job.error || job.status}</li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
-      {uploadJobs ? (
-        <div className={uploadJobs.failed || uploadJobs.retrying ? 'job-health has-warning' : 'job-health'}>
-          <div>
-            <strong>{uploadJobs.failed || uploadJobs.retrying ? 'Artwork uploads need attention' : 'Artwork uploads healthy'}</strong>
-            <span>{uploadJobs.queued} queued · {uploadJobs.processing} processing · {uploadJobs.completed} completed{uploadJobs.retrying ? ` · ${uploadJobs.retrying} retrying` : ''}{uploadJobs.failed ? ` · ${uploadJobs.failed} failed` : ''}</span>
-          </div>
-        </div>
-      ) : null}
-      {status === 'loading' ? <p className="audit-empty">Loading change history…</p> : null}
-      {status !== 'loading' && status !== 'ready' ? <p className="audit-empty">{status}</p> : null}
-      {status === 'ready' && records.length === 0 ? <p className="audit-empty">No changes have been recorded yet.</p> : null}
-      {status === 'ready' && records.length > 0 ? (
-        <div className="audit-list">
-          {records.map((record) => (
-            <article className="audit-entry" key={record.id}>
-              <History size={18} aria-hidden="true" />
-              <div>
-                <strong>{AUDIT_ACTION_LABELS[record.action] || record.action}</strong>
-                <span>{record.actorEmail}{record.entryId ? ` · Entry ${record.entryId}` : ''}</span>
-                {record.changedFields?.length ? <small>Fields: {record.changedFields.join(', ')}</small> : null}
-              </div>
-              <time dateTime={record.createdAt}>{new Date(record.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</time>
-            </article>
-          ))}
-        </div>
-      ) : null}
-    </section>
-  );
-}
 
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
@@ -140,13 +32,12 @@ async function copyText(text) {
   textArea.remove();
 }
 
-export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInstall }) {
-  const [showInstallHelp, setShowInstallHelp] = useState(false);
+export function AdminPage({ viewer, onOpenPage, onSignOut }) {
   const [copiedPayoutName, setCopiedPayoutName] = useState('');
   const canOpenPayoutLedger = FULL_PAYOUT_ACCESS_EMAILS.has(normalizeKey(viewer.email));
   const sheetUrl = EVENT_SHEET_URL;
   const scriptUrl = APPS_SCRIPT_PROJECT_URL;
-  const canViewAudit = AUDIT_ADMIN_EMAILS.has(normalizeKey(viewer.email));
+  const canViewAudit = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']).has(normalizeKey(viewer.email));
 
   return (
     <section className="page-stack admin-page">
@@ -174,25 +65,13 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
           <span>Production web app deployment.</span>
           <ExternalLink size={14} />
         </a>
-        {canInstall ? (
-          <button type="button" className="admin-action admin-action--install" onClick={onInstall}>
-            <Download size={20} />
-            <strong>Install Events App</strong>
-            <span>Add the standalone app to this device.</span>
+        {canViewAudit ? (
+          <button type="button" className="admin-action admin-action--history" onClick={() => onOpenPage('history')}>
+            <History size={20} />
+            <strong>Change History</strong>
+            <span>Review app changes and background job health.</span>
           </button>
-        ) : isInstalled ? (
-          <div className="admin-action admin-action--install install-guidance">
-            <Smartphone size={20} />
-            <strong>Events App Installed</strong>
-            <span>This app is running from your home screen.</span>
-          </div>
-        ) : (
-          <button type="button" className="admin-action admin-action--install" onClick={() => setShowInstallHelp(true)}>
-            <Smartphone size={20} />
-            <strong>Install on iPhone or iPad</strong>
-            <span>Show the Safari installation steps.</span>
-          </button>
-        )}
+        ) : null}
         {canOpenPayoutLedger ? (
           <button type="button" className="admin-action admin-action--ledger" onClick={() => onOpenPage('payoutLedger')}>
             <ClipboardList size={20} />
@@ -200,29 +79,12 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
             <span>Completed-event shop totals and waterfall.</span>
           </button>
         ) : null}
+        <button type="button" className="admin-action admin-action--signout" onClick={onSignOut}>
+          <LogOut size={20} />
+          <strong>Sign Out</strong>
+          <span>End this session on this device.</span>
+        </button>
       </section>
-
-      <section className="event-legend-panel" aria-labelledby="event-legend-title">
-        <div className="event-legend-heading">
-          <div>
-            <h3 id="event-legend-title">Event Card Legend</h3>
-            <p>Icon and color shown on each event card.</p>
-          </div>
-        </div>
-        <div className="event-legend-grid">
-          {EVENT_VISUAL_LEGEND.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div className="event-legend-item" key={item.value} style={{ '--event-legend-color': item.color }}>
-                <span className="event-legend-icon" aria-hidden="true"><Icon size={27} strokeWidth={2} /></span>
-                <span>{item.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {canViewAudit ? <AuditHistory /> : null}
 
       <section className="counter-payout-panel" aria-labelledby="counter-payout-title">
         <div className="counter-payout-heading">
@@ -265,24 +127,6 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
         </div>
       </section>
 
-      {showInstallHelp ? (
-        <div className="install-help-overlay" role="presentation" onClick={() => setShowInstallHelp(false)}>
-          <section className="install-help-dialog" role="dialog" aria-modal="true" aria-labelledby="install-help-title" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="install-help-close" onClick={() => setShowInstallHelp(false)} aria-label="Close installation instructions">
-              <X size={20} />
-            </button>
-            <Smartphone size={34} />
-            <h3 id="install-help-title">Add Events App to your iPhone</h3>
-            <ol>
-              <li>Open this page in <strong>Safari</strong>.</li>
-              <li>Tap the <Share size={18} aria-hidden="true" /> <strong>Share</strong> button.</li>
-              <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-              <li>Tap <strong>Add</strong>.</li>
-            </ol>
-            <button type="button" className="primary-button" onClick={() => setShowInstallHelp(false)}>Got It</button>
-          </section>
-        </div>
-      ) : null}
     </section>
   );
 }

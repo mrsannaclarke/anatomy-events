@@ -7,6 +7,7 @@ import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, g
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
 import { AdminPage } from './pages/AdminPage.jsx';
+import { ChangeHistoryPage } from './pages/ChangeHistoryPage.jsx';
 import { PayoutLedgerPage } from './pages/PayoutLedgerPage.jsx';
 import { PayoutPage } from './pages/PayoutPage.jsx';
 import { PricingPage } from './pages/PricingPage.jsx';
@@ -173,10 +174,6 @@ export function App() {
   const [detail, setDetail] = useState(null);
   const [viewer, setViewer] = useState(null);
   const [authReady, setAuthReady] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState(null);
-  const [isInstalled, setIsInstalled] = useState(
-    () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -221,30 +218,6 @@ export function App() {
     scheduleNextRosterRefresh();
     return () => window.clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    function handleInstallPrompt(event) {
-      event.preventDefault();
-      setInstallPrompt(event);
-    }
-    function handleInstalled() {
-      setInstallPrompt(null);
-      setIsInstalled(true);
-    }
-    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
-    window.addEventListener('appinstalled', handleInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
-      window.removeEventListener('appinstalled', handleInstalled);
-    };
-  }, []);
-
-  async function installApp() {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    if (choice.outcome === 'accepted') setInstallPrompt(null);
-  }
 
   async function loadEvents() {
     setSyncStatus((current) => (events.length > 0 && current === 'connected' ? 'refreshing' : 'loading'));
@@ -374,9 +347,6 @@ export function App() {
             </button>
           ))}
         </nav>
-        <button type="button" className="sign-out-button" onClick={signOut}>
-          Sign out
-        </button>
       </aside>
 
       <section className="workspace">
@@ -398,10 +368,10 @@ export function App() {
           <AdminPage
             viewer={viewer}
             onOpenPage={setActivePage}
-            canInstall={Boolean(installPrompt)}
-            isInstalled={isInstalled}
-            onInstall={installApp}
+            onSignOut={signOut}
           />
+        ) : activePage === 'history' ? (
+          <ChangeHistoryPage onBack={() => setActivePage('admin')} />
         ) : activePage === 'payoutLedger' ? (
           <PayoutLedgerPage events={events} viewer={viewer} onBack={() => setActivePage('admin')} />
         ) : activePage === 'events' ? (

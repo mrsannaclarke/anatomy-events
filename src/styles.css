@@ -1369,8 +1369,19 @@ nav button:hover {
 
 .admin-action--sheet { --admin-accent: #c77f6b; }
 .admin-action--script { --admin-accent: #d9ad62; }
-.admin-action--install { --admin-accent: #8fc9ad; }
+.admin-action--history { --admin-accent: #8fc9ad; }
 .admin-action--ledger { --admin-accent: #d77f98; }
+.admin-action--signout { --admin-accent: #d56b66; }
+
+.change-history-page .panel-heading > div {
+  align-items: flex-start;
+  display: grid;
+  gap: 10px;
+}
+
+.change-history-page .panel-heading .secondary-button {
+  justify-self: start;
+}
 
 .admin-action > svg:first-child {
   background: color-mix(in srgb, var(--admin-accent) 42%, #2b241f);
