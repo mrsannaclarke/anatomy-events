@@ -3027,6 +3027,11 @@ nav button:hover {
 }
 
 @media (max-width: 760px) {
+  .event-list {
+    min-width: 0;
+    width: 100%;
+  }
+
   .brand {
     align-items: center;
     flex-direction: row;
@@ -3034,7 +3039,10 @@ nav button:hover {
   }
 
   .event-card {
+    box-sizing: border-box;
+    min-width: 0;
     padding: 17px 18px 15px;
+    width: 100%;
   }
 
   .event-card__main {
@@ -3050,8 +3058,8 @@ nav button:hover {
   }
 
   .event-card__medallion svg {
-    height: 22px;
-    width: 22px;
+    height: 34px;
+    width: 34px;
   }
 
   .event-card__title-row {
@@ -3122,8 +3130,9 @@ nav button:hover {
   }
 
   .event-card__meta-row {
+    align-items: stretch;
     font-size: 0.78rem;
-    grid-template-columns: minmax(74px, 0.65fr) minmax(126px, 1fr) minmax(118px, 1.15fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 14px;
     padding-top: 10px;
   }
@@ -3131,15 +3140,22 @@ nav button:hover {
   .event-card__meta-row > span {
     gap: 5px;
     min-height: 24px;
-    padding: 0 8px;
+    padding: 8px 6px 2px;
   }
 
   .event-card__meta-row > span + span {
-    border-left: 1px solid #594a3f;
+    border-left: 0;
+    border-top: 1px solid #594a3f;
   }
 
   .event-card__meta-row > span:first-child {
-    padding-left: 2px;
+    grid-column: 1 / -1;
+    padding: 0 2px 9px;
+  }
+
+  .event-card__meta-row > .event-card__status {
+    border-left: 1px solid #594a3f;
+    padding-left: 12px;
   }
 
   .event-card__status > span,
@@ -3155,6 +3171,15 @@ nav button:hover {
   .event-card__staff-list,
   .event-card__staff-person {
     gap: 4px;
+  }
+
+  .event-card__meta-row > span:first-child .event-card__staff-list {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .event-card__meta-row > span:first-child .event-card__staff-person + .event-card__staff-person {
+    margin-left: 0;
   }
 
   .communication-preview {
@@ -3178,7 +3203,7 @@ nav button:hover {
 @media (max-width: 430px) {
   .event-card__meta-row {
     align-items: stretch;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .event-card__meta-row > span {
@@ -3191,12 +3216,17 @@ nav button:hover {
   }
 
   .event-card__meta-row > span + span {
-    border-left: 1px solid #594a3f;
-    border-top: 0;
+    border-left: 0;
+    border-top: 1px solid #594a3f;
   }
 
   .event-card__meta-row > span:first-child {
+    grid-column: 1 / -1;
     padding-left: 2px;
+  }
+
+  .event-card__meta-row > .event-card__status {
+    border-left: 1px solid #594a3f;
   }
 
   .event-card__staff-list,
