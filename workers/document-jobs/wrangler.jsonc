@@ -1,0 +1,57 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "anatomy-events-document-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "APP_ORIGIN": "https://anatomy-events.pages.dev"
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "d1_databases": [
+    {
+      "binding": "AUDIT_DB",
+      "database_name": "anatomy-events-audit",
+      "database_id": "8a5f49a3-4dd3-4956-a882-129ab81f348d"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "UPLOAD_STAGING",
+      "bucket_name": "anatomy-events-upload-staging"
+    }
+  ],
+  "triggers": {
+    "crons": ["17 * * * *"]
+  },
+  "queues": {
+    "consumers": [
+      {
+        "queue": "anatomy-events-documents",
+        "max_batch_size": 5,
+        "max_batch_timeout": 2,
+        "max_retries": 5,
+        "retry_delay": 30,
+        "dead_letter_queue": "anatomy-events-documents-dlq"
+      },
+      {
+        "queue": "anatomy-events-uploads",
+        "max_batch_size": 3,
+        "max_batch_timeout": 2,
+        "max_retries": 5,
+        "retry_delay": 30,
+        "dead_letter_queue": "anatomy-events-uploads-dlq"
+      }
+    ]
+  }
+}

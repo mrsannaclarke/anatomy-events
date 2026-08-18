@@ -206,6 +206,50 @@ export async function generateEventFile(entryId, kind, options = {}) {
   return requestSheetJson({ action, entryId, revision: Boolean(options.revision) });
 }
 
+export async function queueEventFile(entryId, kind) {
+  const response = await fetch('/api/jobs/document', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ entryId, kind }),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'The document could not be queued.');
+  return data.job;
+}
+
+export async function getDocumentJob(jobId) {
+  const response = await fetch(`/api/jobs/document?id=${encodeURIComponent(jobId)}`, {
+    headers: { Accept: 'application/json' },
+    credentials: 'same-origin',
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'Document status could not be checked.');
+  return data.job;
+}
+
+export async function queueEventArt(entryId, file) {
+  const query = new URLSearchParams({ entryId, fileName: file.name });
+  const response = await fetch(`/api/jobs/art-upload?${query}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': file.type || 'application/octet-stream' },
+    credentials: 'same-origin',
+    body: file,
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'The artwork could not be queued.');
+  return data.job;
+}
+
+export async function getArtUploadJob(jobId) {
+  const response = await fetch(`/api/jobs/art-upload?id=${encodeURIComponent(jobId)}`, {
+    headers: { Accept: 'application/json' }, credentials: 'same-origin',
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'Upload status could not be checked.');
+  return data.job;
+}
+
 export async function uploadEventArt(entryId, file) {
   if (!file) throw new Error('Choose an image or PDF first.');
   const fileData = await new Promise((resolve, reject) => {
