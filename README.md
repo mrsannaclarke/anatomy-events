@@ -63,3 +63,4 @@ Operational rules and continuity notes are maintained in:
 
 - `project.json`
 - `docs/app-rules.json`
+- `docs/project-notes.md`
