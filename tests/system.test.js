@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mutationEntryId, sheetMutationInvalidationKeys, sheetReadCacheKey } from '../functions/_sheetCache.js';
 import { auditRecord, isAuditAdmin } from '../functions/_audit.js';
+import { documentAction, signDocumentJob, verifyDocumentJobSignature } from '../functions/_documentJobs.js';
 
 import { sortLedgerEvents } from '../src/activity.js';
 import { isExpiredStaffingOnlyEvent } from '../src/eventVisibility.js';
@@ -64,6 +65,15 @@ test('audit records capture mutation fields without storing uploaded file conten
   assert.ok(!JSON.stringify(record).includes('sensitive-binary-data'));
   assert.equal(isAuditAdmin('MRS.ANNACLARKE@GMAIL.COM'), true);
   assert.equal(isAuditAdmin('tattoosbytomma@gmail.com'), false);
+});
+
+test('document jobs accept supported types and verify signed internal messages', async () => {
+  assert.equal(documentAction('contract'), 'generateContract');
+  assert.equal(documentAction('tfl'), 'generateTfl');
+  assert.equal(documentAction('other'), '');
+  const signature = await signDocumentJob('job-123', 'test-secret');
+  assert.equal(await verifyDocumentJobSignature('job-123', signature, 'test-secret'), true);
+  assert.equal(await verifyDocumentJobSignature('job-456', signature, 'test-secret'), false);
 });
 
 test('allowlist contains no duplicate email addresses', () => {

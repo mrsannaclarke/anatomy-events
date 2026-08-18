@@ -2,13 +2,26 @@ import { useEffect, useState } from 'react';
 import { Copy, ExternalLink, Mail, Upload } from 'lucide-react';
 
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
-import { generateEventFile, pullEventByEntryId, uploadEventArt } from '../sheetClient.js';
+import { getDocumentJob, pullEventByEntryId, queueEventFile, uploadEventArt } from '../sheetClient.js';
+
+function documentJobStorageKey(entryId, kind) {
+  return `anatomy-events:document-job:${entryId}:${kind}`;
+}
+
+function storedDocumentJobs(entryId) {
+  return ['contract', 'tfl'].reduce((jobs, kind) => {
+    const jobId = window.localStorage.getItem(documentJobStorageKey(entryId, kind));
+    if (jobId) jobs[kind] = jobId;
+    return jobs;
+  }, {});
+}
 
 export function FilesPanel({ event, onSaved }) {
   const raw = event.raw || {};
   const [fileUrls, setFileUrls] = useState(null);
   const [status, setStatus] = useState('');
   const [pendingLabel, setPendingLabel] = useState('');
+  const [documentJobs, setDocumentJobs] = useState(() => storedDocumentJobs(event.entryId));
 
   function urlsFromEvent(sourceEvent) {
     const source = sourceEvent?.raw || {};
@@ -44,6 +57,63 @@ export function FilesPanel({ event, onSaved }) {
     };
   }, [event.entryId]);
 
+  useEffect(() => {
+    setDocumentJobs(storedDocumentJobs(event.entryId));
+  }, [event.entryId]);
+
+  useEffect(() => {
+    const activeEntries = Object.entries(documentJobs);
+    if (activeEntries.length === 0) return undefined;
+    let cancelled = false;
+    let timer;
+
+    async function checkDocumentJobs() {
+      const completedKinds = [];
+      const failed = [];
+      let stillProcessing = false;
+      for (const [kind, jobId] of activeEntries) {
+        try {
+          const job = await getDocumentJob(jobId);
+          if (job.status === 'completed') completedKinds.push(kind);
+          else if (job.status === 'failed') failed.push([kind, job.error || 'Document generation failed.']);
+          else stillProcessing = true;
+        } catch {
+          stillProcessing = true;
+        }
+      }
+      if (cancelled) return;
+
+      const finishedKinds = [...completedKinds, ...failed.map(([kind]) => kind)];
+      if (finishedKinds.length > 0) {
+        finishedKinds.forEach((kind) => window.localStorage.removeItem(documentJobStorageKey(event.entryId, kind)));
+        setDocumentJobs((current) => Object.fromEntries(Object.entries(current).filter(([kind]) => !finishedKinds.includes(kind))));
+      }
+      if (completedKinds.length > 0) {
+        try {
+          const refreshed = await pullEventByEntryId(event.entryId);
+          if (!cancelled && refreshed) {
+            setFileUrls(urlsFromEvent(refreshed));
+            onSaved(refreshed);
+            setStatus(`${completedKinds.map((kind) => kind === 'tfl' ? 'Temporary license' : 'Contract').join(' and ')} generated and linked.`);
+          }
+        } catch (error) {
+          if (!cancelled) setStatus(error instanceof Error ? error.message : 'Document generated; refresh the Sheet to see its link.');
+        }
+      } else if (failed.length > 0) {
+        setStatus(failed.map(([kind, error]) => `${kind === 'tfl' ? 'Temporary license' : 'Contract'} failed: ${error}`).join(' '));
+      } else if (stillProcessing) {
+        setStatus('Document generation is running in the background. You can continue using the app.');
+      }
+      if (!cancelled && stillProcessing) timer = window.setTimeout(checkDocumentJobs, 2500);
+    }
+
+    void checkDocumentJobs();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [documentJobs, event.entryId, onSaved]);
+
   function mailtoLink(label, url) {
     const subjectByLabel = {
       Contract: `${event.clientName} ${raw.eventType || ''} ${raw.eventDate || ''} Contract`,
@@ -69,32 +139,15 @@ export function FilesPanel({ event, onSaved }) {
   }
 
   async function generate(kind) {
-    const label = kind === 'tfl' ? 'Generating temporary license...' : 'Generating contract...';
-    setStatus(label);
-    setPendingLabel(label);
+    const label = kind === 'tfl' ? 'Temporary license' : 'Contract';
+    setStatus(`Queueing ${label.toLowerCase()}...`);
     try {
-      const result = await generateEventFile(event.entryId, kind);
-      const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
-      if (!refreshed) throw new Error('File generated, but the refreshed event record was not returned.');
-      setFileUrls(urlsFromEvent(refreshed));
-      onSaved(refreshed);
-      setStatus('Generated file link saved.');
+      const job = await queueEventFile(event.entryId, kind);
+      window.localStorage.setItem(documentJobStorageKey(event.entryId, kind), job.id);
+      setDocumentJobs((current) => ({ ...current, [kind]: job.id }));
+      setStatus(`${label} queued. You can continue using the app while it generates.`);
     } catch (error) {
-      try {
-        const refreshed = await pullEventByEntryId(event.entryId);
-        const generatedUrl = kind === 'tfl' ? refreshed?.raw?.tflUrl : refreshed?.raw?.contractUrl;
-        if (refreshed && generatedUrl) {
-          setFileUrls(urlsFromEvent(refreshed));
-          onSaved(refreshed);
-          setStatus('Generated file link saved.');
-          return;
-        }
-      } catch {
-        // Preserve the original generation error when the recovery lookup also fails.
-      }
-      setStatus(error instanceof Error ? error.message : 'Failed to generate file.');
-    } finally {
-      setPendingLabel('');
+      setStatus(error instanceof Error ? error.message : `${label} could not be queued.`);
     }
   }
 
@@ -132,11 +185,11 @@ export function FilesPanel({ event, onSaved }) {
     <section className="detail-stack pending-scope">
       <PendingOverlay show={Boolean(pendingLabel)} label={pendingLabel} />
       <div className="file-actions">
-        <button type="button" className="primary-button" onClick={() => generate('contract')} disabled={!fileUrls || Boolean(fileUrls.contractUrl) || Boolean(pendingLabel)}>
-          Generate Contract
+        <button type="button" className="primary-button" onClick={() => generate('contract')} disabled={!fileUrls || Boolean(fileUrls.contractUrl) || Boolean(pendingLabel) || Boolean(documentJobs.contract)}>
+          {documentJobs.contract ? 'Generating Contract…' : 'Generate Contract'}
         </button>
-        <button type="button" className="primary-button" onClick={() => generate('tfl')} disabled={!fileUrls || Boolean(fileUrls.tflUrl) || Boolean(pendingLabel)}>
-          Generate TFL
+        <button type="button" className="primary-button" onClick={() => generate('tfl')} disabled={!fileUrls || Boolean(fileUrls.tflUrl) || Boolean(pendingLabel) || Boolean(documentJobs.tfl)}>
+          {documentJobs.tfl ? 'Generating TFL…' : 'Generate TFL'}
         </button>
       </div>
       <div className="link-list">
