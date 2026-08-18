@@ -2777,7 +2777,7 @@ nav button:hover {
   padding: 26px 30px 20px;
 }
 
-.event-card--complimentary {
+.event-card--walk-up-sales-only {
   background:
     radial-gradient(circle at 88% 12%, rgb(169 173 177 / 8%), transparent 32%),
     linear-gradient(135deg, #343638, #292b2d);

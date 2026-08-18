@@ -210,7 +210,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
             <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
               <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
               <option value={PRICING_METHOD_CORPORATE_MODIFIERS}>Corporate / Walk-Up — Client Pays Modifiers Only</option>
-              <option value={PRICING_METHOD_ZERO_WALK_UP}>Complimentary Walk-Up — No Charge or Payout</option>
+              <option value={PRICING_METHOD_ZERO_WALK_UP}>Walk-Up Sales Only — No Artist or Counter Event Pay</option>
             </select>
           </Field>
         </div>

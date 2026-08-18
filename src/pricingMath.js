@@ -7,7 +7,7 @@ export const PRICING_METHOD_ZERO_WALK_UP = 'ZERO_WALK_UP';
 
 export function normalizePricingMethod(value) {
   const normalized = String(value || '').trim().toUpperCase();
-  if (normalized === PRICING_METHOD_ZERO_WALK_UP || normalized === 'COMPLIMENTARY WALK-UP' || normalized === '$0 WALK-UP EVENT' || normalized === '0$ WALK-UP EVENT') {
+  if (normalized === PRICING_METHOD_ZERO_WALK_UP || normalized === 'WALK-UP SALES ONLY' || normalized === 'COMPLIMENTARY WALK-UP' || normalized === '$0 WALK-UP EVENT' || normalized === '0$ WALK-UP EVENT') {
     return PRICING_METHOD_ZERO_WALK_UP;
   }
   if (normalized === PRICING_METHOD_CORPORATE_MODIFIERS || normalized === 'CORPORATE / WALK-UP') {
@@ -18,7 +18,7 @@ export function normalizePricingMethod(value) {
 
 export function pricingMethodToSheetValue(value) {
   const normalized = normalizePricingMethod(value);
-  if (normalized === PRICING_METHOD_ZERO_WALK_UP) return 'Complimentary Walk-Up';
+  if (normalized === PRICING_METHOD_ZERO_WALK_UP) return 'Walk-Up Sales Only';
   return normalized === PRICING_METHOD_CORPORATE_MODIFIERS ? 'Corporate / Walk-Up' : 'Standard';
 }
 

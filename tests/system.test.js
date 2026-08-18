@@ -153,7 +153,7 @@ test('corporate pricing has a five-hour minimum, $300 admin fee, and no deposit'
   assert.equal(totals.balanceDue, 650);
 });
 
-test('complimentary walk-up pricing saves an explicit method and produces no charges or payouts', () => {
+test('walk-up sales only pricing saves an explicit method and produces no event pay', () => {
   const form = pricingForm({
     pricingMethod: PRICING_METHOD_ZERO_WALK_UP,
     customFlash: 'YES',
@@ -170,7 +170,7 @@ test('complimentary walk-up pricing saves an explicit method and produces no cha
   assert.equal(totals.depositRequired, 0);
   assert.equal(totals.balanceDue, 0);
   const saved = buildPricingEvent({}, form, totals);
-  assert.equal(saved.pricingMethod, 'Complimentary Walk-Up');
+  assert.equal(saved.pricingMethod, 'Walk-Up Sales Only');
   assert.equal(saved.totalCharge, '');
   const event = {
     raw: {
@@ -189,7 +189,7 @@ test('complimentary walk-up pricing saves an explicit method and produces no cha
   assert.equal(payout.lines.length, 0);
 });
 
-test('complimentary walk-up event remains visible on its event day and expires the following day', () => {
+test('walk-up sales only event remains visible on its event day and expires the following day', () => {
   const event = { raw: { eventDate: '09/13/2026', pricingMethod: '$0 Walk-Up Event' } };
   assert.equal(isExpiredStaffingOnlyEvent(event, new Date(2026, 8, 13, 23, 59, 59)), false);
   assert.equal(isExpiredStaffingOnlyEvent(event, new Date(2026, 8, 14, 0, 0, 0)), true);
