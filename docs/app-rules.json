@@ -31,7 +31,7 @@
     "deploy_build_step": "vite build",
     "deploy_publish_step": "wrangler pages deploy ./dist --project-name anatomy-events --branch main",
     "write_proxy": "/api/sheet verifies Google ID tokens and forwards allowlisted mutations with encrypted APP_SYNC_TOKEN",
-    "current_state": "Cloudflare Pages is the production frontend. Apps Script Version 80 was deployed and its Manual Upcoming Appointment field verified on 2026-08-12."
+    "current_state": "Cloudflare Pages is the production frontend. Manual Upcoming Appointment is retired from the app and active API paths; its historical Sheet column remains inert for schema stability."
   },
   "data_sources": {
     "production_sheet": {
@@ -46,7 +46,7 @@
     "local_storage": {
       "events_key": "anatomy_events_v3",
       "auth_key": "anatomy-events.auth-user.v2",
-      "manual_appointments": "Not stored locally; persisted in Events.Manual Upcoming Appointment."
+      "manual_appointments": "Retired; not stored locally, displayed, returned by the API, or written by the app."
     }
   },
   "auth_and_permissions": {
@@ -132,7 +132,7 @@
     "card_money_visibility": "Computed Total and Balance are visible only to admin-money viewers and only when status/pay status is not Open/blank.",
     "post_deposit_additions": "When status is deposit paid or later and a numeric deposit exists, Added After Deposit Paid is max(0, computed total - deposit/0.30).",
     "appointment_footer": "Removed from the client-card face.",
-    "manual_appointment_rule": "Manual Upcoming Appointment is stored in the Events sheet. Adding the first nonblank appointment automatically applies status New; changing an existing appointment preserves the current status.",
+    "manual_appointment_rule": "Retired. The historical Events column remains inert so old records and neighboring columns are preserved.",
     "google_calendar_button": "Removed from the client-card face because the calendar hook was unreliable.",
     "map_button": "Shown when venue/address is not TBD and has a usable query.",
     "latest_communication_preview": "Shows most recent staff activity entry for visible event IDs."

@@ -21,7 +21,6 @@ export function NotesPanel({ event, viewerEmail, viewerName, onSaved }) {
   const raw = event.raw || {};
   const [statusValue, setStatusValue] = useState(raw.status || raw.payStatus || '');
   const [privateNotes, setPrivateNotes] = useState(raw.privateNotes || '');
-  const [manualAppointment, setManualAppointment] = useState(raw.manualUpcomingAppointment || '');
   const [communicationEntry, setCommunicationEntry] = useState('');
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -67,7 +66,6 @@ export function NotesPanel({ event, viewerEmail, viewerName, onSaved }) {
         entryId: raw.entryId,
         status: statusValue,
         internalNotes: notes,
-        manualUpcomingAppointment: manualAppointment,
       });
       const refreshed = (await pullEventByEntryId(saved.entryId)) || event;
       onSaved(refreshed);
@@ -95,13 +93,6 @@ export function NotesPanel({ event, viewerEmail, viewerName, onSaved }) {
             </button>
           ))}
         </div>
-      </section>
-
-      <section className="picker-section">
-        <h3>Appointments</h3>
-        <Field label="Manual Upcoming Appointment">
-          <input type="datetime-local" value={manualAppointment} onChange={(input) => setManualAppointment(input.target.value)} />
-        </Field>
       </section>
 
       <section className="picker-section">

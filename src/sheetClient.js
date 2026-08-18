@@ -102,7 +102,6 @@ export function normalizeEvent(raw, index = 0) {
     clientName,
     eventDate,
     status,
-    appointment: [eventDate, startTime].filter(Boolean).join(' at ') || 'No appointment date',
     customFlash: normalizeText(raw.customFlash).toUpperCase() || 'NO',
     temporaryTattoos: normalizeText(raw.temporaryTattoos).toUpperCase() || 'NO',
     balanceDue: formatMoney(raw.balanceDue),
