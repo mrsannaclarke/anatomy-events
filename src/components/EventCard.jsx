@@ -186,7 +186,7 @@ export function EventCard({ event, onAction }) {
     >
       <div className="event-card__main">
         <div className="event-type-dot event-card__medallion" style={{ borderColor: eventColor }}>
-          <EventIcon size={28} color="#fff3e4" strokeWidth={1.7} />
+          <EventIcon size={34} color="#fff3e4" strokeWidth={1.8} />
         </div>
         <div className="event-card__body">
           <div className="event-card__title-row">
