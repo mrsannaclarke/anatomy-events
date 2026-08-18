@@ -14,6 +14,7 @@ import { DetailPanel } from './panels/DetailPanel.jsx';
 import { configurePricingSchedule } from './pricingMath.js';
 import { isExpiredStaffingOnlyEvent } from './eventVisibility.js';
 import { pullEventsFromSheet, pullPricingRulesFromSheet, SHEET_WEB_APP_URL } from './sheetClient.js';
+import { getSheetSyncPresentation } from './sheetSyncStatus.js';
 
 const LAST_SHEET_SYNC_KEY = 'events-app-2.0:last-sheet-sync-at';
 
@@ -111,8 +112,12 @@ function formatSyncTime(value) {
 }
 
 function SheetSyncMenu({ syncStatus, syncError, lastSyncAt, onRefresh }) {
-  const isBusy = syncStatus === 'loading' || syncStatus === 'refreshing';
-  const statusLabel = syncError ? 'Sheet needs attention' : isBusy ? 'Updating Sheet data…' : formatSyncTime(lastSyncAt);
+  const { isBusy, isUsingSavedData, statusLabel } = getSheetSyncPresentation({
+    syncStatus,
+    syncError,
+    lastSyncAt,
+    formatSyncTime,
+  });
 
   return (
     <details className={syncError ? 'sheet-sync-menu has-error' : 'sheet-sync-menu'}>
@@ -125,7 +130,12 @@ function SheetSyncMenu({ syncStatus, syncError, lastSyncAt, onRefresh }) {
           <RefreshCw size={16} className={isBusy ? 'is-spinning' : ''} />
           {isBusy ? 'Refreshing…' : 'Refresh Sheet'}
         </button>
-        {syncError ? <span className="sheet-sync-menu__error" aria-live="polite">{syncError}</span> : null}
+        {isUsingSavedData ? (
+          <span className="sheet-sync-menu__error" aria-live="polite">
+            Live Sheet refresh is unavailable. The app is showing the last successfully saved event data.
+          </span>
+        ) : null}
+        {syncError && !isUsingSavedData ? <span className="sheet-sync-menu__error" aria-live="polite">{syncError}</span> : null}
         {syncError ? (
           <a href={SHEET_WEB_APP_URL} target="_blank" rel="noreferrer">Open Apps Script</a>
         ) : null}
