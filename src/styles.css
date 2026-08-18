@@ -3132,7 +3132,7 @@ nav button:hover {
   .event-card__meta-row {
     align-items: stretch;
     font-size: 0.78rem;
-    grid-template-columns: 1.1fr 0.9fr 1.05fr;
+    grid-template-columns: 1.15fr 0.9fr 1.05fr;
     margin-top: 14px;
     padding-top: 10px;
   }
@@ -3152,12 +3152,6 @@ nav button:hover {
     padding-left: 2px;
   }
 
-  .event-card__meta-row > span:nth-child(2) {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
-
   .event-card__status > span,
   .event-card__staff-dot {
     height: 11px;
@@ -3174,12 +3168,15 @@ nav button:hover {
   }
 
   .event-card__meta-row > span:first-child .event-card__staff-list {
-    align-items: flex-start;
-    flex-direction: column;
+    column-gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    row-gap: 4px;
   }
 
-  .event-card__meta-row > span:first-child .event-card__staff-person + .event-card__staff-person {
+  .event-card__meta-row > span:first-child .event-card__staff-person {
     margin-left: 0;
+    white-space: nowrap;
   }
 
   .communication-preview {
@@ -3203,7 +3200,7 @@ nav button:hover {
 @media (max-width: 430px) {
   .event-card__meta-row {
     align-items: stretch;
-    grid-template-columns: 1.1fr 0.9fr 1.05fr;
+    grid-template-columns: 1.15fr 0.9fr 1.05fr;
   }
 
   .event-card__meta-row > span {
