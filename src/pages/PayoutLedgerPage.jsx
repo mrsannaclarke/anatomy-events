@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { AdminBackButton } from '../components/AdminBackButton.jsx';
 import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay, sortPayoutLedgerCards } from '../payoutMath.js';
 import { isZeroWalkUpPricing } from '../pricingMath.js';
 import { pullPricingRulesFromSheet } from '../sheetClient.js';
@@ -40,13 +41,13 @@ export function PayoutLedgerPage({ events, onBack }) {
   const visibleCards = selectedYear === 'All' ? cards : cards.filter((card) => getCompletedYear(card.event) === selectedYear);
 
   return (
-    <section className="page-stack">
+    <section className="page-stack admin-subpage">
       <div className="panel-heading">
         <div>
+          <AdminBackButton onClick={onBack} />
           <h2>Payout Ledger</h2>
           <p>Completed events are priced, allocated, and reconciled automatically.</p>
         </div>
-        <button type="button" className="secondary-button" onClick={onBack}>Back to Admin</button>
       </div>
       <section className="tool-panel">
         <label className="field">

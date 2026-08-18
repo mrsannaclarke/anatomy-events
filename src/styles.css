@@ -1438,19 +1438,87 @@ nav button:hover {
 .admin-action--payments { --admin-accent: #8faac9; }
 .admin-action--signout { --admin-accent: #d56b66; }
 
-.counter-payment-page .panel-heading > div {
+.admin-subpage .panel-heading > div {
   align-items: flex-start;
   display: grid;
   gap: 10px;
 }
 
-.counter-payment-page .panel-heading .secondary-button {
+.admin-subpage .panel-heading .admin-back-button {
   justify-self: start;
 }
 
 .counter-payment-page .panel-heading > svg {
   color: #8faac9;
   flex: 0 0 auto;
+}
+
+.admin-back-button {
+  gap: 7px;
+}
+
+.event-legend-panel {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(181 139 255 / 9%), transparent 36%),
+    linear-gradient(145deg, #302923, #27211d);
+  border: 1px solid #675448;
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 18%);
+  padding: 22px;
+}
+
+.event-legend-heading h3 {
+  color: #f2e6d5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.event-legend-heading p {
+  color: #bba99a;
+  margin: 0;
+}
+
+.event-legend-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.event-legend-item {
+  align-items: center;
+  background: color-mix(in srgb, var(--event-legend-color) 7%, #28211d);
+  border: 1px solid color-mix(in srgb, var(--event-legend-color) 38%, #5d4c41);
+  border-radius: 12px;
+  color: #eadccc;
+  display: flex;
+  gap: 11px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.event-legend-icon {
+  align-items: center;
+  border: 2px solid var(--event-legend-color);
+  border-radius: 50%;
+  color: #fff3e4;
+  display: flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+@media (max-width: 760px) {
+  .event-legend-panel {
+    padding: 17px;
+  }
+
+  .event-legend-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .change-history-page .panel-heading > div {

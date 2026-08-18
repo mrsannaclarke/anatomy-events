@@ -61,6 +61,26 @@ export function AdminPage({ viewer, onOpenPage, onSignOut }) {
           <span>End this session on this device.</span>
         </button>
       </section>
+
+      <section className="event-legend-panel" aria-labelledby="event-legend-title">
+        <div className="event-legend-heading">
+          <div>
+            <h3 id="event-legend-title">Event Card Legend</h3>
+            <p>Icon and color shown on each event card.</p>
+          </div>
+        </div>
+        <div className="event-legend-grid">
+          {EVENT_VISUAL_LEGEND.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div className="event-legend-item" key={item.value} style={{ '--event-legend-color': item.color }}>
+                <span className="event-legend-icon" aria-hidden="true"><Icon size={27} strokeWidth={2} /></span>
+                <span>{item.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </section>
   );
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Copy, ExternalLink, WalletCards } from 'lucide-react';
+import { Check, Copy, ExternalLink, WalletCards } from 'lucide-react';
+
+import { AdminBackButton } from '../components/AdminBackButton.jsx';
 
 const COUNTER_PAYOUT_LINKS = [
   { name: 'Bree', service: 'Venmo', url: 'https://account.venmo.com/u/breezantines' },
@@ -31,13 +33,10 @@ export function CounterPaymentLinksPage({ onBack }) {
   const [copiedPayoutName, setCopiedPayoutName] = useState('');
 
   return (
-    <section className="page-stack counter-payment-page">
+    <section className="page-stack admin-subpage counter-payment-page">
       <div className="panel-heading">
         <div>
-          <button type="button" className="secondary-button" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Admin Tools
-          </button>
+          <AdminBackButton onClick={onBack} />
           <h2>Counter Payment Links</h2>
           <p>Open a payment profile or copy the name and link to share it.</p>
         </div>

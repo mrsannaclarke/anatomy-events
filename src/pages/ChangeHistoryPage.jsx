@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, History, RefreshCw } from 'lucide-react';
+import { History, RefreshCw } from 'lucide-react';
+
+import { AdminBackButton } from '../components/AdminBackButton.jsx';
 
 const AUDIT_ACTION_LABELS = {
   upsertEvent: 'Saved event',
@@ -38,13 +40,10 @@ export function ChangeHistoryPage({ onBack }) {
   }, []);
 
   return (
-    <section className="page-stack change-history-page">
+    <section className="page-stack admin-subpage change-history-page">
       <div className="panel-heading">
         <div>
-          <button type="button" className="secondary-button" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Admin Tools
-          </button>
+          <AdminBackButton onClick={onBack} />
           <h2>Change History</h2>
           <p>App changes, background jobs, and Cloudflare monitoring.</p>
         </div>
