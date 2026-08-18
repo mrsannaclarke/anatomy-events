@@ -254,7 +254,7 @@
     "open_forward_pricing": "Open-forward rows allow travel distance pricing without requiring a full valid address.",
     "deposit_rule": "Deposit paid/later statuses use 30% deposit behavior for balance/addition displays.",
     "booked_hours_rule": "Base includes 5 hours. Booked hours are derived first from Event Start Time to Event End Time when both are present, then from legacy hour-scaling adjustment reason text, then from extraHours. Standard events under 5 hours prorate base and counter; Corporate / Walk-Up events use a five-hour minimum. Hours above 5 add the configured extra-hour charge.",
-    "staff_adjustment": "Admin-only section for explicit manual staff price adjustments only. Legacy prorate/hour-scaling reason text may restore Booked Hours, but must display through dedicated prorated pricing rows, not as Staff Adjustment. Staff Adjustment rows are hidden when the amount is zero and imports must not seed staffPriceAdjustment from optionalFee.",
+    "staff_adjustment": "Admin-only section for explicit manual price adjustments. Negative adjustments use a payout waterfall: reduce the Corporate Admin Fee first, preserve the $200 temporary facility license as a pass-through cost, reduce remaining shop earnings next, reduce artist payouts after shop earnings are exhausted, and reduce counter payout last. Tomma's salaried artist allocation is shop-captured and is reduced before non-salaried artist payouts. Positive adjustments remain shop revenue. Explicit one-time payout exceptions remain fixed. Legacy prorate/hour-scaling reason text may restore Booked Hours, but must display through dedicated prorated pricing rows, not as Staff Adjustment.",
     "delete_event": "Requires confirmation and sends deleteEvent by Entry ID or Source Row."
   },
   "notes": {
@@ -440,7 +440,8 @@
     "data_refresh": "Pulls live events from sheet on load, falling back to local events only if sheet pull fails.",
     "cards": "Completed events only; cards show gross total, staff paid, shop total, remainder, staff lines, and shop modifier breakdown.",
     "display_cleanup": "One-cent .01/.99 noise is normalized for event-level gross/shop/remainder display.",
-    "counter_none": "Explicit None counter selection is recognized and not treated as a person assignment."
+    "counter_none": "Explicit None counter selection is recognized and not treated as a person assignment.",
+    "staff_choice_order": "Artist and counter choices are alphabetical. Jeremy is a standard counter choice; None and Write in remain at the end of the counter list."
   },
   "generators_files": {
     "access": {

@@ -252,6 +252,7 @@ export function PayoutPage({ events, viewer }) {
                 <div className="payout-breakdown-lines">
                   {row.role !== 'counter' ? <span>Artist Base {formatPayout(row.artistBasePayout)}</span> : null}
                   {row.counterPayout > 0 ? <span>Counter {formatPayout(row.counterPayout)}</span> : null}
+                  {row.priceAdjustmentReduction > 0 ? <span>Price Adjustment −{formatPayout(row.priceAdjustmentReduction)}</span> : null}
                   {modifierItems(row).map(([label, amount]) => (
                     <span key={label}>
                       {label} {formatPayout(amount)}

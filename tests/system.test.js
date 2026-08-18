@@ -13,7 +13,7 @@ import {
   timeInputValue,
 } from '../src/pricingMath.js';
 import { ALLOWED_USERS } from '../shared/authPolicy.js';
-import { STAFF_OPTIONS, STATUS_OPTIONS } from '../src/constants.js';
+import { COUNTER_OPTIONS, STAFF_OPTIONS, STATUS_OPTIONS } from '../src/constants.js';
 import { getStaffColor } from '../src/staffColors.js';
 
 function pricingForm(overrides = {}) {
@@ -43,6 +43,13 @@ test('Sienna is an active green artist with both approved login emails', () => {
 
 test('Consult Booked/Pending is available as an event status', () => {
   assert.ok(STATUS_OPTIONS.includes('Consult Booked/Pending'));
+});
+
+test('staff choices are alphabetical and Jeremy is a counter option', () => {
+  assert.deepEqual(STAFF_OPTIONS, [...STAFF_OPTIONS].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+  const counterNames = COUNTER_OPTIONS.filter((name) => !['None', 'Other'].includes(name));
+  assert.deepEqual(counterNames, [...counterNames].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+  assert.ok(COUNTER_OPTIONS.includes('Jeremy'));
 });
 
 test('event times parse 12-hour, 24-hour, and overnight ranges', () => {
@@ -89,6 +96,39 @@ test('corporate pricing has a five-hour minimum, $300 admin fee, and no deposit'
   assert.equal(totals.totalCharge, 650);
   assert.equal(totals.depositRequired, 0);
   assert.equal(totals.balanceDue, 650);
+});
+
+test('standard discount protects licensing and counter while reducing artist payout first', () => {
+  const event = {
+    raw: {
+      entryId: 'discount-standard', status: 'Event Complete', year: '2026', pricingMethod: 'Standard',
+      numberOfArtists: '1', bookedHours: '5', artistNames: 'Agnes', counterNames: 'Jeremy',
+      staffPriceAdjustment: '-100', totalCharge: '1850',
+    },
+  };
+  assert.equal(getPersonPayRow(event, 'Agnes').totalPayout, 1500);
+  assert.equal(getPersonPayRow(event, 'Jeremy').totalPayout, 150);
+  const payout = calculateEventPayout(event, ['Agnes', 'Jeremy']);
+  assert.equal(payout.shopTotal, 200);
+  assert.equal(payout.remainder, 0);
+});
+
+test('corporate discount consumes admin, shop share, artists, then counter while preserving $200 license', () => {
+  const pricingPayoutMap = { '2026::1': { customFlashArtistSharePct: 0.5 } };
+  const event = {
+    raw: {
+      entryId: 'discount-corporate', status: 'Event Complete', year: '2026', pricingMethod: 'Corporate / Walk-Up',
+      numberOfArtists: '1', bookedHours: '5', artistNames: 'Agnes', counterNames: 'Jeremy', customFlash: 'YES',
+      customFlashFee: '220', staffPriceAdjustment: '-650', totalCharge: '220',
+    },
+  };
+  assert.equal(getPersonPayRow(event, 'Agnes', pricingPayoutMap).totalPayout, 0);
+  assert.equal(getPersonPayRow(event, 'Jeremy', pricingPayoutMap).totalPayout, 20);
+  const payout = calculateEventPayout(event, ['Agnes', 'Jeremy'], pricingPayoutMap);
+  assert.equal(payout.adjustmentWaterfall.corporateAdminReduction, 300);
+  assert.equal(payout.adjustmentWaterfall.protectedLicense, 200);
+  assert.equal(payout.shopTotal, 200);
+  assert.equal(payout.remainder, 0);
 });
 
 test('event feed places confirmed events first and sorts each group soonest-first', () => {

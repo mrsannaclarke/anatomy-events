@@ -47,24 +47,26 @@ export const STATUS_OPTIONS = [
 ];
 
 export const STAFF_OPTIONS = [
-  'Tomma',
-  'Shy',
-  'Megan',
-  'Sisi',
-  'Drew',
   'Agnes',
-  'Lindsay',
-  'Jayden',
-  'Summer',
   'Anna',
-  'Jake',
-  'Lucky',
   'Anne',
+  'Drew',
+  'Jake',
+  'Jayden',
   'Jazz',
+  'Lindsay',
+  'Lucky',
+  'Megan',
+  'Shy',
   'Sienna',
+  'Sisi',
+  'Summer',
+  'Tomma',
 ];
 
-export const COUNTER_OPTIONS = [...STAFF_OPTIONS, 'Jacob', 'Jason', 'Kevin', 'Veda', 'None', 'Other'];
+export const COUNTER_OPTIONS = [
+  ...new Set([...STAFF_OPTIONS, 'Jacob', 'Jason', 'Jeremy', 'Kevin', 'Veda']),
+].sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' })).concat('None', 'Other');
 
 export const CLIENT_FIELD_CONFIG = [
   ['year', 'Price Plan', 'select-year'],

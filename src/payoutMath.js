@@ -106,7 +106,7 @@ export function buildPricingPayoutMap(pricingRows) {
   );
 }
 
-export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
+function getBasePersonPayRow(event, personName, pricingPayoutMap = {}) {
   if (isCancelledForPay(event)) return null;
 
   const raw = event.raw || event;
@@ -202,6 +202,100 @@ function normalizeCurrency(value) {
   return Math.abs(amount) < 0.005 ? 0 : Number(amount.toFixed(2));
 }
 
+function consumeFromPool(remaining, pool) {
+  return Math.max(0, remaining - Math.max(0, pool));
+}
+
+function buildAdjustmentPlan(event, pricingPayoutMap) {
+  const raw = event.raw || event;
+  const totals = computePricing(formFromEvent(event));
+  const discount = Math.max(0, -parseMoney(raw.staffPriceAdjustment || raw.staffAdjustmentAmount || totals.staffAdjustment));
+  const entryId = String(raw.entryId || '').trim();
+  if (discount <= 0 || ONE_TIME_PAYOUT_TRUTH[entryId]) return { discount: 0, reductions: new Map() };
+
+  const assignedPeople = [...new Set([...parseNames(raw.artistNames), ...parseNames(raw.counterNames)])];
+  const baseRows = assignedPeople
+    .map((person) => ({ person, key: normalizeNameKey(person), row: getBasePersonPayRow(event, person, pricingPayoutMap) }))
+    .filter(({ row }) => row);
+  const allStaffAllocations = baseRows.reduce((sum, { row }) => sum + row.totalPayout, 0);
+  const baselineGross = Math.max(0, totals.totalCharge - totals.staffAdjustment);
+  const baselineShopOwn = Math.max(0, baselineGross - allStaffAllocations);
+  const protectedLicense = Math.max(0, totals.tempFacilityLicenseFee);
+  const corporateAdmin = Math.max(0, totals.corporateAdminFee);
+  const otherShopEarnings = Math.max(0, baselineShopOwn - protectedLicense - corporateAdmin);
+  const reductions = new Map(baseRows.map(({ key }) => [key, { artist: 0, counter: 0 }]));
+
+  let remaining = consumeFromPool(discount, corporateAdmin);
+  remaining = consumeFromPool(remaining, otherShopEarnings);
+
+  const reduceRows = (eligible, field, amountField) => {
+    const pool = eligible.reduce((sum, item) => sum + item.row[amountField], 0);
+    const applied = normalizeCurrency(Math.min(remaining, pool));
+    if (applied <= 0 || pool <= 0) return;
+    let assigned = 0;
+    eligible.forEach(({ key, row }, index) => {
+      const share = index === eligible.length - 1
+        ? normalizeCurrency(applied - assigned)
+        : normalizeCurrency(applied * (row[amountField] / pool));
+      reductions.get(key)[field] = share;
+      assigned = normalizeCurrency(assigned + share);
+    });
+    remaining = normalizeCurrency(Math.max(0, remaining - assigned));
+  };
+
+  // Tomma's artist allocation is shop-captured because she is salaried, so it
+  // is exhausted with shop earnings before non-salaried artist payouts.
+  reduceRows(baseRows.filter(({ key, row }) => key === 'tomma' && row.artistPayout > 0), 'artist', 'artistPayout');
+  reduceRows(baseRows.filter(({ key, row }) => key !== 'tomma' && row.artistPayout > 0), 'artist', 'artistPayout');
+  reduceRows(baseRows.filter(({ row }) => row.counterPayout > 0), 'counter', 'counterPayout');
+
+  return {
+    discount,
+    reductions,
+    corporateAdminReduction: Math.min(discount, corporateAdmin),
+    protectedLicense,
+    unallocatedReduction: normalizeCurrency(remaining),
+  };
+}
+
+function applyArtistReduction(row, reduction) {
+  if (reduction <= 0 || row.artistPayout <= 0) return row;
+  const targetPayout = normalizeCurrency(Math.max(0, row.artistPayout - reduction));
+  const components = [['base', row.artistBasePayout], ...Object.entries(row.artistModifierBreakdown)].filter(([, amount]) => amount > 0);
+  const adjustedComponents = {};
+  let assigned = 0;
+  components.forEach(([key, amount], index) => {
+    const adjusted = index === components.length - 1
+      ? normalizeCurrency(targetPayout - assigned)
+      : normalizeCurrency(targetPayout * (amount / row.artistPayout));
+    adjustedComponents[key] = Math.max(0, adjusted);
+    assigned = normalizeCurrency(assigned + adjustedComponents[key]);
+  });
+  const artistModifierBreakdown = Object.fromEntries(
+    Object.keys(row.artistModifierBreakdown).map((key) => [key, adjustedComponents[key] || 0]),
+  );
+  const artistBasePayout = adjustedComponents.base || 0;
+  const artistModifierPayout = normalizeCurrency(Object.values(artistModifierBreakdown).reduce((sum, amount) => sum + amount, 0));
+  return { ...row, artistBasePayout, artistModifierBreakdown, artistModifierPayout, artistPayout: targetPayout };
+}
+
+export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
+  const baseRow = getBasePersonPayRow(event, personName, pricingPayoutMap);
+  if (!baseRow || baseRow.payoutSource === 'one_time_exception') return baseRow;
+  const plan = buildAdjustmentPlan(event, pricingPayoutMap);
+  const reduction = plan.reductions.get(normalizeNameKey(personName)) || { artist: 0, counter: 0 };
+  const artistAdjusted = applyArtistReduction(baseRow, reduction.artist);
+  const counterPayout = normalizeCurrency(Math.max(0, artistAdjusted.counterPayout - reduction.counter));
+  const priceAdjustmentReduction = normalizeCurrency(reduction.artist + reduction.counter);
+  return {
+    ...artistAdjusted,
+    counterPayout,
+    totalPayout: normalizeCurrency(artistAdjusted.artistPayout + counterPayout),
+    priceAdjustmentReduction,
+    adjustmentWaterfall: plan,
+  };
+}
+
 export function calculateEventPayout(event, people, pricingPayoutMap = {}) {
   const raw = event?.raw || event || {};
   const computed = computePricing(formFromEvent(event));
@@ -233,6 +327,7 @@ export function calculateEventPayout(event, people, pricingPayoutMap = {}) {
     shopOwnEarnings,
     shopTotal,
     remainder,
+    adjustmentWaterfall: buildAdjustmentPlan(event, pricingPayoutMap),
     grossSource: savedGross > 0 ? 'saved' : 'calculated',
   };
 }
