@@ -3152,6 +3152,12 @@ nav button:hover {
     padding-left: 2px;
   }
 
+  .event-card__meta-row > span:nth-child(2) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
   .event-card__status > span,
   .event-card__staff-dot {
     height: 11px;
