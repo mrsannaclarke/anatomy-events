@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Copy, ExternalLink, Mail, Upload } from 'lucide-react';
 
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { ActionStatus } from '../components/ActionStatus.jsx';
 import { generateEventFile, getArtUploadJob, getDocumentJob, pullEventByEntryId, queueEventArt, queueEventFile } from '../sheetClient.js';
 
 function documentJobStorageKey(entryId, kind) {
@@ -383,7 +384,7 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
           )}
         </section>
       ) : null}
-      {status ? <p className="save-status">{status}</p> : null}
+      <ActionStatus>{status}</ActionStatus>
     </section>
   );
 }

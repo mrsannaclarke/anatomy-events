@@ -4,6 +4,7 @@ import { Copy, Pencil, Route, Save, Trash2 } from 'lucide-react';
 import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { ActionStatus } from '../components/ActionStatus.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
@@ -271,7 +272,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
         </div>
       </section>
 
-      {status ? <p className="save-status">{status}</p> : null}
+      <ActionStatus>{status}</ActionStatus>
 
       <div className="panel-actions panel-actions--bottom">
         <button type="button" className="secondary-button" onClick={() => setIsEditable((value) => !value)}>

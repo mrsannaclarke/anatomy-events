@@ -1105,6 +1105,43 @@ nav button:hover {
   margin: 0;
 }
 
+.action-status {
+  align-items: flex-start;
+  background: rgb(143 170 201 / 10%);
+  border: 1px solid rgb(143 170 201 / 32%);
+  border-radius: 11px;
+  color: #cad8e6;
+  display: flex;
+  font-size: 0.92rem;
+  gap: 10px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 11px 13px;
+}
+
+.action-status > svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.action-status--success {
+  background: rgb(143 201 173 / 11%);
+  border-color: rgb(143 201 173 / 35%);
+  color: #a9dbc3;
+}
+
+.action-status--error {
+  background: rgb(213 107 102 / 11%);
+  border-color: rgb(213 107 102 / 38%);
+  color: #efa6a1;
+}
+
+.action-status--progress {
+  background: rgb(217 173 98 / 10%);
+  border-color: rgb(217 173 98 / 34%);
+  color: #e6c47f;
+}
+
 .sr-only {
   height: 1px;
   margin: -1px;

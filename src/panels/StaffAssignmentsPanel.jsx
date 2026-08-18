@@ -3,6 +3,7 @@ import { CircleDollarSign, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { ActionStatus } from '../components/ActionStatus.jsx';
 import { COUNTER_OPTIONS, STAFF_OPTIONS } from '../constants.js';
 import { buildPricingPayoutMap, formatPayout, getStaffTypePayPreview } from '../payoutMath.js';
 import { ARTIST_COUNTS } from '../pricingMath.js';
@@ -193,7 +194,7 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
         <Save size={16} />
         Save Staff Assignments
       </button>
-      {status ? <p className="save-status">{status}</p> : null}
+      <ActionStatus>{status}</ActionStatus>
     </section>
   );
 }

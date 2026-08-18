@@ -3,6 +3,7 @@ import { Save, Trash2 } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
+import { ActionStatus } from '../components/ActionStatus.jsx';
 import { STATUS_OPTIONS } from '../constants.js';
 import { pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
 
@@ -138,7 +139,7 @@ export function NotesPanel({ event, viewerEmail, viewerName, onSaved, onSavedAnd
         <Save size={16} />
         Save Notes
       </button>
-      {status ? <p className="save-status">{status}</p> : null}
+      <ActionStatus>{status}</ActionStatus>
     </section>
   );
 }

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Copy, ExternalLink, Plus, Route, Save, Trash2 } from 'lucide-react';
 
+import { ActionStatus } from '../components/ActionStatus.jsx';
+
 import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
@@ -487,7 +489,7 @@ export function PricingPage({ events, viewer, onSaved }) {
             {isSaving ? 'Saving...' : hasBalanceAddOnChanges ? 'Save Add-On & Generate Revised Contract' : saveMode === 'import' ? 'Import' : saveMode === 'overwrite' ? 'Overwrite' : 'Save'}
           </button>
         </div>
-        {saveStatus ? <p className="save-status">{saveStatus}</p> : null}
+        <ActionStatus>{saveStatus}</ActionStatus>
       </section>
     </section>
   );
