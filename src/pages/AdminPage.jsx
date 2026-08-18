@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsheet, Share, ShieldCheck, Smartphone, WalletCards, X } from 'lucide-react';
 
+import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
-import project from '../../project.json';
 
 const COUNTER_PAYOUT_LINKS = [
   { name: 'Bree', service: 'Venmo', url: 'https://account.venmo.com/u/breezantines' },
@@ -35,8 +35,8 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
   const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [copiedPayoutName, setCopiedPayoutName] = useState('');
   const canOpenPayoutLedger = FULL_PAYOUT_ACCESS_EMAILS.has(normalizeKey(viewer.email));
-  const sheetUrl = project?.source_links?.sheet_url || '';
-  const scriptUrl = project?.source_links?.script_url || '';
+  const sheetUrl = EVENT_SHEET_URL;
+  const scriptUrl = APPS_SCRIPT_PROJECT_URL;
 
   return (
     <section className="page-stack admin-page">

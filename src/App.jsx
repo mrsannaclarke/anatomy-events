@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
-import project from '../project.json';
 import { sortLedgerEvents } from './activity.js';
+import { APP_PROJECT_NAME } from './appConfig.js';
 import { cacheViewer, clearAppSession, clearCachedViewer, establishAppSession, getActiveAppViewer, getCachedViewer, getGoogleCredential, getStaySignedInPreference, GOOGLE_WEB_CLIENT_ID, loadGoogleIdentityScript, viewerFromGoogleCredential } from './auth.js';
 import { EventCard, isHiddenLedgerStatus } from './components/EventCard.jsx';
 import { EVENTS_CACHE_KEY, navItems } from './constants.js';
@@ -18,7 +18,7 @@ import { pullEventsFromSheet, pullPricingRulesFromSheet, SHEET_WEB_APP_URL } fro
 const LAST_SHEET_SYNC_KEY = 'events-app-2.0:last-sheet-sync-at';
 
 function getProjectTitle() {
-  return project?.project?.name || project?.name || 'Events App 3.0';
+  return APP_PROJECT_NAME;
 }
 
 function GoogleSignInGate({ onSignedIn }) {
@@ -420,7 +420,7 @@ export function App() {
         ) : (
           <section className="empty-state">
             <strong>{navItems.find((item) => item.id === activePage)?.label || 'Page'} rebuild pending</strong>
-            <span>This page will be rebuilt from project.json and docs/app-rules.json next.</span>
+            <span>This page is not available.</span>
           </section>
         )}
       </section>
