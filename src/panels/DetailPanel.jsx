@@ -45,7 +45,7 @@ export function DetailPanel({ detail, viewerEmail, viewerName, onBack, onSaved, 
       {effectiveMode === 'client' ? <ClientDetailsPanel event={event} onSaved={onSaved} onDeleted={onDeleted} /> : null}
       {effectiveMode === 'staff' ? <StaffAssignmentsPanel event={event} onSaved={onSaved} /> : null}
       {effectiveMode === 'notes' ? <NotesPanel event={event} viewerEmail={viewerEmail} viewerName={viewerName} onSaved={onSaved} /> : null}
-      {effectiveMode === 'files' ? <FilesPanel event={event} onSaved={onSaved} /> : null}
+      {effectiveMode === 'files' ? <FilesPanel event={event} viewerEmail={viewerEmail} onSaved={onSaved} /> : null}
     </section>
   );
 }

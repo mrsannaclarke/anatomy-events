@@ -4,7 +4,9 @@ import { Copy, ExternalLink, Mail, Upload } from 'lucide-react';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { generateEventFile, pullEventByEntryId, uploadEventArt } from '../sheetClient.js';
 
-export function FilesPanel({ event, onSaved }) {
+const REVISED_CONTRACT_ADMIN = 'admin@anatomytattoo.com';
+
+export function FilesPanel({ event, viewerEmail, onSaved }) {
   const raw = event.raw || {};
   const [fileUrls, setFileUrls] = useState(null);
   const [status, setStatus] = useState('');
@@ -68,25 +70,37 @@ export function FilesPanel({ event, onSaved }) {
     }
   }
 
-  async function generate(kind) {
-    const label = kind === 'tfl' ? 'Generating temporary license...' : 'Generating contract...';
+  async function generate(kind, options = {}) {
+    const isRevision = kind === 'contract' && Boolean(options.revision);
+    if (
+      isRevision &&
+      !window.confirm(
+        'Generate a new contract from the event’s currently saved details? The previous contract will remain in Drive, and this new contract will become the active link for this event.',
+      )
+    ) {
+      return;
+    }
+
+    const previousContractUrl = fileUrls?.contractUrl || '';
+    const label = kind === 'tfl' ? 'Generating temporary license...' : isRevision ? 'Generating revised contract...' : 'Generating contract...';
     setStatus(label);
     setPendingLabel(label);
     try {
-      const result = await generateEventFile(event.entryId, kind);
+      const result = await generateEventFile(event.entryId, kind, { revision: isRevision });
       const refreshed = await pullEventByEntryId(result.entryId || event.entryId);
       if (!refreshed) throw new Error('File generated, but the refreshed event record was not returned.');
       setFileUrls(urlsFromEvent(refreshed));
       onSaved(refreshed);
-      setStatus('Generated file link saved.');
+      setStatus(isRevision ? 'Revised contract generated and linked.' : 'Generated file link saved.');
     } catch (error) {
       try {
         const refreshed = await pullEventByEntryId(event.entryId);
         const generatedUrl = kind === 'tfl' ? refreshed?.raw?.tflUrl : refreshed?.raw?.contractUrl;
-        if (refreshed && generatedUrl) {
+        const recoveredGeneration = isRevision ? generatedUrl && generatedUrl !== previousContractUrl : generatedUrl;
+        if (refreshed && recoveredGeneration) {
           setFileUrls(urlsFromEvent(refreshed));
           onSaved(refreshed);
-          setStatus('Generated file link saved.');
+          setStatus(isRevision ? 'Revised contract generated and linked.' : 'Generated file link saved.');
           return;
         }
       } catch {
@@ -127,14 +141,22 @@ export function FilesPanel({ event, onSaved }) {
     ['Temporary License', fileUrls?.tflUrl],
     ['Uploaded Art', fileUrls?.artImageUrl],
   ];
+  const canGenerateRevisedContract =
+    String(viewerEmail || '').trim().toLowerCase() === REVISED_CONTRACT_ADMIN && Boolean(fileUrls?.contractUrl);
 
   return (
     <section className="detail-stack pending-scope">
       <PendingOverlay show={Boolean(pendingLabel)} label={pendingLabel} />
       <div className="file-actions">
-        <button type="button" className="primary-button" onClick={() => generate('contract')} disabled={!fileUrls || Boolean(fileUrls.contractUrl) || Boolean(pendingLabel)}>
-          Generate Contract
-        </button>
+        {!fileUrls?.contractUrl ? (
+          <button type="button" className="primary-button" onClick={() => generate('contract')} disabled={!fileUrls || Boolean(pendingLabel)}>
+            Generate Contract
+          </button>
+        ) : canGenerateRevisedContract ? (
+          <button type="button" className="primary-button" onClick={() => generate('contract', { revision: true })} disabled={Boolean(pendingLabel)}>
+            Generate Revised Contract
+          </button>
+        ) : null}
         <button type="button" className="primary-button" onClick={() => generate('tfl')} disabled={!fileUrls || Boolean(fileUrls.tflUrl) || Boolean(pendingLabel)}>
           Generate TFL
         </button>
