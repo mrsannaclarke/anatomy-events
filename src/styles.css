@@ -1440,6 +1440,25 @@ nav button:hover {
   padding: 11px 13px;
 }
 
+.event-type-key-entry > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.event-type-key-entry small {
+  color: #cdbbab;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.event-type-key-entry--corporate {
+  --event-type-color: #d6ad62;
+}
+
+.event-type-key-entry--zero-walk-up {
+  --event-type-color: #8fc9ad;
+}
+
 .event-type-key-icon {
   align-items: center;
   background: color-mix(in srgb, var(--event-type-color) 20%, #211d19);
