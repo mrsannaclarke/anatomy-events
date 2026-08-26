@@ -1516,7 +1516,7 @@ nav button:hover {
 .admin-action--history { --admin-accent: #8fc9ad; }
 .admin-action--ledger { --admin-accent: #d77f98; }
 .admin-action--payments { --admin-accent: #8faac9; }
-.admin-action--signout { --admin-accent: #d56b66; }
+.admin-action--signout { --admin-accent: #8fc9ad; }
 
 .admin-subpage .panel-heading > div {
   align-items: flex-start;
