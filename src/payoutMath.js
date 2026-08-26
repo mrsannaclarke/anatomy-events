@@ -296,6 +296,32 @@ export function getPersonPayRow(event, personName, pricingPayoutMap = {}) {
   };
 }
 
+export function getStaffTypePayPreview(event, artistCount, counterCount = 1, pricingPayoutMap = {}) {
+  const normalizedArtistCount = Math.max(1, Number(artistCount) || 1);
+  const normalizedCounterCount = Math.max(1, Number(counterCount) || 1);
+  const artistNames = Array.from({ length: normalizedArtistCount }, (_, index) => `Projected Artist ${index + 1}`);
+  const counterNames = Array.from({ length: normalizedCounterCount }, (_, index) => `Projected Counter ${index + 1}`);
+  const previewEvent = {
+    ...event,
+    raw: {
+      ...(event?.raw || event || {}),
+      numberOfArtists: String(normalizedArtistCount),
+      artistNames: artistNames.join(', '),
+      counterNames: counterNames.join(', '),
+    },
+  };
+  const artistRow = getPersonPayRow(previewEvent, artistNames[0], pricingPayoutMap);
+  const counterRow = getPersonPayRow(previewEvent, counterNames[0], pricingPayoutMap);
+  return {
+    artistCount: normalizedArtistCount,
+    artistEach: normalizeCurrency(artistRow?.artistPayout),
+    artistTotal: normalizeCurrency((artistRow?.artistPayout || 0) * normalizedArtistCount),
+    counterCount: normalizedCounterCount,
+    counterEach: normalizeCurrency(counterRow?.counterPayout),
+    counterTotal: normalizeCurrency((counterRow?.counterPayout || 0) * normalizedCounterCount),
+  };
+}
+
 export function calculateEventPayout(event, people, pricingPayoutMap = {}) {
   const raw = event?.raw || event || {};
   const computed = computePricing(formFromEvent(event));

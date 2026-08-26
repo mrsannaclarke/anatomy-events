@@ -91,7 +91,7 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
       if (!refreshed) throw new Error('File generated, but the refreshed event record was not returned.');
       setFileUrls(urlsFromEvent(refreshed));
       onSaved(refreshed);
-      setStatus(isRevision ? 'Revised contract generated and linked.' : 'Generated file link saved.');
+      setStatus(isRevision ? 'Contract regenerated and linked.' : 'Generated file link saved.');
     } catch (error) {
       try {
         const refreshed = await pullEventByEntryId(event.entryId);
@@ -100,7 +100,7 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
         if (refreshed && recoveredGeneration) {
           setFileUrls(urlsFromEvent(refreshed));
           onSaved(refreshed);
-          setStatus(isRevision ? 'Revised contract generated and linked.' : 'Generated file link saved.');
+          setStatus(isRevision ? 'Contract regenerated and linked.' : 'Generated file link saved.');
           return;
         }
       } catch {
@@ -154,7 +154,7 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
           </button>
         ) : canGenerateRevisedContract ? (
           <button type="button" className="primary-button" onClick={() => generate('contract', { revision: true })} disabled={Boolean(pendingLabel)}>
-            Generate Revised Contract
+            Regenerate Contract
           </button>
         ) : null}
         <button type="button" className="primary-button" onClick={() => generate('tfl')} disabled={!fileUrls || Boolean(fileUrls.tflUrl) || Boolean(pendingLabel)}>

@@ -1706,6 +1706,77 @@ nav button:hover {
   min-width: 0;
 }
 
+.email-copy-control {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 42px;
+}
+
+.email-copy-control .icon-link-button {
+  align-items: center;
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  padding: 0;
+  width: 42px;
+}
+
+.staff-pay-preview {
+  background: linear-gradient(145deg, rgb(105 76 54 / 28%), rgb(43 35 29 / 94%));
+  border: 1px solid #7f6653;
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.staff-pay-preview__heading {
+  align-items: flex-start;
+  color: #d9ad62;
+  display: flex;
+  gap: 10px;
+}
+
+.staff-pay-preview__heading h3,
+.staff-pay-preview__heading p {
+  margin: 0;
+}
+
+.staff-pay-preview__heading p,
+.staff-pay-preview small {
+  color: #bba99a;
+}
+
+.staff-pay-preview dl {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+}
+
+.staff-pay-preview dl > div {
+  align-items: center;
+  background: rgb(23 21 18 / 78%);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.staff-pay-preview dt {
+  color: #d6c7b9;
+}
+
+.staff-pay-preview dd {
+  color: #bba99a;
+  margin: 0;
+  text-align: right;
+}
+
+.staff-pay-preview dd strong {
+  color: #f2e6d5;
+}
+
 .info-line {
   color: #d6c7b9;
   margin: 0;

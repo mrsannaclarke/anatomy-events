@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { Save } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CircleDollarSign, Save } from 'lucide-react';
 
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { COUNTER_OPTIONS, STAFF_OPTIONS } from '../constants.js';
+import { buildPricingPayoutMap, formatPayout, getStaffTypePayPreview } from '../payoutMath.js';
 import { ARTIST_COUNTS } from '../pricingMath.js';
-import { pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
+import { pullEventByEntryId, pullPricingRulesFromSheet, upsertEventToSheet } from '../sheetClient.js';
 import { getContrastTextForHex, getStaffColor, hexToRgba } from '../staffColors.js';
 import { joinNames, normalizeStaffName, splitNames } from './panelUtils.js';
 
@@ -48,6 +49,30 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
   const [counterWriteIn, setCounterWriteIn] = useState(initialCounters.customName);
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [pricingPayoutMap, setPricingPayoutMap] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    pullPricingRulesFromSheet()
+      .then((rows) => {
+        if (active) setPricingPayoutMap(buildPricingPayoutMap(rows));
+      })
+      .catch(() => {
+        // Recorded payout defaults keep the preview useful if the Sheet refresh is unavailable.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const counterCount = useMemo(() => {
+    const assigned = expandWriteIn(counters, counterWriteIn, 2).filter((name) => name !== 'None');
+    return Math.max(1, assigned.length);
+  }, [counterWriteIn, counters]);
+  const payPreview = useMemo(
+    () => getStaffTypePayPreview(event, artistCount, counterCount, pricingPayoutMap),
+    [artistCount, counterCount, event, pricingPayoutMap],
+  );
 
   function toggleFromList(list, value, max) {
     if (value === 'None') return list.includes('None') ? [] : ['None'];
@@ -141,6 +166,27 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
             <input value={counterWriteIn} onChange={(input) => setCounterWriteIn(input.target.value)} placeholder="Enter counter staff name" />
           </Field>
         ) : null}
+      </section>
+
+      <section className="staff-pay-preview" aria-labelledby="staff-pay-preview-title">
+        <div className="staff-pay-preview__heading">
+          <CircleDollarSign size={22} />
+          <div>
+            <h3 id="staff-pay-preview-title">Projected Staff Pay</h3>
+            <p>Based on the current event pricing, options, and price adjustment.</p>
+          </div>
+        </div>
+        <dl>
+          <div>
+            <dt>Tattooer</dt>
+            <dd><strong>{formatPayout(payPreview.artistEach)}</strong> each × {payPreview.artistCount}</dd>
+          </div>
+          <div>
+            <dt>Counter</dt>
+            <dd><strong>{formatPayout(payPreview.counterEach)}</strong> each × {payPreview.counterCount}</dd>
+          </div>
+        </dl>
+        <small>Final payout becomes payable after the event is marked complete.</small>
       </section>
 
       <button type="button" className="primary-button detail-save" onClick={saveStaffAssignments} disabled={isSaving}>

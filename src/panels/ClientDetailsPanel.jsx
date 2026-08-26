@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pencil, Route, Save, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Route, Save, Trash2 } from 'lucide-react';
 
 import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
@@ -36,6 +36,17 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
 
   function updateField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function copyClientEmail() {
+    const email = String(form.email || '').trim();
+    if (!email) return;
+    try {
+      await navigator.clipboard.writeText(email);
+      setStatus('Client email copied.');
+    } catch {
+      setStatus('Could not copy the email. Select it and copy it manually.');
+    }
   }
 
   async function lookupMileage() {
@@ -132,6 +143,13 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
               </option>
             ))}
           </select>
+        ) : key === 'email' ? (
+          <div className="email-copy-control">
+            <input disabled={!isEditable} type="email" value={form[key]} onChange={(input) => updateField(key, input.target.value)} />
+            <button type="button" className="icon-link-button" onClick={copyClientEmail} disabled={!String(form[key] || '').trim()} aria-label="Copy client email" title="Copy client email">
+              <Copy size={17} />
+            </button>
+          </div>
         ) : (
           <input
             disabled={!isEditable}

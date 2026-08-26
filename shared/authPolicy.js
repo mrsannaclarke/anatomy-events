@@ -22,6 +22,7 @@ export const ALLOWED_USERS = [
   { email: 'sirjasonbarnes@gmail.com', name: 'Jason' },
   { email: 'veda.mueller.27@gmail.com', name: 'Veda' },
   { email: 'breannenorling@gmail.com', name: 'Bree' },
+  { email: 'hellasicktattz@gmail.com', name: 'Jeremy' },
   { email: 'anatomytattoo@gmail.com', name: 'Tomma' },
   { email: 'mrs.annaclarke@gmail.com', name: 'Anna' },
   { email: 'admin@anatomytattoo.com', name: 'Anna' },

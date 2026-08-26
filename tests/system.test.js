@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { sortLedgerEvents } from '../src/activity.js';
 import { isExpiredStaffingOnlyEvent } from '../src/eventVisibility.js';
-import { calculateEventPayout, getPersonPayRow, sortPayoutLedgerCards } from '../src/payoutMath.js';
+import { calculateEventPayout, getPersonPayRow, getStaffTypePayPreview, sortPayoutLedgerCards } from '../src/payoutMath.js';
 import {
   PRICING_METHOD_CORPORATE_MODIFIERS,
   PRICING_METHOD_ZERO_WALK_UP,
@@ -41,6 +41,14 @@ test('Sienna is an active green artist with both approved login emails', () => {
   assert.equal(getStaffColor('Sienna'), '#228b22');
   const siennaEmails = ALLOWED_USERS.filter(({ name }) => name === 'Sienna').map(({ email }) => email).sort();
   assert.deepEqual(siennaEmails, ['siennarosey@gmail.com', 'thundermadetattoos@gmail.com']);
+});
+
+test('Jeremy login is allowlisted and mapped to his counter staff identity', () => {
+  assert.deepEqual(ALLOWED_USERS.find(({ email }) => email === 'hellasicktattz@gmail.com'), {
+    email: 'hellasicktattz@gmail.com',
+    name: 'Jeremy',
+  });
+  assert.ok(COUNTER_OPTIONS.includes('Jeremy'));
 });
 
 test('Consult Booked/Pending is available as an event status', () => {
@@ -157,6 +165,22 @@ test('standard discount protects licensing and counter while reducing artist pay
   const payout = calculateEventPayout(event, ['Agnes', 'Jeremy']);
   assert.equal(payout.shopTotal, 200);
   assert.equal(payout.remainder, 0);
+});
+
+test('staffing payout preview uses the shared payout engine for artist and split counter pay', () => {
+  const event = {
+    raw: {
+      year: '2026', pricingMethod: 'Standard', numberOfArtists: '4', bookedHours: '5',
+      customFlash: 'YES', customFlashFee: '400', counterStaffCharge: '600',
+      tempFacilityLicenseFee: '200', staffPriceAdjustment: '-200', totalCharge: '6200',
+    },
+  };
+  const pricingPayoutMap = { '2026::4': { customFlashArtistSharePct: 0.5 } };
+  const preview = getStaffTypePayPreview(event, 4, 2, pricingPayoutMap);
+  assert.equal(preview.artistEach, 1350);
+  assert.equal(preview.artistTotal, 5400);
+  assert.equal(preview.counterEach, 300);
+  assert.equal(preview.counterTotal, 600);
 });
 
 test('corporate discount consumes admin, shop share, artists, then counter while preserving $200 license', () => {
