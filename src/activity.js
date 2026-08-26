@@ -51,14 +51,14 @@ function getEventDateTimestamp(event) {
 
   const timeValue = String(raw.eventStartTime || event.eventStartTime || '').trim();
   const timeMatch = timeValue.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
-  if (!timeMatch) return new Date(year, month - 1, day, 23, 59, 59).getTime();
+  if (!timeMatch) return new Date(year, month - 1, day).getTime();
 
   let hour = Number(timeMatch[1]);
   const minute = Number(timeMatch[2]);
   const suffix = timeMatch[3]?.toUpperCase();
   if (suffix === 'AM' && hour === 12) hour = 0;
   if (suffix === 'PM' && hour < 12) hour += 12;
-  if (hour > 23 || minute > 59) return new Date(year, month - 1, day, 23, 59, 59).getTime();
+  if (hour > 23 || minute > 59) return new Date(year, month - 1, day).getTime();
   return new Date(year, month - 1, day, hour, minute).getTime();
 }
 
