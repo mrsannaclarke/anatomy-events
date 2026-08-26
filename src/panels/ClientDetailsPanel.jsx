@@ -189,7 +189,7 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       <section className="picker-section">
         <h3>Client Information</h3>
         <div className="detail-grid editable-grid">
-          {CLIENT_FIELD_CONFIG.filter(([key]) => key !== 'eventAddress').map(renderClientField)}
+          {CLIENT_FIELD_CONFIG.filter(([key]) => key !== 'eventAddress' && key !== 'eventType').map(renderClientField)}
         </div>
         <div className="field-with-action">
           {renderClientField(['eventAddress', 'Event Address'])}
@@ -200,9 +200,12 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
         </div>
       </section>
 
-      <section className="picker-section">
-        <h3>Options</h3>
+      <section className="picker-section event-classification-section">
+        <h3>Event Classification</h3>
         <div className="form-grid">
+          <Field label="Type of Event">
+            <EventTypePicker value={form.eventType} onChange={(value) => updateField('eventType', value)} disabled={!isEditable} />
+          </Field>
           <Field label="Pricing Method">
             <select disabled={!isEditable} value={form.pricingMethod} onChange={(input) => updateField('pricingMethod', input.target.value)}>
               <option value={PRICING_METHOD_STANDARD}>Standard Event</option>
@@ -210,6 +213,12 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
               <option value={PRICING_METHOD_ZERO_WALK_UP}>$0 Walk-Up Event — No Charge or Payout</option>
             </select>
           </Field>
+        </div>
+      </section>
+
+      <section className="picker-section">
+        <h3>Options</h3>
+        <div className="form-grid">
           <Field label="Number of Artists">
             <div className="mode-tabs" role="radiogroup" aria-label="Number of artists">
               {ARTIST_COUNTS.map((count) => (

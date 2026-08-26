@@ -71,6 +71,7 @@ export function PricingPage({ events, viewer, onSaved }) {
   useEffect(() => {
     if (!selectedEvent) return;
     setForm(formFromEvent(selectedEvent));
+    setNewClient((current) => ({ ...current, eventType: selectedEvent.raw?.eventType || '' }));
     setSaveStatus(`Imported ${selectedEvent.clientName}.`);
   }, [selectedEvent]);
 
@@ -174,7 +175,10 @@ export function PricingPage({ events, viewer, onSaved }) {
                 payStatus: 'New',
               },
             }
-          : selectedEvent;
+          : {
+              ...selectedEvent,
+              raw: { ...selectedEvent.raw, eventType: newClient.eventType || selectedEvent.raw?.eventType || '' },
+            };
       const eventForSheet = buildPricingEvent(baseEvent, form, totals);
       const saved = await upsertEventToSheet(eventForSheet, {
         totalCharge: totals.totalCharge,
@@ -282,9 +286,6 @@ export function PricingPage({ events, viewer, onSaved }) {
             <Field label="Venue Name">
               <input value={newClient.venueName} onChange={(event) => setNewClient((current) => ({ ...current, venueName: event.target.value }))} />
             </Field>
-            <Field label="Type of Event">
-              <EventTypePicker value={newClient.eventType} onChange={(eventType) => setNewClient((current) => ({ ...current, eventType }))} />
-            </Field>
           </div>
         ) : (
           <div className="form-grid">
@@ -307,6 +308,35 @@ export function PricingPage({ events, viewer, onSaved }) {
           </div>
         )}
 
+        <section className="picker-section event-classification-section">
+          <h3>Event Classification</h3>
+          <div className="form-grid">
+            <Field label="Type of Event">
+              <EventTypePicker value={newClient.eventType} onChange={(eventType) => setNewClient((current) => ({ ...current, eventType }))} />
+            </Field>
+            <Field label="Pricing Method">
+              <div className="mode-tabs" role="radiogroup" aria-label="Pricing method">
+                <button type="button" className={form.pricingMethod === PRICING_METHOD_STANDARD ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_STANDARD)}>
+                  Standard Event
+                </button>
+                <button type="button" className={form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_CORPORATE_MODIFIERS)}>
+                  Corporate / Walk-Up
+                </button>
+                <button type="button" className={form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_ZERO_WALK_UP)}>
+                  $0 Walk-Up Event
+                </button>
+              </div>
+              <span className="field-help">
+                {form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP
+                  ? 'No client charges, deposits, invoices, or staff payouts are tracked. Any walk-up payments happen outside this app.'
+                  : form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
+                  ? 'The event client pays required counter, licensing, and admin charges plus selected modifiers. Walk-up tattoo sales are not tracked in this app.'
+                  : 'The event client pays the standard tattoo base plus modifiers.'}
+              </span>
+            </Field>
+          </div>
+        </section>
+
         <Field label="Client / Consultation Notes">
           <textarea
             value={form.consultationNotes}
@@ -314,27 +344,6 @@ export function PricingPage({ events, viewer, onSaved }) {
             placeholder="Consultation details, client requests, preferences, or follow-up notes"
           />
           <span className="field-help">Saved to Client Notes on the Status &amp; Communication page.</span>
-        </Field>
-
-        <Field label="Pricing Method">
-          <div className="mode-tabs" role="radiogroup" aria-label="Pricing method">
-            <button type="button" className={form.pricingMethod === PRICING_METHOD_STANDARD ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_STANDARD)}>
-              Standard Event
-            </button>
-            <button type="button" className={form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_CORPORATE_MODIFIERS)}>
-              Corporate / Walk-Up
-            </button>
-            <button type="button" className={form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_ZERO_WALK_UP)}>
-              $0 Walk-Up Event
-            </button>
-          </div>
-          <span className="field-help">
-            {form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP
-              ? 'No client charges, deposits, invoices, or staff payouts are tracked. Any walk-up payments happen outside this app.'
-              : form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
-              ? 'The event client pays required counter, licensing, and admin charges plus selected modifiers. Walk-up tattoo sales are not tracked in this app.'
-              : 'The event client pays the standard tattoo base plus modifiers.'}
-          </span>
         </Field>
 
         {canAddToPaidBalance ? (

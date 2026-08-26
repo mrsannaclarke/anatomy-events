@@ -835,6 +835,10 @@ nav button:hover {
   gap: 0.55rem;
 }
 
+.event-classification-section > .form-grid {
+  align-items: start;
+}
+
 .event-type-selection {
   color: #d6c7b9;
   margin: 0;
