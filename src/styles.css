@@ -3097,7 +3097,7 @@ nav button:hover {
   border-top: 1px solid #594a3f;
   display: grid;
   gap: 0;
-  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.8fr) minmax(180px, 0.9fr);
+  grid-template-columns: 1.15fr 0.9fr 1.05fr;
   margin-top: 20px;
   padding-top: 14px;
 }
@@ -3116,6 +3116,12 @@ nav button:hover {
 
 .event-card__meta-row > span + span {
   border-left: 1px solid #594a3f;
+}
+
+.event-card__meta-row > span:nth-child(2) {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .event-card__status > span,
@@ -3167,15 +3173,16 @@ nav button:hover {
   }
 
   .event-card__meta-row {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    grid-template-columns: 1.15fr 0.9fr 1.05fr;
   }
 
   .event-card__meta-row > span {
-    padding: 6px 4px;
+    padding: 3px 12px;
   }
 
   .event-card__meta-row > span + span {
-    border-left: 0;
+    border-left: 1px solid #594a3f;
   }
 }
 
