@@ -250,6 +250,27 @@ export async function getArtUploadJob(jobId) {
   return data.job;
 }
 
+export async function getArtAttachments(entryId) {
+  const response = await fetch(`/api/art-attachments?entryId=${encodeURIComponent(entryId)}`, {
+    headers: { Accept: 'application/json' }, credentials: 'same-origin',
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'Uploaded art could not be loaded.');
+  return data;
+}
+
+export async function deleteArtAttachment(entryId, attachment) {
+  const response = await fetch('/api/art-attachments', {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ entryId, id: attachment.id || '', url: attachment.url || '' }),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'Uploaded art could not be removed.');
+  return data;
+}
+
 export async function uploadEventArt(entryId, file) {
   if (!file) throw new Error('Choose an image or PDF first.');
   const fileData = await new Promise((resolve, reject) => {

@@ -1081,6 +1081,76 @@ nav button:hover {
   max-height: 720px;
 }
 
+.saved-art-collection {
+  display: grid;
+  gap: 12px;
+}
+
+.saved-art-collection h3 {
+  margin: 0;
+}
+
+.saved-art-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+.saved-art-item {
+  background: #211d19;
+  border: 1px solid #51443b;
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.saved-art-item iframe,
+.saved-art-item img,
+.saved-art-file-placeholder {
+  background: #171512;
+  border: 1px solid #51443b;
+  border-radius: 9px;
+  height: 260px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.saved-art-file-placeholder {
+  align-items: center;
+  color: #bba99a;
+  display: flex;
+  font-weight: 800;
+  justify-content: center;
+}
+
+.saved-art-item > strong {
+  overflow-wrap: anywhere;
+}
+
+.saved-art-item--processing {
+  border-color: #8fc9ad;
+}
+
+.saved-art-item--processing > span {
+  color: #8fc9ad;
+}
+
+.saved-art-item__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.saved-art-item__actions a,
+.saved-art-item__actions button {
+  align-items: center;
+  display: inline-flex;
+  gap: 5px;
+}
+
 .link-row span {
   color: #bba99a;
   font-weight: 700;

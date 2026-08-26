@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Copy, ExternalLink, Mail, Upload } from 'lucide-react';
+import { Copy, ExternalLink, Mail, Trash2, Upload } from 'lucide-react';
 
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { ActionStatus } from '../components/ActionStatus.jsx';
-import { generateEventFile, getArtUploadJob, getDocumentJob, pullEventByEntryId, queueEventArt, queueEventFile } from '../sheetClient.js';
+import { deleteArtAttachment, generateEventFile, getArtAttachments, getArtUploadJob, getDocumentJob, pullEventByEntryId, queueEventArt, queueEventFile } from '../sheetClient.js';
 
 function documentJobStorageKey(entryId, kind) {
   return `anatomy-events:document-job:${entryId}:${kind}`;
@@ -20,7 +20,34 @@ function storedDocumentJobs(entryId) {
 const REVISED_CONTRACT_ADMIN = 'admin@anatomytattoo.com';
 
 function artUploadStorageKey(entryId) {
-  return `anatomy-events:art-upload-job:${entryId}`;
+  return `anatomy-events:art-upload-jobs:${entryId}`;
+}
+
+function storedArtUploadJobs(entryId) {
+  const stored = window.localStorage.getItem(artUploadStorageKey(entryId));
+  if (!stored) return [];
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [stored];
+  }
+}
+
+function legacyArtAttachments(url, deletedUrls = []) {
+  const deleted = new Set(deletedUrls);
+  return String(url || '').split(/\n+/).map((value) => value.trim()).filter((value) => value && !deleted.has(value)).map((value) => ({
+    id: '', url: value, fileName: 'Uploaded art', mimeType: '', legacy: true,
+  }));
+}
+
+function mergeArtAttachments(saved, legacy) {
+  const seen = new Set();
+  return [...saved, ...legacy].filter((attachment) => {
+    if (!attachment.url || seen.has(attachment.url)) return false;
+    seen.add(attachment.url);
+    return true;
+  });
 }
 
 export function FilesPanel({ event, viewerEmail, onSaved }) {
@@ -29,8 +56,9 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
   const [status, setStatus] = useState('');
   const [pendingLabel, setPendingLabel] = useState('');
   const [documentJobs, setDocumentJobs] = useState(() => storedDocumentJobs(event.entryId));
-  const [artUploadJob, setArtUploadJob] = useState(() => window.localStorage.getItem(artUploadStorageKey(event.entryId)) || '');
-  const [localArtPreview, setLocalArtPreview] = useState(null);
+  const [artUploadJobs, setArtUploadJobs] = useState(() => storedArtUploadJobs(event.entryId));
+  const [localArtPreviews, setLocalArtPreviews] = useState([]);
+  const [artAttachments, setArtAttachments] = useState([]);
 
   function urlsFromEvent(sourceEvent) {
     const source = sourceEvent?.raw || {};
@@ -63,11 +91,21 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
         const refreshed = await pullEventByEntryId(event.entryId);
         if (cancelled) return;
         if (!refreshed) throw new Error('The latest event record was not returned.');
-        setFileUrls(urlsFromEvent(refreshed));
+        const refreshedUrls = urlsFromEvent(refreshed);
+        setFileUrls(refreshedUrls);
+        try {
+          const savedArt = await getArtAttachments(event.entryId);
+          if (cancelled) return;
+          setArtAttachments(mergeArtAttachments(savedArt.attachments || [], legacyArtAttachments(refreshedUrls.artImageUrl, savedArt.deletedUrls)));
+        } catch {
+          setArtAttachments(legacyArtAttachments(refreshedUrls.artImageUrl));
+        }
         setStatus('');
       } catch (error) {
         if (cancelled) return;
-        setFileUrls(urlsFromEvent(event));
+        const fallbackUrls = urlsFromEvent(event);
+        setFileUrls(fallbackUrls);
+        setArtAttachments(legacyArtAttachments(fallbackUrls.artImageUrl));
         setStatus(error instanceof Error ? `Could not refresh file links: ${error.message}` : 'Could not refresh file links.');
       }
     }
@@ -80,12 +118,8 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
 
   useEffect(() => {
     setDocumentJobs(storedDocumentJobs(event.entryId));
-    setArtUploadJob(window.localStorage.getItem(artUploadStorageKey(event.entryId)) || '');
+    setArtUploadJobs(storedArtUploadJobs(event.entryId));
   }, [event.entryId]);
-
-  useEffect(() => () => {
-    if (localArtPreview?.url) URL.revokeObjectURL(localArtPreview.url);
-  }, [localArtPreview]);
 
   useEffect(() => {
     const activeEntries = Object.entries(documentJobs);
@@ -153,51 +187,69 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
   }, [documentJobs, event.entryId, onSaved]);
 
   useEffect(() => {
-    if (!artUploadJob) return undefined;
+    if (artUploadJobs.length === 0) return undefined;
     let cancelled = false;
     let timer;
 
-    async function checkUpload() {
-      try {
-        const job = await getArtUploadJob(artUploadJob);
-        if (cancelled) return;
-        if (job.status === 'completed') {
-          window.localStorage.removeItem(artUploadStorageKey(event.entryId));
-          setArtUploadJob('');
-          const refreshed = await pullEventByEntryId(event.entryId);
+    async function checkUploads() {
+      const completed = [];
+      const failed = [];
+      let stillProcessing = false;
+      for (const jobId of artUploadJobs) {
+        try {
+          const job = await getArtUploadJob(jobId);
+          if (job.status === 'completed') completed.push(job);
+          else if (job.status === 'failed') failed.push(job);
+          else stillProcessing = true;
+        } catch {
+          stillProcessing = true;
+        }
+      }
+      if (cancelled) return;
+
+      const finishedIds = [...completed, ...failed].map((job) => job.id);
+      const remaining = artUploadJobs.filter((jobId) => !finishedIds.includes(jobId));
+      if (finishedIds.length) {
+        setArtUploadJobs(remaining);
+        if (remaining.length) window.localStorage.setItem(artUploadStorageKey(event.entryId), JSON.stringify(remaining));
+        else window.localStorage.removeItem(artUploadStorageKey(event.entryId));
+        setLocalArtPreviews((current) => {
+          const next = current.filter((preview) => !finishedIds.includes(preview.jobId));
+          current.filter((preview) => finishedIds.includes(preview.jobId)).forEach((preview) => URL.revokeObjectURL(preview.url));
+          return next;
+        });
+      }
+
+      if (completed.length) {
+        try {
+          const [refreshed, savedArt] = await Promise.all([
+            pullEventByEntryId(event.entryId),
+            getArtAttachments(event.entryId),
+          ]);
           if (!cancelled && refreshed) {
             const refreshedUrls = urlsFromEvent(refreshed);
-            const completedArtUrl = findResultUrl(job.result, ['artImageUrl', 'artUrl', 'existingUrl', 'url']);
-            setFileUrls((current) => ({
-              ...current,
-              ...refreshedUrls,
-              artImageUrl: refreshedUrls.artImageUrl || completedArtUrl || current?.artImageUrl || '',
-            }));
-            setLocalArtPreview(null);
+            setFileUrls((current) => ({ ...current, ...refreshedUrls }));
+            setArtAttachments(mergeArtAttachments(savedArt.attachments || [], legacyArtAttachments(refreshedUrls.artImageUrl, savedArt.deletedUrls)));
             onSaved(refreshed);
-            setStatus('Uploaded art saved to Drive and connected to this client.');
           }
-          return;
+          setStatus(`${completed.length} art ${completed.length === 1 ? 'file' : 'files'} uploaded.`);
+        } catch (error) {
+          if (!cancelled) setStatus(error instanceof Error ? error.message : 'Uploaded art is ready; reopen this panel to refresh it.');
         }
-        if (job.status === 'failed') {
-          window.localStorage.removeItem(artUploadStorageKey(event.entryId));
-          setArtUploadJob('');
-          setStatus(`Artwork upload failed: ${job.error || 'Please try again.'}`);
-          return;
-        }
-        setStatus('Artwork is copying to Drive in the background. You can continue using the app.');
-      } catch {
-        if (!cancelled) setStatus('Artwork is queued; its status will be checked again automatically.');
+      } else if (failed.length) {
+        setStatus(failed.map((job) => `${job.fileName || 'Artwork'} failed: ${job.error || 'Please try again.'}`).join(' '));
+      } else if (stillProcessing) {
+        setStatus(`${artUploadJobs.length} art ${artUploadJobs.length === 1 ? 'file is' : 'files are'} copying to Drive in the background.`);
       }
-      if (!cancelled) timer = window.setTimeout(checkUpload, 2500);
+      if (!cancelled && stillProcessing) timer = window.setTimeout(checkUploads, 2500);
     }
 
-    void checkUpload();
+    void checkUploads();
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [artUploadJob, event.entryId, onSaved]);
+  }, [artUploadJobs, event.entryId, onSaved]);
 
   function mailtoLink(label, url) {
     const subjectByLabel = {
@@ -279,25 +331,30 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
   }
 
   async function uploadArtFile(input) {
-    const file = input.target.files?.[0];
+    const files = [...(input.target.files || [])];
     input.target.value = '';
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-      setStatus('Choose an image or PDF smaller than 8 MB.');
+    if (!files.length) return;
+    const oversized = files.find((file) => file.size > 8 * 1024 * 1024);
+    if (oversized) {
+      setStatus(`${oversized.name} is larger than 8 MB. Choose smaller files.`);
       return;
     }
-    setLocalArtPreview({
-      name: file.name,
-      type: file.type,
-      url: URL.createObjectURL(file),
-    });
-    setStatus('Uploading artwork securely to Cloudflare...');
+    setStatus(`Uploading ${files.length} art ${files.length === 1 ? 'file' : 'files'} securely...`);
     setPendingLabel('Uploading artwork securely...');
     try {
-      const job = await queueEventArt(event.entryId, file);
-      window.localStorage.setItem(artUploadStorageKey(event.entryId), job.id);
-      setArtUploadJob(job.id);
-      setStatus('Artwork received. It is copying to Drive in the background.');
+      const queued = [];
+      for (const file of files) {
+        const job = await queueEventArt(event.entryId, file);
+        queued.push({ job, file });
+      }
+      const nextJobIds = [...artUploadJobs, ...queued.map(({ job }) => job.id)];
+      window.localStorage.setItem(artUploadStorageKey(event.entryId), JSON.stringify(nextJobIds));
+      setArtUploadJobs(nextJobIds);
+      setLocalArtPreviews((current) => [
+        ...current,
+        ...queued.map(({ job, file }) => ({ jobId: job.id, name: file.name, type: file.type, url: URL.createObjectURL(file) })),
+      ]);
+      setStatus(`${queued.length} art ${queued.length === 1 ? 'file is' : 'files are'} copying to Drive in the background.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Failed to upload art.');
     } finally {
@@ -305,10 +362,21 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
     }
   }
 
+  async function removeArt(attachment) {
+    if (!window.confirm(`Remove ${attachment.fileName || 'this uploaded art'} from this event?`)) return;
+    setStatus('Removing uploaded art...');
+    try {
+      await deleteArtAttachment(event.entryId, attachment);
+      setArtAttachments((current) => current.filter((item) => item.url !== attachment.url));
+      setStatus('Uploaded art removed from this event.');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Uploaded art could not be removed.');
+    }
+  }
+
   const links = [
     ['Contract', fileUrls?.contractUrl],
     ['Temporary License', fileUrls?.tflUrl],
-    ['Uploaded Art', fileUrls?.artImageUrl],
   ];
   const canGenerateRevisedContract =
     String(viewerEmail || '').trim().toLowerCase() === REVISED_CONTRACT_ADMIN && Boolean(fileUrls?.contractUrl);
@@ -358,30 +426,46 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
         ))}
       </div>
       <div className="art-upload-actions">
-        <label className="primary-button art-upload-button" aria-label="Upload image or PDF">
+        <label className="primary-button art-upload-button" aria-label="Add art sheets or files">
           <Upload size={16} />
-          {artUploadJob ? 'Artwork Processing…' : 'Choose Photo or File'}
-          <input type="file" accept="image/*,.pdf,application/pdf" onChange={uploadArtFile} disabled={Boolean(pendingLabel) || Boolean(artUploadJob)} />
+          Add Art Sheets or Files
+          <input type="file" accept="image/*,.pdf,application/pdf" multiple onChange={uploadArtFile} disabled={Boolean(pendingLabel)} />
         </label>
       </div>
-      {localArtPreview ? (
-        <section className="saved-art-preview saved-art-preview--local">
-          <h3>{artUploadJob ? 'Uploading Preview' : 'Selected Upload'}</h3>
-          {localArtPreview.type === 'application/pdf' ? (
-            <iframe title={`${localArtPreview.name} preview`} src={localArtPreview.url} />
-          ) : (
-            <img src={localArtPreview.url} alt={`${localArtPreview.name} preview`} />
-          )}
-        </section>
-      ) : null}
-      {fileUrls?.artImageUrl ? (
-        <section className="saved-art-preview">
-          <h3>Saved Uploaded Art</h3>
-          {drivePreviewUrl(fileUrls.artImageUrl) ? (
-            <iframe title={`${event.clientName} uploaded art`} src={drivePreviewUrl(fileUrls.artImageUrl)} allow="autoplay" />
-          ) : (
-            <img src={fileUrls.artImageUrl} alt={`${event.clientName} uploaded art`} />
-          )}
+      {localArtPreviews.length || artAttachments.length ? (
+        <section className="saved-art-collection">
+          <h3>Uploaded Art</h3>
+          <div className="saved-art-grid">
+            {localArtPreviews.map((preview) => (
+              <article className="saved-art-item saved-art-item--processing" key={preview.jobId}>
+                {preview.type === 'application/pdf' ? (
+                  <iframe title={`${preview.name} preview`} src={preview.url} />
+                ) : (
+                  <img src={preview.url} alt={`${preview.name} preview`} />
+                )}
+                <strong>{preview.name}</strong>
+                <span>Processing…</span>
+              </article>
+            ))}
+            {artAttachments.map((attachment) => (
+              <article className="saved-art-item" key={attachment.id || attachment.url}>
+                {drivePreviewUrl(attachment.url) ? (
+                  <iframe title={`${attachment.fileName} preview`} src={drivePreviewUrl(attachment.url)} allow="autoplay" />
+                ) : attachment.mimeType === 'application/pdf' ? (
+                  <div className="saved-art-file-placeholder">PDF</div>
+                ) : (
+                  <img src={attachment.url} alt={`${attachment.fileName} uploaded art`} />
+                )}
+                <strong>{attachment.fileName || 'Uploaded art'}</strong>
+                <div className="saved-art-item__actions">
+                  <a href={attachment.url} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open</a>
+                  <button type="button" className="icon-link-button" onClick={() => removeArt(attachment)}>
+                    <Trash2 size={14} /> Remove
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
       ) : null}
       <ActionStatus>{status}</ActionStatus>
