@@ -265,41 +265,6 @@ export function PricingPage({ events, viewer, onSaved }) {
           ))}
         </div>
 
-        <section className="picker-section event-classification-section">
-          <h3>Event Classification</h3>
-          <Field label="Pricing Method">
-            <div className="mode-tabs" role="radiogroup" aria-label="Pricing method">
-              <button type="button" className={form.pricingMethod === PRICING_METHOD_STANDARD ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_STANDARD)}>
-                Standard Event
-              </button>
-              <button type="button" className={form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_CORPORATE_MODIFIERS)}>
-                Corporate / Walk-Up
-              </button>
-              <button type="button" className={form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP ? 'active' : ''} onClick={() => updateForm('pricingMethod', PRICING_METHOD_ZERO_WALK_UP)}>
-                Walk-Up Sales Only
-              </button>
-            </div>
-            <span className="field-help">
-              {form.pricingMethod === PRICING_METHOD_ZERO_WALK_UP
-                ? 'No event pay for artists or counters. They receive only the money they personally charge walk-up clients; those sales happen outside this app.'
-                : form.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS
-                ? 'The event client pays required counter, licensing, and admin charges plus selected modifiers. Walk-up tattoo sales are not tracked in this app.'
-                : 'The event client pays the standard tattoo base plus modifiers.'}
-            </span>
-          </Field>
-          {form.pricingMethod === PRICING_METHOD_STANDARD ? (
-            <Field label="Type of Event">
-              <EventTypePicker
-                value={saveMode === 'new' ? newClient.eventType : form.eventType}
-                onChange={(eventType) => {
-                  if (saveMode === 'new') setNewClient((current) => ({ ...current, eventType }));
-                  else updateForm('eventType', eventType);
-                }}
-              />
-            </Field>
-          ) : null}
-        </section>
-
         {saveMode === 'new' ? (
           <div className="form-grid">
             <Field label="Client Name">
