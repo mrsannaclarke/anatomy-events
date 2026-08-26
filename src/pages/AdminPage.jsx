@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Ban, Check, ClipboardList, Code2, Copy, DollarSign, Download, ExternalLink, FileSpreadsheet, Share, ShieldCheck, Smartphone, WalletCards, X } from 'lucide-react';
+import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsheet, Share, ShieldCheck, Smartphone, WalletCards, X } from 'lucide-react';
 
 import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
@@ -111,20 +111,6 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
               </div>
             );
           })}
-          <div className="event-type-key-entry event-type-key-entry--corporate">
-            <span className="event-type-key-icon" aria-hidden="true"><DollarSign size={20} /></span>
-            <span>
-              <strong>Corporate / Walk-Up</strong>
-              <small>Gold $ on the event card</small>
-            </span>
-          </div>
-          <div className="event-type-key-entry event-type-key-entry--zero-walk-up">
-            <span className="event-type-key-icon" aria-hidden="true"><Ban size={20} /></span>
-            <span>
-              <strong>$0 Walk-Up Event</strong>
-              <small>Staffing-only event card</small>
-            </span>
-          </div>
         </div>
       </section>
 
