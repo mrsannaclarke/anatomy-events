@@ -830,6 +830,24 @@ nav button:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.event-type-control {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.event-type-selection {
+  color: #d6c7b9;
+  margin: 0;
+}
+
+.event-type-selection span {
+  color: #bba99a;
+}
+
+.event-type-selection strong {
+  color: #f2e6d5;
+}
+
 .event-type-picker {
   display: flex;
   flex-wrap: wrap;

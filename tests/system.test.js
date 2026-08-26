@@ -181,6 +181,10 @@ test('staffing payout preview uses the shared payout engine for artist and split
   assert.equal(preview.artistTotal, 5400);
   assert.equal(preview.counterEach, 300);
   assert.equal(preview.counterTotal, 600);
+
+  const singleCounterPreview = getStaffTypePayPreview(event, 4, 1, pricingPayoutMap);
+  assert.equal(singleCounterPreview.counterEach, 600);
+  assert.equal(singleCounterPreview.counterTotal, 600);
 });
 
 test('corporate discount consumes admin, shop share, artists, then counter while preserving $200 license', () => {

@@ -178,12 +178,12 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
         </div>
         <dl>
           <div>
-            <dt>Tattooer</dt>
-            <dd><strong>{formatPayout(payPreview.artistEach)}</strong> each × {payPreview.artistCount}</dd>
+            <dt>Artist amount</dt>
+            <dd><strong>{formatPayout(payPreview.artistEach)}</strong></dd>
           </div>
           <div>
-            <dt>Counter</dt>
-            <dd><strong>{formatPayout(payPreview.counterEach)}</strong> each × {payPreview.counterCount}</dd>
+            <dt>Counter amount</dt>
+            <dd><strong>{formatPayout(payPreview.counterEach)}</strong></dd>
           </div>
         </dl>
         <small>Final payout becomes payable after the event is marked complete.</small>
