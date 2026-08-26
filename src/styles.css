@@ -1412,8 +1412,7 @@ nav button:hover {
   transform: translateY(-2px);
 }
 
-.counter-payout-panel,
-.event-type-key-panel {
+.counter-payout-panel {
   background:
     radial-gradient(circle at 92% 10%, rgb(143 201 173 / 12%), transparent 34%),
     linear-gradient(145deg, #302923, #27211d);
@@ -1423,33 +1422,68 @@ nav button:hover {
   padding: 22px;
 }
 
-.event-type-key-grid {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+.event-legend-panel {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(181 139 255 / 9%), transparent 36%),
+    linear-gradient(145deg, #302923, #27211d);
+  border: 1px solid #675448;
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 18%);
+  padding: 22px;
 }
 
-.event-type-key-entry {
-  align-items: center;
-  background: color-mix(in srgb, var(--event-type-color) 8%, #211d19);
-  border: 1px solid color-mix(in srgb, var(--event-type-color) 42%, #51443b);
-  border-radius: 12px;
+.event-legend-heading h3 {
   color: #f2e6d5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.event-legend-heading p {
+  color: #bba99a;
+  margin: 0;
+}
+
+.event-legend-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.event-legend-item {
+  align-items: center;
+  background: color-mix(in srgb, var(--event-legend-color) 7%, #28211d);
+  border: 1px solid color-mix(in srgb, var(--event-legend-color) 38%, #5d4c41);
+  border-radius: 12px;
+  color: #eadccc;
   display: flex;
   gap: 11px;
-  padding: 11px 13px;
+  min-width: 0;
+  padding: 10px 12px;
 }
 
-.event-type-key-icon {
+.event-legend-icon {
   align-items: center;
-  background: color-mix(in srgb, var(--event-type-color) 20%, #211d19);
-  border: 1px solid color-mix(in srgb, var(--event-type-color) 62%, #51443b);
-  border-radius: 9px;
-  color: var(--event-type-color);
-  display: inline-flex;
-  height: 38px;
+  border: 2px solid var(--event-legend-color);
+  border-radius: 50%;
+  color: #fff3e4;
+  display: flex;
+  flex: 0 0 auto;
+  height: 42px;
   justify-content: center;
-  width: 38px;
+  width: 42px;
+}
+
+@media (max-width: 760px) {
+  .event-legend-panel {
+    padding: 17px;
+  }
+
+  .event-legend-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .counter-payout-heading {
@@ -1947,14 +1981,6 @@ nav button:hover {
   height: 26px;
   justify-content: center;
   width: 26px;
-}
-
-.corporate-pricing-symbol {
-  color: #e2b756;
-  flex: 0 0 auto;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
 }
 
 .event-card h2 {

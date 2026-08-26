@@ -3,7 +3,7 @@ import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsh
 
 import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
-import { EVENT_TYPE_OPTIONS } from '../components/EventTypePicker.jsx';
+import { EVENT_VISUAL_LEGEND } from '../components/EventTypePicker.jsx';
 
 const COUNTER_PAYOUT_LINKS = [
   { name: 'Bree', service: 'Venmo', url: 'https://account.venmo.com/u/breezantines' },
@@ -93,21 +93,20 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
         ) : null}
       </section>
 
-      <section className="event-type-key-panel" aria-labelledby="event-type-key-title">
-        <div className="counter-payout-heading">
+      <section className="event-legend-panel" aria-labelledby="event-legend-title">
+        <div className="event-legend-heading">
           <div>
-            <span>Event Cards</span>
-            <h3 id="event-type-key-title">Event Type Key</h3>
-            <p>The icon and color used for each event type throughout the app.</p>
+            <h3 id="event-legend-title">Event Card Legend</h3>
+            <p>Icon and color shown on each event card.</p>
           </div>
         </div>
-        <div className="event-type-key-grid">
-          {EVENT_TYPE_OPTIONS.map((option) => {
-            const Icon = option.icon;
+        <div className="event-legend-grid">
+          {EVENT_VISUAL_LEGEND.map((item) => {
+            const Icon = item.icon;
             return (
-              <div className="event-type-key-entry" key={option.value} style={{ '--event-type-color': option.color }}>
-                <span className="event-type-key-icon" aria-hidden="true"><Icon size={20} /></span>
-                <strong>{option.label}</strong>
+              <div className="event-legend-item" key={item.value} style={{ '--event-legend-color': item.color }}>
+                <span className="event-legend-icon" aria-hidden="true"><Icon size={27} strokeWidth={2} /></span>
+                <span>{item.label}</span>
               </div>
             );
           })}

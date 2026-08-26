@@ -1,10 +1,10 @@
 import { CalendarPlus, MapPin } from 'lucide-react';
 
 import { cardActions } from '../constants.js';
-import { computePricing, formFromEvent, PRICING_METHOD_CORPORATE_MODIFIERS } from '../pricingMath.js';
+import { computePricing, formFromEvent } from '../pricingMath.js';
 import { getLatestCommunication } from '../activity.js';
 import { getStaffColor } from '../staffColors.js';
-import { getEventTypeVisual } from './EventTypePicker.jsx';
+import { getEventVisual } from './EventTypePicker.jsx';
 
 const STAFF_NAME_ALIASES = {
   Lindsey: 'Lindsay',
@@ -142,7 +142,7 @@ export function EventCard({ event, onAction }) {
   const raw = event.raw || {};
   const location = raw.eventAddress || raw.venueName || '';
   const latestCommunication = getLatestCommunication(raw);
-  const eventVisual = getEventTypeVisual(raw.eventType);
+  const eventVisual = getEventVisual(raw.eventType, raw.pricingMethod);
   const EventIcon = eventVisual.icon;
   const eventColor = eventVisual.color;
   const eventDate = formatDate(raw.eventDate || event.eventDate);
@@ -190,9 +190,6 @@ export function EventCard({ event, onAction }) {
         </div>
         <div className="event-card__body">
           <div className="event-card__title-row">
-            {totals.pricingMethod === PRICING_METHOD_CORPORATE_MODIFIERS ? (
-              <span className="corporate-pricing-symbol" title="Corporate pricing" aria-label="Corporate pricing">$</span>
-            ) : null}
             <h2>{event.clientName}</h2>
             {eventDate ? (
               <span className="event-card__date-group">
