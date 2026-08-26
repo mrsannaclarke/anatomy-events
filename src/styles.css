@@ -2945,11 +2945,11 @@ nav button:hover {
 
 .event-card {
   background:
-    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--event-color) 16%, transparent), transparent 38%),
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--event-color) 11%, transparent), transparent 38%),
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--event-color) 13%, #302923),
-      color-mix(in srgb, var(--event-color) 4%, #27211d)
+      color-mix(in srgb, var(--event-color) 9%, #302923),
+      color-mix(in srgb, var(--event-color) 3%, #27211d)
     );
   border: 1px solid color-mix(in srgb, var(--event-color) 34%, #594a3f);
   border-radius: 16px;
