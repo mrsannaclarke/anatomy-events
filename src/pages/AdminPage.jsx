@@ -3,6 +3,7 @@ import { Check, ClipboardList, Code2, Copy, Download, ExternalLink, FileSpreadsh
 
 import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
+import { EVENT_TYPE_OPTIONS } from '../components/EventTypePicker.jsx';
 
 const COUNTER_PAYOUT_LINKS = [
   { name: 'Bree', service: 'Venmo', url: 'https://account.venmo.com/u/breezantines' },
@@ -90,6 +91,27 @@ export function AdminPage({ viewer, onOpenPage, canInstall, isInstalled, onInsta
             <span>Completed-event shop totals and waterfall.</span>
           </button>
         ) : null}
+      </section>
+
+      <section className="event-type-key-panel" aria-labelledby="event-type-key-title">
+        <div className="counter-payout-heading">
+          <div>
+            <span>Event Cards</span>
+            <h3 id="event-type-key-title">Event Type Key</h3>
+            <p>The icon and color used for each event type throughout the app.</p>
+          </div>
+        </div>
+        <div className="event-type-key-grid">
+          {EVENT_TYPE_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            return (
+              <div className="event-type-key-entry" key={option.value} style={{ '--event-type-color': option.color }}>
+                <span className="event-type-key-icon" aria-hidden="true"><Icon size={20} /></span>
+                <strong>{option.label}</strong>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className="counter-payout-panel" aria-labelledby="counter-payout-title">

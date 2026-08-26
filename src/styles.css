@@ -1412,7 +1412,8 @@ nav button:hover {
   transform: translateY(-2px);
 }
 
-.counter-payout-panel {
+.counter-payout-panel,
+.event-type-key-panel {
   background:
     radial-gradient(circle at 92% 10%, rgb(143 201 173 / 12%), transparent 34%),
     linear-gradient(145deg, #302923, #27211d);
@@ -1420,6 +1421,35 @@ nav button:hover {
   border-radius: 16px;
   box-shadow: 0 14px 30px rgb(0 0 0 / 18%);
   padding: 22px;
+}
+
+.event-type-key-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.event-type-key-entry {
+  align-items: center;
+  background: color-mix(in srgb, var(--event-type-color) 8%, #211d19);
+  border: 1px solid color-mix(in srgb, var(--event-type-color) 42%, #51443b);
+  border-radius: 12px;
+  color: #f2e6d5;
+  display: flex;
+  gap: 11px;
+  padding: 11px 13px;
+}
+
+.event-type-key-icon {
+  align-items: center;
+  background: color-mix(in srgb, var(--event-type-color) 20%, #211d19);
+  border: 1px solid color-mix(in srgb, var(--event-type-color) 62%, #51443b);
+  border-radius: 9px;
+  color: var(--event-type-color);
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
 }
 
 .counter-payout-heading {

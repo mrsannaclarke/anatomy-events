@@ -214,6 +214,14 @@ test('event feed places confirmed events first and sorts each group soonest-firs
   assert.deepEqual(sortLedgerEvents(events).map(({ clientName }) => clientName), ['Sooner', 'Later', 'Pending']);
 });
 
+test('event feed sorts same-day events by start time within the same status group', () => {
+  const events = [
+    { clientName: 'Justine', status: 'New', eventDate: '08/29/2026', raw: { eventDate: '08/29/2026', eventStartTime: '8:00 PM' } },
+    { clientName: 'Tara', status: 'New', eventDate: '08/29/2026', raw: { eventDate: '08/29/2026', eventStartTime: '5:00 PM' } },
+  ];
+  assert.deepEqual(sortLedgerEvents(events).map(({ clientName }) => clientName), ['Tara', 'Justine']);
+});
+
 test('payout ledger sorts newest completed event first', () => {
   const cards = [
     { event: { clientName: 'Old', eventDate: '01/01/2026' } },

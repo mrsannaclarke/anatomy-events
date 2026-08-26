@@ -38,9 +38,28 @@ function getFeedGroup(event) {
 
 function getEventDateTimestamp(event) {
   const raw = event.raw || event;
-  const value = raw.eventDate || event.eventDate || '';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? Number.POSITIVE_INFINITY : parsed.getTime();
+  const dateValue = String(raw.eventDate || event.eventDate || '').trim();
+  const dateMatch = dateValue.match(/^(?:(\d{4})-(\d{1,2})-(\d{1,2})|(\d{1,2})\/(\d{1,2})\/(\d{2,4}))/);
+  if (!dateMatch) return Number.POSITIVE_INFINITY;
+
+  const yearText = dateMatch[1] || dateMatch[6];
+  const year = Number(yearText.length === 2 ? `20${yearText}` : yearText);
+  const month = Number(dateMatch[2] || dateMatch[4]);
+  const day = Number(dateMatch[3] || dateMatch[5]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return Number.POSITIVE_INFINITY;
+
+  const timeValue = String(raw.eventStartTime || event.eventStartTime || '').trim();
+  const timeMatch = timeValue.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (!timeMatch) return new Date(year, month - 1, day, 23, 59, 59).getTime();
+
+  let hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2]);
+  const suffix = timeMatch[3]?.toUpperCase();
+  if (suffix === 'AM' && hour === 12) hour = 0;
+  if (suffix === 'PM' && hour < 12) hour += 12;
+  if (hour > 23 || minute > 59) return new Date(year, month - 1, day, 23, 59, 59).getTime();
+  return new Date(year, month - 1, day, hour, minute).getTime();
 }
 
 export function sortLedgerEvents(events) {
