@@ -6,7 +6,7 @@ import { documentAction, signDocumentJob, verifyDocumentJobSignature } from '../
 
 import { sortLedgerEvents } from '../src/activity.js';
 import { isExpiredStaffingOnlyEvent } from '../src/eventVisibility.js';
-import { calculateEventPayout, getPersonPayRow, getStaffTypePayPreview, sortPayoutLedgerCards } from '../src/payoutMath.js';
+import { buildPricingPayoutMap, calculateEventPayout, getPersonPayRow, getStaffTypePayPreview, sortPayoutLedgerCards } from '../src/payoutMath.js';
 import {
   PRICING_METHOD_CORPORATE_MODIFIERS,
   PRICING_METHOD_ZERO_WALK_UP,
@@ -15,6 +15,7 @@ import {
   computePricing,
   deriveEventHours,
   formFromEvent,
+  getDefaultPricingPlanYear,
   timeInputValue,
 } from '../src/pricingMath.js';
 import { ALLOWED_USERS } from '../shared/authPolicy.js';
@@ -123,6 +124,70 @@ test('pricing event preserves start/end time and derives booked hours on import'
   const saved = buildPricingEvent({}, imported, totals);
   assert.equal(saved.eventStartTime, '17:00');
   assert.equal(saved.eventEndTime, '22:30');
+});
+
+test('pricing overwrite preserves the selected normalized Entry ID', () => {
+  const form = pricingForm();
+  const totals = computePricing(form);
+  const saved = buildPricingEvent({ entryId: '6135', raw: { clientName: 'Bret Herzog' } }, form, totals);
+  assert.equal(saved.entryId, '6135');
+  assert.equal(saved.clientName, 'Bret Herzog');
+});
+
+test('pricing cutoff defaults only newly created events to the 2027 plan', () => {
+  assert.equal(getDefaultPricingPlanYear(null, new Date('2026-09-01T23:59:59-07:00')), '2026');
+  assert.equal(getDefaultPricingPlanYear(null, new Date('2026-09-02T00:00:00-07:00')), '2027');
+  assert.equal(formFromEvent({ raw: { createdAt: '2026-09-01T18:00:00-07:00' } }, new Date('2027-01-01')).year, '2026');
+  assert.equal(formFromEvent({ raw: { createdAt: '2026-09-02T00:01:00-07:00' } }, new Date('2026-09-01')).year, '2027');
+  assert.equal(formFromEvent({ raw: { year: '2026', createdAt: '2027-01-01T00:00:00-08:00' } }).year, '2026');
+});
+
+test('2027 standard payouts use a flat $1300 artist base and updated modifier shares', () => {
+  const pricingPayoutMap = buildPricingPayoutMap([{
+    'Plan Year': 2027,
+    Artists: 2,
+    'Artist Base Payout Per Artist': 1300,
+    'Radius Artist %': 85,
+    'Extra Hourly Artist %': 90,
+    'Custom Flash Artist %': 0,
+    'Temporary Tattoos Artist %': 0,
+  }]);
+  const event = {
+    raw: {
+      year: '2027', pricingMethod: 'Standard', numberOfArtists: '2', bookedHours: '6', extraHours: '1',
+      artistNames: 'Agnes, Sienna', counterNames: 'Jeremy', counterStaffCharge: '300',
+      customFlash: 'YES', customFlashFee: '270', temporaryTattoos: 'YES', temporaryTattooFee: '150',
+      radiusFee: '100', extraHourlyCharge: '500', totalCharge: '4520',
+    },
+  };
+  const artist = getPersonPayRow(event, 'Agnes', pricingPayoutMap);
+  assert.equal(artist.artistBasePayout, 1300);
+  assert.equal(artist.artistModifierBreakdown.customFlash, 0);
+  assert.equal(artist.artistModifierBreakdown.temporaryTattoos, 0);
+  assert.equal(artist.artistModifierBreakdown.radius, 42.5);
+  assert.equal(artist.artistModifierBreakdown.extraHourly, 225);
+  assert.equal(artist.totalPayout, 1567.5);
+  assert.equal(getPersonPayRow(event, 'Jeremy', pricingPayoutMap).counterPayout, 300);
+});
+
+test('2027 corporate events do not receive the standard $1300 artist base', () => {
+  const pricingPayoutMap = buildPricingPayoutMap([{
+    'Plan Year': 2027,
+    Artists: 1,
+    'Artist Base Payout Per Artist': 1300,
+    'Radius Artist %': 85,
+    'Extra Hourly Artist %': 90,
+    'Custom Flash Artist %': 0,
+    'Temporary Tattoos Artist %': 0,
+  }]);
+  const event = {
+    raw: {
+      year: '2027', pricingMethod: 'Corporate / Walk-Up', numberOfArtists: '1', bookedHours: '5',
+      artistNames: 'Agnes', counterNames: 'Jeremy', customFlash: 'YES', customFlashFee: '220',
+      counterStaffCharge: '150', totalCharge: '870',
+    },
+  };
+  assert.equal(getPersonPayRow(event, 'Agnes', pricingPayoutMap).totalPayout, 0);
 });
 
 test('standard pricing prorates under five hours and uses a deposit', () => {

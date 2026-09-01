@@ -4,6 +4,7 @@ export const DEFAULT_BASE_ADDRESS = 'Anatomy Tattoo, Portland, OR';
 export const PRICING_METHOD_STANDARD = 'STANDARD';
 export const PRICING_METHOD_CORPORATE_MODIFIERS = 'CORPORATE_MODIFIERS';
 export const PRICING_METHOD_ZERO_WALK_UP = 'ZERO_WALK_UP';
+export const PRICING_PLAN_CUTOFF = '2026-09-02T00:00:00-07:00';
 
 export function normalizePricingMethod(value) {
   const normalized = String(value || '').trim().toUpperCase();
@@ -35,6 +36,12 @@ export const PRICING_SCHEDULE = {
     4: { baseRatePerArtist5h: 1150, counterPerArtist: 150, customFlashFeeEvent: 350, extraHourlyPerArtist: 225, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
   },
   2026: {
+    1: { baseRatePerArtist5h: 1600, counterPerArtist: 150, customFlashFeeEvent: 220, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
+    2: { baseRatePerArtist5h: 1500, counterPerArtist: 150, customFlashFeeEvent: 270, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
+    3: { baseRatePerArtist5h: 1400, counterPerArtist: 150, customFlashFeeEvent: 320, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
+    4: { baseRatePerArtist5h: 1300, counterPerArtist: 150, customFlashFeeEvent: 400, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
+  },
+  2027: {
     1: { baseRatePerArtist5h: 1600, counterPerArtist: 150, customFlashFeeEvent: 220, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
     2: { baseRatePerArtist5h: 1500, counterPerArtist: 150, customFlashFeeEvent: 270, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
     3: { baseRatePerArtist5h: 1400, counterPerArtist: 150, customFlashFeeEvent: 320, extraHourlyPerArtist: 250, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
@@ -77,6 +84,17 @@ export function configurePricingSchedule(pricingRows) {
 
 export const PLAN_YEARS = Object.keys(PRICING_SCHEDULE).sort((a, b) => Number(b) - Number(a));
 export const ARTIST_COUNTS = ['1', '2', '3', '4'];
+
+export function getDefaultPricingPlanYear(event, now = new Date()) {
+  const raw = event?.raw || event || {};
+  const explicitYear = String(raw.year || raw.pricePlan || '').trim();
+  if (explicitYear) return explicitYear;
+
+  const createdAt = raw.createdAt || raw.gravityImportedAt || '';
+  const createdDate = createdAt ? new Date(createdAt) : now;
+  const basis = Number.isNaN(createdDate.getTime()) ? now : createdDate;
+  return basis.getTime() >= new Date(PRICING_PLAN_CUTOFF).getTime() ? '2027' : '2026';
+}
 
 export function parseMoney(value) {
   const text = String(value || '').trim();
@@ -321,14 +339,14 @@ export function buildPricingClipboardText(form, totals) {
   return lines.join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
-export function formFromEvent(event) {
+export function formFromEvent(event, now = new Date()) {
   const raw = event?.raw || event || {};
   const extraHours = Math.max(0, Number(raw.extraHours) || 0);
   const hasEvent = Boolean(event);
   const bookedHoursFromReason = deriveBookedHoursFromReason(raw.staffPriceAdjustmentReason);
   const bookedHoursFromTimes = deriveEventHours(raw.eventStartTime, raw.eventEndTime);
   return {
-    year: String(raw.year || '2026'),
+    year: getDefaultPricingPlanYear(event, now),
     pricingMethod: normalizePricingMethod(raw.pricingMethod),
     numberOfArtists: String(raw.numberOfArtists || ''),
     bookedHours: hasEvent ? bookedHoursFromTimes || bookedHoursFromReason || String(BASE_INCLUDED_HOURS + extraHours) : '',
@@ -354,6 +372,7 @@ export function buildPricingEvent(baseEvent, form, totals) {
   const raw = baseEvent?.raw || baseEvent || {};
   const event = {
     ...raw,
+    entryId: String(baseEvent?.entryId || raw.entryId || '').trim(),
     year: form.year,
     pricingMethod: pricingMethodToSheetValue(form.pricingMethod),
     numberOfArtists: form.numberOfArtists,

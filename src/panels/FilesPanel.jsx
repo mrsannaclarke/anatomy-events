@@ -130,10 +130,12 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
     async function checkDocumentJobs() {
       const completedKinds = [];
       const failed = [];
+      const jobsByKind = {};
       let stillProcessing = false;
       for (const [kind, jobId] of activeEntries) {
         try {
           const job = await getDocumentJob(jobId);
+          jobsByKind[kind] = job;
           if (job.status === 'completed') completedKinds.push(kind);
           else if (job.status === 'failed') failed.push([kind, job.error || 'Document generation failed.']);
           else stillProcessing = true;
@@ -142,6 +144,23 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
         }
       }
       if (cancelled) return;
+
+      let recoveredEvent = null;
+      if (stillProcessing) {
+        try {
+          recoveredEvent = await pullEventByEntryId(event.entryId);
+          const recoveredUrls = urlsFromEvent(recoveredEvent);
+          for (const [kind] of activeEntries) {
+            const generatedUrl = kind === 'tfl' ? recoveredUrls.tflUrl : recoveredUrls.contractUrl;
+            if (generatedUrl && !completedKinds.includes(kind) && !failed.some(([failedKind]) => failedKind === kind)) {
+              completedKinds.push(kind);
+            }
+          }
+          if (completedKinds.length > 0) stillProcessing = false;
+        } catch {
+          // The job status endpoint remains authoritative when the Sheet refresh is temporarily unavailable.
+        }
+      }
 
       const finishedKinds = [...completedKinds, ...failed.map(([kind]) => kind)];
       if (finishedKinds.length > 0) {
@@ -152,11 +171,11 @@ export function FilesPanel({ event, viewerEmail, onSaved }) {
         try {
           const completedUrls = {};
           for (const kind of completedKinds) {
-            const job = await getDocumentJob(documentJobs[kind]);
+            const job = jobsByKind[kind];
             const key = kind === 'tfl' ? 'tflUrl' : 'contractUrl';
-            completedUrls[key] = findResultUrl(job.result, [key, 'existingUrl', 'url']);
+            completedUrls[key] = findResultUrl(job?.result, [key, 'existingUrl', 'url']);
           }
-          const refreshed = await pullEventByEntryId(event.entryId);
+          const refreshed = recoveredEvent || await pullEventByEntryId(event.entryId);
           if (!cancelled && refreshed) {
             const refreshedUrls = urlsFromEvent(refreshed);
             setFileUrls((current) => ({

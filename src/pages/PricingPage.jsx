@@ -18,6 +18,7 @@ import {
   deriveEventHours,
   formFromEvent,
   formatMoney,
+  getDefaultPricingPlanYear,
   parseMoney,
   PRICING_METHOD_CORPORATE_MODIFIERS,
   PRICING_METHOD_STANDARD,
@@ -79,8 +80,9 @@ export function PricingPage({ events, viewer, onSaved }) {
 
   const totals = useMemo(() => computePricing(form), [form]);
   const summaryRows = useMemo(() => buildPricingSummaryRows(totals), [totals]);
-  const pricingSheetUrl = PRICING_SHEET_PUBLIC_URL_BY_YEAR[2026];
-  const planRows = Object.entries(PRICING_SCHEDULE[2026] || {}).sort(([left], [right]) => Number(left) - Number(right));
+  const currentPlanYear = Number(getDefaultPricingPlanYear(null));
+  const pricingSheetUrl = PRICING_SHEET_PUBLIC_URL_BY_YEAR[currentPlanYear] || PRICING_SHEET_PUBLIC_URL_BY_YEAR[2026];
+  const planRows = Object.entries(PRICING_SCHEDULE[currentPlanYear] || PRICING_SCHEDULE[2026] || {}).sort(([left], [right]) => Number(left) - Number(right));
   const canAddToPaidBalance = viewer?.email?.toLowerCase() === 'admin@anatomytattoo.com'
     && saveMode === 'overwrite'
     && selectedEvent
@@ -179,7 +181,11 @@ export function PricingPage({ events, viewer, onSaved }) {
             }
           : {
               ...selectedEvent,
-              raw: { ...selectedEvent.raw, eventType: newClient.eventType || selectedEvent.raw?.eventType || '' },
+              raw: {
+                ...selectedEvent.raw,
+                entryId: selectedEvent.entryId || selectedEvent.raw?.entryId || '',
+                eventType: newClient.eventType || selectedEvent.raw?.eventType || '',
+              },
             };
       const eventForSheet = buildPricingEvent(baseEvent, form, totals);
       const saved = await upsertEventToSheet(eventForSheet, {

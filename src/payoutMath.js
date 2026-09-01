@@ -96,6 +96,9 @@ export function buildPricingPayoutMap(pricingRows) {
       return [
         `${year}::${artists}`,
         {
+          artistBasePayoutPerArtist: String(row['Artist Base Payout Per Artist'] ?? '').trim() === ''
+            ? null
+            : Number(row['Artist Base Payout Per Artist']),
           radiusArtistSharePct: (Number(row['Radius Artist %']) || 0) / 100,
           extraHourlyArtistSharePct: (Number(row['Extra Hourly Artist %']) || 0) / 100,
           customFlashArtistSharePct: (Number(row['Custom Flash Artist %']) || 0) / 100,
@@ -159,7 +162,12 @@ function getBasePersonPayRow(event, personName, pricingPayoutMap = {}) {
     .reduce((sum, item) => sum + parseMoney(item.amount), 0);
 
   const historical = HISTORICAL_PAYOUT_TRUTH[String(raw.entryId || '').trim()];
-  let artistBasePayout = isArtist ? totals.baseTotal / artistCount : 0;
+  const configuredArtistBase = payoutRule.artistBasePayoutPerArtist;
+  let artistBasePayout = isArtist
+    ? Number.isFinite(configuredArtistBase) && !totals.isCorporateModifiers
+      ? configuredArtistBase
+      : totals.baseTotal / artistCount
+    : 0;
   let artistModifierBreakdown = {
     customFlash: isArtist ? ((totals.customFlashFee + addOnAmount('Custom Flash')) * customFlashShare) / artistCount : 0,
     radius: isArtist ? ((totals.radiusFee + addOnAmount('Radius / Travel')) * radiusShare) / artistCount : 0,
