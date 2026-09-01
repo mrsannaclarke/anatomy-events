@@ -149,7 +149,7 @@ test('2027 standard payouts use a flat $1300 artist base and updated modifier sh
     'Artist Base Payout Per Artist': 1300,
     'Radius Artist %': 85,
     'Extra Hourly Artist %': 90,
-    'Custom Flash Artist %': 0,
+    'Custom Flash Artist %': 50,
     'Temporary Tattoos Artist %': 0,
   }]);
   const event = {
@@ -162,11 +162,11 @@ test('2027 standard payouts use a flat $1300 artist base and updated modifier sh
   };
   const artist = getPersonPayRow(event, 'Agnes', pricingPayoutMap);
   assert.equal(artist.artistBasePayout, 1300);
-  assert.equal(artist.artistModifierBreakdown.customFlash, 0);
+  assert.equal(artist.artistModifierBreakdown.customFlash, 67.5);
   assert.equal(artist.artistModifierBreakdown.temporaryTattoos, 0);
   assert.equal(artist.artistModifierBreakdown.radius, 42.5);
   assert.equal(artist.artistModifierBreakdown.extraHourly, 225);
-  assert.equal(artist.totalPayout, 1567.5);
+  assert.equal(artist.totalPayout, 1635);
   assert.equal(getPersonPayRow(event, 'Jeremy', pricingPayoutMap).counterPayout, 300);
 });
 
@@ -177,7 +177,7 @@ test('2027 corporate events do not receive the standard $1300 artist base', () =
     'Artist Base Payout Per Artist': 1300,
     'Radius Artist %': 85,
     'Extra Hourly Artist %': 90,
-    'Custom Flash Artist %': 0,
+    'Custom Flash Artist %': 50,
     'Temporary Tattoos Artist %': 0,
   }]);
   const event = {
@@ -187,7 +187,7 @@ test('2027 corporate events do not receive the standard $1300 artist base', () =
       counterStaffCharge: '150', totalCharge: '870',
     },
   };
-  assert.equal(getPersonPayRow(event, 'Agnes', pricingPayoutMap).totalPayout, 0);
+  assert.equal(getPersonPayRow(event, 'Agnes', pricingPayoutMap).totalPayout, 110);
 });
 
 test('standard pricing prorates under five hours and uses a deposit', () => {
