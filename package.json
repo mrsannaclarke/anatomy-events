@@ -8,6 +8,7 @@
     "test": "node --test tests/*.test.js",
     "lint": "eslint src functions shared workers vite.config.js",
     "build": "vite build",
+    "reconcile:shadow": "node scripts/reconcile-event-shadow.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "deploy": "npm run build && wrangler pages deploy ./dist --project-name anatomy-events --branch main",
     "deploy:check": "npm run build && wrangler pages deploy ./dist --project-name anatomy-events --branch preview"

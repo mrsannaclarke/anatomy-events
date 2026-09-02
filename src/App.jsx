@@ -228,7 +228,7 @@ export function App() {
         pullEventsFromSheet(),
         pullPricingRulesFromSheet().catch(() => null),
       ]);
-      setPricingSource(pricingRows && configurePricingSchedule(pricingRows) ? 'live' : 'fallback');
+      setPricingSource(configurePricingSchedule(pricingRows));
       setEvents(sheetEvents);
       setDetail((current) => {
         if (!current?.event?.entryId) return current;
@@ -369,7 +369,7 @@ export function App() {
             onChangeMode={(mode) => setDetail((current) => (current ? { ...current, mode } : current))}
           />
         ) : activePage === 'pricing' ? (
-          <PricingPage events={visibleLedgerEvents} viewer={viewer} onSaved={replaceSavedEvent} />
+          <PricingPage events={visibleLedgerEvents} viewer={viewer} pricingSource={pricingSource} onSaved={replaceSavedEvent} />
         ) : activePage === 'payout' ? (
           <PayoutPage events={events} viewer={viewer} />
         ) : activePage === 'admin' ? (

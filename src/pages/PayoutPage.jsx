@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Sparkles } from 'lucide-react';
 
 import { getPayoutPeopleForViewer, normalizeKey } from '../auth.js';
+import { ActionStatus } from '../components/ActionStatus.jsx';
 import { getEventVisual } from '../components/EventTypePicker.jsx';
 import {
   buildPricingPayoutMap,
@@ -50,7 +51,8 @@ export function PayoutPage({ events, viewer }) {
   const selectablePeople = useMemo(() => getPayoutPeopleForViewer(viewer, allPeople), [allPeople, viewer]);
   const [selectedPerson, setSelectedPerson] = useState('');
   const [selectedYear, setSelectedYear] = useState('All');
-  const [pricingPayoutMap, setPricingPayoutMap] = useState({});
+  const [pricingPayoutMap, setPricingPayoutMap] = useState(() => buildPricingPayoutMap([]));
+  const [pricingRuleSource, setPricingRuleSource] = useState('loading');
 
   const canPickPerson = viewer.canViewFullPayout;
   const defaultPerson = viewer.name;
@@ -73,10 +75,12 @@ export function PayoutPage({ events, viewer }) {
       .then((rows) => {
         if (!mounted) return;
         setPricingPayoutMap(buildPricingPayoutMap(rows));
+        setPricingRuleSource('live');
       })
       .catch(() => {
         if (!mounted) return;
-        setPricingPayoutMap({});
+        setPricingPayoutMap(buildPricingPayoutMap([]));
+        setPricingRuleSource('fallback');
       });
     return () => {
       mounted = false;
@@ -149,6 +153,14 @@ export function PayoutPage({ events, viewer }) {
           <p>{canPickPerson ? 'Full payout picker enabled for this login.' : 'Access limited to your own payout schedule.'}</p>
         </div>
       </div>
+
+      <ActionStatus tone={pricingRuleSource === 'fallback' ? 'error' : undefined}>
+        {pricingRuleSource === 'loading'
+          ? 'Loading payout rules…'
+          : pricingRuleSource === 'fallback'
+            ? 'Pricing Rules could not be refreshed. Using the recorded 2027 payout rules.'
+            : ''}
+      </ActionStatus>
 
       <section className="tool-panel">
         <div className="form-grid">

@@ -1,7 +1,7 @@
 const AUDIT_ADMIN_EMAILS = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']);
 
 function cleanEntryId(payload) {
-  const direct = String(payload?.entryId || payload?.event?.entryId || '').trim();
+  const direct = String(payload?.entryId || payload?.event?.entryId || payload?.payment?.eventId || '').trim();
   if (direct) return direct;
   if (payload?.eventJson) {
     try {
@@ -15,6 +15,7 @@ function cleanEntryId(payload) {
 
 function eventFields(payload) {
   if (payload?.event && typeof payload.event === 'object') return Object.keys(payload.event).sort();
+  if (payload?.payment && typeof payload.payment === 'object') return Object.keys(payload.payment).sort();
   if (payload?.eventJson) {
     try {
       const parsed = JSON.parse(payload.eventJson);

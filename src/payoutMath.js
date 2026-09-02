@@ -21,6 +21,22 @@ const ONE_TIME_PAYOUT_TRUTH = {
   },
 };
 
+const DEFAULT_PRICING_PAYOUT_MAP = Object.fromEntries(
+  ['1', '2', '3', '4'].map((artists) => [
+    `2027::${artists}`,
+    {
+      artistBasePayoutPerArtist: 1300,
+      counterBasePayoutPerArtist: 125,
+      counterBasePayoutCap: 500,
+      counterExtraHourlyPayout: 30,
+      radiusArtistSharePct: 0.85,
+      extraHourlyArtistSharePct: 0.9,
+      customFlashArtistSharePct: 0.5,
+      temporaryTattooArtistSharePct: 0,
+    },
+  ]),
+);
+
 export function normalizeNameKey(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
@@ -89,8 +105,8 @@ export function getPeopleFromEvents(events) {
 }
 
 export function buildPricingPayoutMap(pricingRows) {
-  return Object.fromEntries(
-    pricingRows.map((row) => {
+  const sheetRules = Object.fromEntries(
+    (Array.isArray(pricingRows) ? pricingRows : []).map((row) => {
       const year = String(row['Plan Year'] || row.year || '').trim();
       const artists = String(row.Artists || row.artists || '').trim();
       return [
@@ -99,6 +115,15 @@ export function buildPricingPayoutMap(pricingRows) {
           artistBasePayoutPerArtist: String(row['Artist Base Payout Per Artist'] ?? '').trim() === ''
             ? null
             : Number(row['Artist Base Payout Per Artist']),
+          counterBasePayoutPerArtist: String(row['Counter Base Payout Per Artist (5h)'] ?? '').trim() === ''
+            ? null
+            : Number(row['Counter Base Payout Per Artist (5h)']),
+          counterBasePayoutCap: String(row['Counter Base Payout Cap (5h)'] ?? '').trim() === ''
+            ? null
+            : Number(row['Counter Base Payout Cap (5h)']),
+          counterExtraHourlyPayout: String(row['Counter Extra Hourly Payout'] ?? '').trim() === ''
+            ? null
+            : Number(row['Counter Extra Hourly Payout']),
           radiusArtistSharePct: (Number(row['Radius Artist %']) || 0) / 100,
           extraHourlyArtistSharePct: (Number(row['Extra Hourly Artist %']) || 0) / 100,
           customFlashArtistSharePct: (Number(row['Custom Flash Artist %']) || 0) / 100,
@@ -107,6 +132,7 @@ export function buildPricingPayoutMap(pricingRows) {
       ];
     }),
   );
+  return { ...DEFAULT_PRICING_PAYOUT_MAP, ...sheetRules };
 }
 
 function getBasePersonPayRow(event, personName, pricingPayoutMap = {}) {
@@ -152,7 +178,8 @@ function getBasePersonPayRow(event, personName, pricingPayoutMap = {}) {
   const totals = computePricing(formFromEvent(event));
   const artistCount = artistNames.length || Math.max(1, Number(raw.numberOfArtists) || totals.artistCount || 1);
   const counterCount = counterNames.length || 1;
-  const payoutRule = pricingPayoutMap[`${raw.year || totals.year}::${artistCount}`] || {};
+  const payoutKey = `${raw.year || totals.year}::${artistCount}`;
+  const payoutRule = pricingPayoutMap[payoutKey] || DEFAULT_PRICING_PAYOUT_MAP[payoutKey] || {};
   const customFlashShare = payoutRule.customFlashArtistSharePct ?? 0.5;
   const radiusShare = payoutRule.radiusArtistSharePct ?? 0.85;
   const extraHourlyShare = payoutRule.extraHourlyArtistSharePct ?? 0.8;
@@ -188,7 +215,26 @@ function getBasePersonPayRow(event, personName, pricingPayoutMap = {}) {
         };
   }
   const artistModifierPayout = Object.values(artistModifierBreakdown).reduce((sum, amount) => sum + amount, 0);
-  const counterPayout = isCounter ? (parseMoney(raw.counterStaffCharge) || totals.counterStaffCharge) / counterCount + addOnAmount('Counter Staff') / counterCount : 0;
+  const hasConfiguredCounterPayout = Number.isFinite(payoutRule.counterBasePayoutPerArtist)
+    && Number.isFinite(payoutRule.counterBasePayoutCap)
+    && Number.isFinite(payoutRule.counterExtraHourlyPayout);
+  const counterBaseHoursFactor = 1;
+  const counterExtraHours = Math.max(
+    0,
+    Number(totals.extraHours) || 0,
+    Number(raw.extraHours) || 0,
+    (Number(raw.bookedHours) || Number(totals.billableHours) || 0) - 5,
+  );
+  const configuredCounterPool = hasConfiguredCounterPayout
+    ? Math.min(
+        payoutRule.counterBasePayoutPerArtist * artistCount,
+        payoutRule.counterBasePayoutCap,
+      ) * counterBaseHoursFactor + payoutRule.counterExtraHourlyPayout * counterExtraHours
+    : null;
+  const counterPool = configuredCounterPool ?? (parseMoney(raw.counterStaffCharge) || totals.counterStaffCharge);
+  const counterPayout = isCounter
+    ? (counterPool + addOnAmount('Counter Staff')) / counterCount
+    : 0;
   const artistPayout = artistBasePayout + artistModifierPayout;
 
   return {

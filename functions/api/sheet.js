@@ -1,10 +1,12 @@
 import { authenticateAppRequest } from '../_session.js';
 import { sheetMutationInvalidationKeys, sheetReadCacheKey } from '../_sheetCache.js';
 import { auditRecord, writeAuditRecord } from '../_audit.js';
+import { mirrorSheetMutation } from '../_eventShadow.js';
 
 const MUTATION_ACTIONS = new Set([
   'upsertEvent',
   'upsertEventPartialJson',
+  'recordEventPayment',
   'deleteEvent',
   'generateContract',
   'generateTfl',
@@ -14,6 +16,7 @@ const READ_ACTIONS = new Set(['events', 'event', 'pricing']);
 const ALLOWED_ACTIONS = new Set([...READ_ACTIONS, ...MUTATION_ACTIONS]);
 const UPSTREAM_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 30;
+const PAYMENT_ADMIN_EMAILS = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']);
 
 function jsonResponse(payload, status) {
   return Response.json(payload, {
@@ -73,6 +76,9 @@ export async function onRequest(context) {
   if (!ALLOWED_ACTIONS.has(action)) {
     return jsonResponse({ ok: false, error: 'Action is not allowed through this endpoint.' }, 403);
   }
+  if (action === 'recordEventPayment' && !PAYMENT_ADMIN_EMAILS.has(String(email || '').trim().toLowerCase())) {
+    return jsonResponse({ ok: false, error: 'Only an accounting administrator can record event payments.' }, 403);
+  }
 
   if (payload?.revision && email !== 'admin@anatomytattoo.com') {
     return jsonResponse({ ok: false, error: 'Only the super admin can generate revised contracts.' }, 403);
@@ -119,6 +125,25 @@ export async function onRequest(context) {
       const record = auditRecord(payload, email, upstreamResponse.status);
       waitUntil(writeAuditRecord(env.AUDIT_DB, record).catch((error) => {
         console.error(JSON.stringify({ event: 'audit_write_error', action, email, reason: error instanceof Error ? error.message : 'unknown' }));
+      }));
+    }
+    if (MUTATION_ACTIONS.has(action) && upstreamResponse.ok && env.EVENTS_DB) {
+      waitUntil(mirrorSheetMutation({
+        db: env.EVENTS_DB,
+        payload,
+        upstreamBody: responseBody,
+        actorEmail: email,
+        sheetUrl: env.SHEET_WEB_APP_URL,
+        token: env.APP_SYNC_TOKEN,
+      }).then((result) => {
+        console.log(JSON.stringify({ event: 'event_shadow_mirror', action, email, ...result }));
+      }).catch((error) => {
+        console.error(JSON.stringify({
+          event: 'event_shadow_error',
+          action,
+          email,
+          reason: error instanceof Error ? error.message : 'unknown',
+        }));
       }));
     }
 

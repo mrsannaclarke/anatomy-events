@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, ExternalLink, Plus, Route, Save, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Plus, Receipt, Route, Save, Trash2 } from 'lucide-react';
 
 import { ActionStatus } from '../components/ActionStatus.jsx';
 
@@ -7,7 +7,7 @@ import { EventTypePicker } from '../components/EventTypePicker.jsx';
 import { Field } from '../components/Field.jsx';
 import { PendingOverlay } from '../components/PendingOverlay.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
-import { generateEventFile, pullEventByEntryId, upsertEventToSheet } from '../sheetClient.js';
+import { generateEventFile, pullEventByEntryId, recordEventPaymentToSheet, upsertEventToSheet } from '../sheetClient.js';
 import {
   ARTIST_COUNTS,
   buildPricingClipboardText,
@@ -33,6 +33,27 @@ const PRICING_SHEET_PUBLIC_URL_BY_YEAR = {
 
 const BALANCE_ADD_ON_TYPES = ['Custom Flash', 'Temporary Tattoos', 'Extra Hours', 'Radius / Travel', 'Counter Staff', 'Licensing', 'Other'];
 const DEPOSIT_PAID_STATUSES = new Set(['deposit paid', 'temporary license submitted', 'temporary license received', 'awaiting follow up', 'needing changes', 'balance invoice sent', 'invoice paid in full', 'event complete', 'event complete balance late']);
+const PAYMENT_ADMIN_EMAILS = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']);
+const PAYMENT_METHODS = ['Cash', 'Check', 'Venmo', 'Cash App', 'Square', 'QuickBooks', 'Other'];
+
+function localIsoDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function newPaymentDraft() {
+  return {
+    transactionId: crypto.randomUUID(),
+    transactionDate: localIsoDate(),
+    transactionType: 'Deposit',
+    amount: '',
+    paymentMethod: 'Venmo',
+    notes: '',
+  };
+}
 
 function normalizedEventStatus(event) {
   return String(event?.status || event?.raw?.status || event?.raw?.payStatus || '').trim().toLowerCase();
@@ -52,7 +73,7 @@ function sortNewestEventFirst(left, right) {
     || left.clientName.localeCompare(right.clientName, undefined, { sensitivity: 'base' });
 }
 
-export function PricingPage({ events, viewer, onSaved }) {
+export function PricingPage({ events, viewer, pricingSource, onSaved }) {
   const [selectedId, setSelectedId] = useState('');
   const [saveMode, setSaveMode] = useState('new');
   const importableEvents = useMemo(
@@ -70,6 +91,9 @@ export function PricingPage({ events, viewer, onSaved }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isLookingUpMileage, setIsLookingUpMileage] = useState(false);
   const [addOnDraft, setAddOnDraft] = useState({ type: 'Custom Flash', amount: '', reason: '' });
+  const [paymentDraft, setPaymentDraft] = useState(() => newPaymentDraft());
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
   useEffect(() => {
     if (!selectedEvent) return;
@@ -89,6 +113,7 @@ export function PricingPage({ events, viewer, onSaved }) {
     && DEPOSIT_PAID_STATUSES.has(String(selectedEvent.raw?.status || selectedEvent.status || '').trim().toLowerCase());
   const hasBalanceAddOnChanges = Boolean(canAddToPaidBalance)
     && JSON.stringify(form.balanceAddOns) !== JSON.stringify(formFromEvent(selectedEvent).balanceAddOns);
+  const canRecordPayment = PAYMENT_ADMIN_EMAILS.has(String(viewer?.email || '').trim().toLowerCase()) && Boolean(selectedEvent?.entryId);
 
   function updateForm(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -119,6 +144,42 @@ export function PricingPage({ events, viewer, onSaved }) {
 
   function removeBalanceAddOn(id) {
     setForm((current) => ({ ...current, balanceAddOns: current.balanceAddOns.filter((item) => item.id !== id) }));
+  }
+
+  async function recordPayment() {
+    const amount = parseMoney(paymentDraft.amount);
+    if (!selectedEvent?.entryId) {
+      setPaymentStatus('Select an existing event first.');
+      return;
+    }
+    if (!paymentDraft.transactionDate) {
+      setPaymentStatus('Choose the date the payment was received.');
+      return;
+    }
+    if (amount <= 0) {
+      setPaymentStatus('Enter a payment amount greater than zero.');
+      return;
+    }
+
+    setIsRecordingPayment(true);
+    setPaymentStatus('Recording payment...');
+    try {
+      const result = await recordEventPaymentToSheet({
+        ...paymentDraft,
+        eventId: selectedEvent.entryId,
+        clientEvent: selectedEvent.clientName,
+        amount,
+        sourceStatus: 'Manual',
+      });
+      setPaymentStatus(result.skippedDuplicate
+        ? 'This payment was already recorded; no duplicate was added.'
+        : `Recorded ${formatMoney(amount)} as ${paymentDraft.transactionType.toLowerCase()}.`);
+      setPaymentDraft(newPaymentDraft());
+    } catch (error) {
+      setPaymentStatus(error instanceof Error ? error.message : 'Unable to record the payment.');
+    } finally {
+      setIsRecordingPayment(false);
+    }
   }
 
   async function lookupMileage() {
@@ -222,6 +283,15 @@ export function PricingPage({ events, viewer, onSaved }) {
   return (
     <section className="pricing-page">
       <section className="pricing-card">
+        <ActionStatus tone={pricingSource === 'fallback' ? 'error' : undefined}>
+          {pricingSource === 'loading'
+            ? 'Loading pricing rules…'
+            : pricingSource === 'mixed'
+              ? 'Some Pricing Sheet rows were missing or invalid. Recorded pricing is filling those rows.'
+              : pricingSource === 'fallback'
+                ? 'Pricing Rules could not be refreshed. Using recorded pricing.'
+                : ''}
+        </ActionStatus>
         <div className="panel-heading">
           <div>
             <h2>Pricing</h2>
@@ -353,6 +423,42 @@ export function PricingPage({ events, viewer, onSaved }) {
           />
           <span className="field-help">Saved to Client Notes on the Status &amp; Communication page.</span>
         </Field>
+
+        {canRecordPayment ? (
+          <section className="picker-section payment-entry-section pending-scope">
+            <PendingOverlay show={isRecordingPayment} label="Recording payment..." />
+            <div>
+              <h3>Record Event Payment</h3>
+              <p className="info-line">Records the actual date and amount received. Deposits and balances remain separate ledger entries.</p>
+            </div>
+            <div className="form-grid">
+              <Field label="Payment Date">
+                <input type="date" value={paymentDraft.transactionDate} onChange={(event) => setPaymentDraft((current) => ({ ...current, transactionDate: event.target.value }))} />
+              </Field>
+              <Field label="Payment Type">
+                <select value={paymentDraft.transactionType} onChange={(event) => setPaymentDraft((current) => ({ ...current, transactionType: event.target.value }))}>
+                  <option>Deposit</option>
+                  <option>Balance Payment</option>
+                </select>
+              </Field>
+              <Field label="Amount Received">
+                <input inputMode="decimal" placeholder="0.00" value={paymentDraft.amount} onChange={(event) => setPaymentDraft((current) => ({ ...current, amount: event.target.value }))} />
+              </Field>
+              <Field label="Payment Method">
+                <select value={paymentDraft.paymentMethod} onChange={(event) => setPaymentDraft((current) => ({ ...current, paymentMethod: event.target.value }))}>
+                  {PAYMENT_METHODS.map((method) => <option key={method}>{method}</option>)}
+                </select>
+              </Field>
+            </div>
+            <Field label="Payment Notes">
+              <input placeholder="Optional reference or explanation" value={paymentDraft.notes} onChange={(event) => setPaymentDraft((current) => ({ ...current, notes: event.target.value }))} />
+            </Field>
+            <button type="button" className="secondary-button" onClick={recordPayment} disabled={isRecordingPayment}>
+              <Receipt size={16} /> {isRecordingPayment ? 'Recording...' : 'Record Payment'}
+            </button>
+            <ActionStatus>{paymentStatus}</ActionStatus>
+          </section>
+        ) : null}
 
         {canAddToPaidBalance ? (
           <section className="picker-section balance-add-on-section">

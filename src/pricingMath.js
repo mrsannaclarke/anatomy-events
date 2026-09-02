@@ -28,7 +28,7 @@ export function isZeroWalkUpPricing(value) {
   return normalizePricingMethod(typeof raw === 'object' ? raw.pricingMethod : raw) === PRICING_METHOD_ZERO_WALK_UP;
 }
 
-export const PRICING_SCHEDULE = {
+const DEFAULT_PRICING_SCHEDULE = {
   2025: {
     1: { baseRatePerArtist5h: 1300, counterPerArtist: 150, customFlashFeeEvent: 200, extraHourlyPerArtist: 225, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
     2: { baseRatePerArtist5h: 1200, counterPerArtist: 150, customFlashFeeEvent: 250, extraHourlyPerArtist: 225, tempTattoosFee: 150, facilityCityFee: 150, facilityAdminFee: 50, depositRatePct: 30, freeRadiusMiles: 20, radiusStepMiles: 20, radiusStepFee: 100 },
@@ -49,29 +49,49 @@ export const PRICING_SCHEDULE = {
   },
 };
 
+function clonePricingSchedule(schedule) {
+  return Object.fromEntries(
+    Object.entries(schedule).map(([year, rows]) => [
+      year,
+      Object.fromEntries(Object.entries(rows).map(([artists, row]) => [artists, { ...row }])),
+    ]),
+  );
+}
+
+export const PRICING_SCHEDULE = clonePricingSchedule(DEFAULT_PRICING_SCHEDULE);
+
+const PRICING_ROW_FIELDS = [
+  ['Base Rate Per Artist (5h)', 'baseRatePerArtist5h'],
+  ['Counter Per Artist (5h)', 'counterPerArtist'],
+  ['Custom Flash Fee (Event)', 'customFlashFeeEvent'],
+  ['Extra Hourly Per Artist', 'extraHourlyPerArtist'],
+  ['Temporary Tattoos Fee (Event)', 'tempTattoosFee'],
+  ['Facility City Fee', 'facilityCityFee'],
+  ['Facility Admin Fee', 'facilityAdminFee'],
+  ['Deposit Rate %', 'depositRatePct'],
+  ['Radius Included Miles', 'freeRadiusMiles'],
+  ['Radius Step Miles', 'radiusStepMiles'],
+  ['Radius Step Fee', 'radiusStepFee'],
+];
+
 export function configurePricingSchedule(pricingRows) {
-  if (!Array.isArray(pricingRows) || pricingRows.length === 0) return false;
-  const nextSchedule = {};
-  pricingRows.forEach((source) => {
+  const nextSchedule = clonePricingSchedule(DEFAULT_PRICING_SCHEDULE);
+  const validSheetKeys = new Set();
+  (Array.isArray(pricingRows) ? pricingRows : []).forEach((source) => {
     const year = Number(source['Plan Year']);
     const artists = Number(source.Artists);
     if (!Number.isFinite(year) || !Number.isFinite(artists) || artists < 1) return;
+    const values = PRICING_ROW_FIELDS.map(([sheetField]) => {
+      const rawValue = source[sheetField];
+      return String(rawValue ?? '').trim() === '' ? Number.NaN : Number(rawValue);
+    });
+    if (values.some((value) => !Number.isFinite(value))) return;
     if (!nextSchedule[year]) nextSchedule[year] = {};
-    nextSchedule[year][artists] = {
-      baseRatePerArtist5h: Number(source['Base Rate Per Artist (5h)']) || 0,
-      counterPerArtist: Number(source['Counter Per Artist (5h)']) || 0,
-      customFlashFeeEvent: Number(source['Custom Flash Fee (Event)']) || 0,
-      extraHourlyPerArtist: Number(source['Extra Hourly Per Artist']) || 0,
-      tempTattoosFee: Number(source['Temporary Tattoos Fee (Event)']) || 0,
-      facilityCityFee: Number(source['Facility City Fee']) || 0,
-      facilityAdminFee: Number(source['Facility Admin Fee']) || 0,
-      depositRatePct: Number(source['Deposit Rate %']) || 0,
-      freeRadiusMiles: Number(source['Radius Included Miles']) || 0,
-      radiusStepMiles: Number(source['Radius Step Miles']) || 0,
-      radiusStepFee: Number(source['Radius Step Fee']) || 0,
-    };
+    nextSchedule[year][artists] = Object.fromEntries(
+      PRICING_ROW_FIELDS.map(([, codeField], index) => [codeField, values[index]]),
+    );
+    validSheetKeys.add(`${year}::${artists}`);
   });
-  if (Object.keys(nextSchedule).length === 0) return false;
   Object.keys(PRICING_SCHEDULE).forEach((year) => delete PRICING_SCHEDULE[year]);
   Object.assign(PRICING_SCHEDULE, nextSchedule);
   PLAN_YEARS.splice(0, PLAN_YEARS.length, ...Object.keys(nextSchedule).sort((a, b) => Number(b) - Number(a)));
@@ -79,7 +99,10 @@ export function configurePricingSchedule(pricingRows) {
     (a, b) => Number(a) - Number(b),
   );
   ARTIST_COUNTS.splice(0, ARTIST_COUNTS.length, ...artistCounts);
-  return true;
+  const fallbackKeys = Object.entries(DEFAULT_PRICING_SCHEDULE)
+    .flatMap(([year, schedule]) => Object.keys(schedule).map((artists) => `${year}::${artists}`));
+  if (validSheetKeys.size === 0) return 'fallback';
+  return fallbackKeys.every((key) => validSheetKeys.has(key)) ? 'live' : 'mixed';
 }
 
 export const PLAN_YEARS = Object.keys(PRICING_SCHEDULE).sort((a, b) => Number(b) - Number(a));
@@ -91,8 +114,9 @@ export function getDefaultPricingPlanYear(event, now = new Date()) {
   if (explicitYear) return explicitYear;
 
   const createdAt = raw.createdAt || raw.gravityImportedAt || '';
-  const createdDate = createdAt ? new Date(createdAt) : now;
-  const basis = Number.isNaN(createdDate.getTime()) ? now : createdDate;
+  const createdDate = createdAt ? new Date(createdAt) : null;
+  if (event && (!createdDate || Number.isNaN(createdDate.getTime()))) return '2026';
+  const basis = createdDate || now;
   return basis.getTime() >= new Date(PRICING_PLAN_CUTOFF).getTime() ? '2027' : '2026';
 }
 

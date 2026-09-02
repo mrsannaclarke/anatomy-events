@@ -11,6 +11,7 @@ const DEV_SHEET_PROXY_URL = '/api/sheet';
 const MUTATION_ACTIONS = new Set([
   'upsertEvent',
   'upsertEventPartialJson',
+  'recordEventPayment',
   'deleteEvent',
   'generateContract',
   'generateTfl',
@@ -190,6 +191,15 @@ export async function upsertEventPartialToSheet(patch) {
     eventJson: JSON.stringify(patch),
   });
   if (!data.result?.entryId) throw new Error('Sheet partial save did not return an Entry ID.');
+  return data.result;
+}
+
+export async function recordEventPaymentToSheet(payment) {
+  const data = await requestSheetJson({
+    action: 'recordEventPayment',
+    payment,
+  });
+  if (!data.result?.transactionId) throw new Error('Payment save did not return a Transaction ID.');
   return data.result;
 }
 

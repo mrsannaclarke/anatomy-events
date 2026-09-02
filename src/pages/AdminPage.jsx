@@ -1,14 +1,34 @@
-import { ClipboardList, Code2, ExternalLink, FileSpreadsheet, History, LogOut, ShieldCheck, WalletCards } from 'lucide-react';
+import { useState } from 'react';
+import { ClipboardList, Code2, DatabaseZap, ExternalLink, FileSpreadsheet, History, LoaderCircle, LogOut, ShieldCheck, WalletCards } from 'lucide-react';
 
 import { APPS_SCRIPT_PROJECT_URL, EVENT_SHEET_URL } from '../appConfig.js';
 import { FULL_PAYOUT_ACCESS_EMAILS, normalizeKey } from '../auth.js';
 import { EVENT_VISUAL_LEGEND } from '../components/EventTypePicker.jsx';
 
 export function AdminPage({ viewer, onOpenPage, onSignOut }) {
+  const [backfillStatus, setBackfillStatus] = useState('');
+  const [backfillBusy, setBackfillBusy] = useState(false);
   const canOpenPayoutLedger = FULL_PAYOUT_ACCESS_EMAILS.has(normalizeKey(viewer.email));
   const sheetUrl = EVENT_SHEET_URL;
   const scriptUrl = APPS_SCRIPT_PROJECT_URL;
   const canViewAudit = new Set(['admin@anatomytattoo.com', 'mrs.annaclarke@gmail.com']).has(normalizeKey(viewer.email));
+  const canRunPreviewBackfill = normalizeKey(viewer.email) === 'admin@anatomytattoo.com'
+    && window.location.hostname === 'preview.anatomy-events.pages.dev';
+
+  async function runPreviewBackfill() {
+    setBackfillBusy(true);
+    setBackfillStatus('');
+    try {
+      const result = await fetch('/api/admin/event-shadow-backfill', { method: 'POST' });
+      const data = await result.json();
+      if (!result.ok || !data.ok) throw new Error(data.error || 'Backfill failed.');
+      setBackfillStatus(`Backfill and reconciliation complete: ${data.reconciliation.counts.matched} of ${data.sourceCount} Sheet events match development D1.`);
+    } catch (error) {
+      setBackfillStatus(error instanceof Error ? error.message : 'Backfill failed.');
+    } finally {
+      setBackfillBusy(false);
+    }
+  }
 
   return (
     <section className="page-stack admin-page">
@@ -43,6 +63,13 @@ export function AdminPage({ viewer, onOpenPage, onSignOut }) {
             <span>Review app changes and background job health.</span>
           </button>
         ) : null}
+        {canRunPreviewBackfill ? (
+          <button type="button" className="admin-action admin-action--history" onClick={runPreviewBackfill} disabled={backfillBusy}>
+            {backfillBusy ? <LoaderCircle size={20} className="is-spinning" /> : <DatabaseZap size={20} />}
+            <strong>{backfillBusy ? 'Backfilling development D1…' : 'Backfill Development D1'}</strong>
+            <span>Copy all events from the private Preview Sheet into the isolated shadow database.</span>
+          </button>
+        ) : null}
         {canOpenPayoutLedger ? (
           <button type="button" className="admin-action admin-action--ledger" onClick={() => onOpenPage('payoutLedger')}>
             <ClipboardList size={20} />
@@ -61,6 +88,7 @@ export function AdminPage({ viewer, onOpenPage, onSignOut }) {
           <span>End this session on this device.</span>
         </button>
       </section>
+      {backfillStatus ? <p className="save-status" role="status">{backfillStatus}</p> : null}
 
       <section className="event-legend-panel" aria-labelledby="event-legend-title">
         <div className="event-legend-heading">

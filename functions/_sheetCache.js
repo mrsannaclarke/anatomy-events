@@ -12,7 +12,7 @@ export function sheetReadCacheKey(payload) {
 }
 
 export function mutationEntryId(payload) {
-  const directEntryId = String(payload?.entryId || payload?.event?.entryId || '').trim();
+  const directEntryId = String(payload?.entryId || payload?.event?.entryId || payload?.payment?.eventId || '').trim();
   if (directEntryId) return directEntryId;
 
   if (payload?.action === 'upsertEventPartialJson' && payload?.eventJson) {

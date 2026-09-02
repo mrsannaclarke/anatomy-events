@@ -38,5 +38,28 @@
       "binding": "UPLOAD_STAGING",
       "bucket_name": "anatomy-events-upload-staging"
     }
-  ]
+  ],
+  "env": {
+    "preview": {
+      "vars": {
+        "EVENT_SHADOW_BACKFILL_ENABLED": "true",
+        "GOOGLE_WEB_CLIENT_ID": "861652963658-rf9j5nspdk36ae76f9ssc5bf5bpli5ov.apps.googleusercontent.com",
+        "SHEET_WEB_APP_URL": "https://script.google.com/macros/s/AKfycbwsiu-QxLTwcVuUfF-frhmHfYx6eilAl_m1onWjXzfr0C6FcbKCiTj_HbdTd_n3evadXQ/exec"
+      },
+      "d1_databases": [
+        {
+          "binding": "AUDIT_DB",
+          "database_name": "anatomy-events-audit",
+          "database_id": "8a5f49a3-4dd3-4956-a882-129ab81f348d",
+          "migrations_dir": "migrations"
+        },
+        {
+          "binding": "EVENTS_DB",
+          "database_name": "anatomy-events-shadow-dev",
+          "database_id": "a2539cd3-55f9-46bd-983f-931db52fb43f",
+          "migrations_dir": "event-migrations"
+        }
+      ]
+    }
+  }
 }

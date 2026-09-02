@@ -50,16 +50,20 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
   const [counterWriteIn, setCounterWriteIn] = useState(initialCounters.customName);
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [pricingPayoutMap, setPricingPayoutMap] = useState({});
+  const [pricingPayoutMap, setPricingPayoutMap] = useState(() => buildPricingPayoutMap([]));
+  const [pricingRuleSource, setPricingRuleSource] = useState('loading');
 
   useEffect(() => {
     let active = true;
     pullPricingRulesFromSheet()
       .then((rows) => {
-        if (active) setPricingPayoutMap(buildPricingPayoutMap(rows));
+        if (active) {
+          setPricingPayoutMap(buildPricingPayoutMap(rows));
+          setPricingRuleSource('live');
+        }
       })
       .catch(() => {
-        // Recorded payout defaults keep the preview useful if the Sheet refresh is unavailable.
+        if (active) setPricingRuleSource('fallback');
       });
     return () => {
       active = false;
@@ -170,6 +174,13 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
       </section>
 
       <section className="staff-pay-preview" aria-labelledby="staff-pay-preview-title">
+        <ActionStatus tone={pricingRuleSource === 'fallback' ? 'error' : undefined}>
+          {pricingRuleSource === 'loading'
+            ? 'Loading payout rules…'
+            : pricingRuleSource === 'fallback'
+              ? 'Pricing Rules could not be refreshed. Using the recorded 2027 payout rules.'
+              : ''}
+        </ActionStatus>
         <div className="staff-pay-preview__heading">
           <CircleDollarSign size={22} />
           <div>

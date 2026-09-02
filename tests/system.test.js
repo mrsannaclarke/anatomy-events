@@ -12,10 +12,12 @@ import {
   PRICING_METHOD_ZERO_WALK_UP,
   buildPricingEvent,
   buildPricingSummaryRows,
+  configurePricingSchedule,
   computePricing,
   deriveEventHours,
   formFromEvent,
   getDefaultPricingPlanYear,
+  PRICING_SCHEDULE,
   timeInputValue,
 } from '../src/pricingMath.js';
 import { ALLOWED_USERS } from '../shared/authPolicy.js';
@@ -49,6 +51,13 @@ test('Sheet mutations invalidate the ledger and affected event cache', () => {
     'sheet-read:v1:events:1000',
     'sheet-read:v1:event:1513',
   ]);
+
+  const payment = { action: 'recordEventPayment', payment: { eventId: '4482', transactionId: 'payment-1' } };
+  assert.equal(mutationEntryId(payment), '4482');
+  assert.deepEqual(sheetMutationInvalidationKeys(payment), [
+    'sheet-read:v1:events:1000',
+    'sheet-read:v1:event:4482',
+  ]);
 });
 
 test('audit records capture mutation fields without storing uploaded file contents', () => {
@@ -66,6 +75,13 @@ test('audit records capture mutation fields without storing uploaded file conten
   assert.ok(!JSON.stringify(record).includes('sensitive-binary-data'));
   assert.equal(isAuditAdmin('MRS.ANNACLARKE@GMAIL.COM'), true);
   assert.equal(isAuditAdmin('tattoosbytomma@gmail.com'), false);
+
+  const paymentRecord = auditRecord({
+    action: 'recordEventPayment',
+    payment: { eventId: '4482', transactionId: 'payment-1', amount: 500 },
+  }, 'mrs.annaclarke@gmail.com', 200);
+  assert.equal(paymentRecord.entryId, '4482');
+  assert.deepEqual(paymentRecord.changedFields, ['amount', 'eventId', 'transactionId']);
 });
 
 test('document jobs accept supported types and verify signed internal messages', async () => {
@@ -140,6 +156,41 @@ test('pricing cutoff defaults only newly created events to the 2027 plan', () =>
   assert.equal(formFromEvent({ raw: { createdAt: '2026-09-01T18:00:00-07:00' } }, new Date('2027-01-01')).year, '2026');
   assert.equal(formFromEvent({ raw: { createdAt: '2026-09-02T00:01:00-07:00' } }, new Date('2026-09-01')).year, '2027');
   assert.equal(formFromEvent({ raw: { year: '2026', createdAt: '2027-01-01T00:00:00-08:00' } }).year, '2026');
+  assert.equal(formFromEvent({ raw: { clientName: 'Legacy event' } }, new Date('2027-01-01')).year, '2026');
+  assert.equal(formFromEvent({ raw: { clientName: 'Legacy event', createdAt: 'not-a-date' } }, new Date('2027-01-01')).year, '2026');
+});
+
+test('partial live pricing preserves built-in years and missing artist rows', () => {
+  const source = configurePricingSchedule([{
+    'Plan Year': 2027,
+    Artists: 1,
+    'Base Rate Per Artist (5h)': 1700,
+    'Counter Per Artist (5h)': 150,
+    'Custom Flash Fee (Event)': 220,
+    'Extra Hourly Per Artist': 250,
+    'Temporary Tattoos Fee (Event)': 150,
+    'Facility City Fee': 150,
+    'Facility Admin Fee': 50,
+    'Deposit Rate %': 30,
+    'Radius Included Miles': 20,
+    'Radius Step Miles': 20,
+    'Radius Step Fee': 100,
+  }]);
+  assert.equal(source, 'mixed');
+  assert.equal(PRICING_SCHEDULE[2027][1].baseRatePerArtist5h, 1700);
+  assert.equal(PRICING_SCHEDULE[2027][2].baseRatePerArtist5h, 1500);
+  assert.equal(PRICING_SCHEDULE[2026][1].baseRatePerArtist5h, 1600);
+});
+
+test('malformed live pricing rows leave the complete fallback row intact', () => {
+  const source = configurePricingSchedule([{
+    'Plan Year': 2027,
+    Artists: 1,
+    'Base Rate Per Artist (5h)': '',
+  }]);
+  assert.equal(source, 'fallback');
+  assert.equal(PRICING_SCHEDULE[2027][1].baseRatePerArtist5h, 1600);
+  assert.equal(PRICING_SCHEDULE[2027][4].baseRatePerArtist5h, 1300);
 });
 
 test('2027 standard payouts use a flat $1300 artist base and updated modifier shares', () => {
@@ -147,6 +198,9 @@ test('2027 standard payouts use a flat $1300 artist base and updated modifier sh
     'Plan Year': 2027,
     Artists: 2,
     'Artist Base Payout Per Artist': 1300,
+    'Counter Base Payout Per Artist (5h)': 125,
+    'Counter Base Payout Cap (5h)': 500,
+    'Counter Extra Hourly Payout': 30,
     'Radius Artist %': 85,
     'Extra Hourly Artist %': 90,
     'Custom Flash Artist %': 50,
@@ -167,7 +221,70 @@ test('2027 standard payouts use a flat $1300 artist base and updated modifier sh
   assert.equal(artist.artistModifierBreakdown.radius, 42.5);
   assert.equal(artist.artistModifierBreakdown.extraHourly, 225);
   assert.equal(artist.totalPayout, 1635);
-  assert.equal(getPersonPayRow(event, 'Jeremy', pricingPayoutMap).counterPayout, 300);
+  assert.equal(getPersonPayRow(event, 'Jeremy', pricingPayoutMap).counterPayout, 280);
+});
+
+test('2027 standard payouts retain recorded rules when the Pricing Sheet is unavailable', () => {
+  const event = {
+    raw: {
+      year: '2027', pricingMethod: 'Standard', numberOfArtists: '2', bookedHours: '6', extraHours: '1',
+      artistNames: 'Agnes, Sienna', counterNames: 'Jeremy', counterStaffCharge: '300',
+      customFlash: 'YES', customFlashFee: '270', temporaryTattoos: 'YES', temporaryTattooFee: '150',
+      radiusFee: '100', extraHourlyCharge: '500', totalCharge: '4520',
+    },
+  };
+  const artist = getPersonPayRow(event, 'Agnes', buildPricingPayoutMap([]));
+  assert.equal(artist.artistBasePayout, 1300);
+  assert.equal(artist.artistModifierBreakdown.customFlash, 67.5);
+  assert.equal(artist.artistModifierBreakdown.temporaryTattoos, 0);
+  assert.equal(artist.artistModifierBreakdown.radius, 42.5);
+  assert.equal(artist.artistModifierBreakdown.extraHourly, 225);
+  assert.equal(artist.totalPayout, 1635);
+  assert.equal(getPersonPayRow(event, 'Jeremy', buildPricingPayoutMap([])).counterPayout, 280);
+});
+
+test('2027 counter payout is $125 per artist, capped at $500, plus $30 per extra hour', () => {
+  const pricingPayoutMap = buildPricingPayoutMap([]);
+  const eventFor = (artistCount, bookedHours = 5, counterNames = 'Jeremy') => ({
+    raw: {
+      year: '2027', pricingMethod: 'Standard', numberOfArtists: String(artistCount), bookedHours: String(bookedHours),
+      artistNames: Array.from({ length: artistCount }, (_, index) => `Artist ${index + 1}`).join(', '),
+      counterNames, counterStaffCharge: String(150 * artistCount), totalCharge: '10000',
+    },
+  });
+
+  assert.equal(getPersonPayRow(eventFor(1), 'Jeremy', pricingPayoutMap).counterPayout, 125);
+  assert.equal(getPersonPayRow(eventFor(2), 'Jeremy', pricingPayoutMap).counterPayout, 250);
+  assert.equal(getPersonPayRow(eventFor(3), 'Jeremy', pricingPayoutMap).counterPayout, 375);
+  assert.equal(getPersonPayRow(eventFor(4), 'Jeremy', pricingPayoutMap).counterPayout, 500);
+  assert.equal(getPersonPayRow(eventFor(4, 7), 'Jeremy', pricingPayoutMap).counterPayout, 560);
+  assert.equal(getPersonPayRow(eventFor(4, 4), 'Jeremy', pricingPayoutMap).counterPayout, 500);
+
+  const splitEvent = eventFor(4, 7, 'Jeremy, Marissa');
+  assert.equal(getPersonPayRow(splitEvent, 'Jeremy', pricingPayoutMap).counterPayout, 280);
+  assert.equal(getPersonPayRow(splitEvent, 'Marissa', pricingPayoutMap).counterPayout, 280);
+
+  assert.equal(computePricing(pricingForm({ year: '2027', numberOfArtists: '4', bookedHours: '5' })).counterStaffCharge, 600);
+});
+
+test('live Pricing Sheet rows override the recorded 2027 payout fallback', () => {
+  const payoutMap = buildPricingPayoutMap([{
+    'Plan Year': 2027,
+    Artists: 2,
+    'Artist Base Payout Per Artist': 1400,
+    'Counter Base Payout Per Artist (5h)': 120,
+    'Counter Base Payout Cap (5h)': 480,
+    'Counter Extra Hourly Payout': 35,
+    'Radius Artist %': 80,
+    'Extra Hourly Artist %': 75,
+    'Custom Flash Artist %': 40,
+    'Temporary Tattoos Artist %': 25,
+  }]);
+  assert.equal(payoutMap['2027::2'].artistBasePayoutPerArtist, 1400);
+  assert.equal(payoutMap['2027::2'].counterBasePayoutPerArtist, 120);
+  assert.equal(payoutMap['2027::2'].counterBasePayoutCap, 480);
+  assert.equal(payoutMap['2027::2'].counterExtraHourlyPayout, 35);
+  assert.equal(payoutMap['2027::2'].customFlashArtistSharePct, 0.4);
 });
 
 test('2027 corporate events do not receive the standard $1300 artist base', () => {

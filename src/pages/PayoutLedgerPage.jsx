@@ -1,22 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { AdminBackButton } from '../components/AdminBackButton.jsx';
+import { ActionStatus } from '../components/ActionStatus.jsx';
 import { buildPricingPayoutMap, calculateEventPayout, formatPayout, getCompletedYear, getPeopleFromEvents, isCompletedForPay, isCancelledForPay, sortPayoutLedgerCards } from '../payoutMath.js';
 import { isZeroWalkUpPricing } from '../pricingMath.js';
 import { pullPricingRulesFromSheet } from '../sheetClient.js';
 
 export function PayoutLedgerPage({ events, onBack }) {
   const [selectedYear, setSelectedYear] = useState('All');
-  const [pricingPayoutMap, setPricingPayoutMap] = useState({});
+  const [pricingPayoutMap, setPricingPayoutMap] = useState(() => buildPricingPayoutMap([]));
+  const [pricingRuleSource, setPricingRuleSource] = useState('loading');
   const people = useMemo(() => getPeopleFromEvents(events), [events]);
   useEffect(() => {
     let active = true;
     pullPricingRulesFromSheet()
       .then((rows) => {
-        if (active) setPricingPayoutMap(buildPricingPayoutMap(rows));
+        if (active) {
+          setPricingPayoutMap(buildPricingPayoutMap(rows));
+          setPricingRuleSource('live');
+        }
       })
       .catch(() => {
-        // The payout framework's recorded defaults remain available offline.
+        if (active) setPricingRuleSource('fallback');
       });
     return () => {
       active = false;
@@ -49,6 +54,13 @@ export function PayoutLedgerPage({ events, onBack }) {
           <p>Completed events are priced, allocated, and reconciled automatically.</p>
         </div>
       </div>
+      <ActionStatus tone={pricingRuleSource === 'fallback' ? 'error' : undefined}>
+        {pricingRuleSource === 'loading'
+          ? 'Loading payout rules…'
+          : pricingRuleSource === 'fallback'
+            ? 'Pricing Rules could not be refreshed. Using the recorded 2027 payout rules.'
+            : ''}
+      </ActionStatus>
       <section className="tool-panel">
         <label className="field">
           <span>Year</span>
