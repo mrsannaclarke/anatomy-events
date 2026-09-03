@@ -2,8 +2,11 @@ export function getSheetSyncPresentation({ syncStatus, syncError, lastSyncAt, fo
   const isBusy = syncStatus === 'loading' || syncStatus === 'refreshing';
   const isUsingSavedData = syncStatus === 'connected_error' && Boolean(lastSyncAt);
 
-  if (isBusy) {
-    return { isBusy, isUsingSavedData: false, statusLabel: 'Updating Sheet data…' };
+  if (syncStatus === 'loading') {
+    return { isBusy, isUsingSavedData: false, statusLabel: 'Loading events…' };
+  }
+  if (syncStatus === 'refreshing') {
+    return { isBusy, isUsingSavedData: false, statusLabel: 'Refreshing events…' };
   }
   if (isUsingSavedData) {
     return { isBusy, isUsingSavedData, statusLabel: 'Using saved Sheet data' };

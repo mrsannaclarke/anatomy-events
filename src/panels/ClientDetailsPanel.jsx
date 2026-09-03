@@ -8,7 +8,8 @@ import { ActionStatus } from '../components/ActionStatus.jsx';
 import { lookupDrivingDistanceMiles } from '../addressDistance.js';
 import { CLIENT_FIELD_CONFIG } from '../constants.js';
 import { deleteEventFromSheet, pullEventByEntryId, upsertEventPartialToSheet } from '../sheetClient.js';
-import { ARTIST_COUNTS, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD, PRICING_METHOD_ZERO_WALK_UP } from '../pricingMath.js';
+import { ARTIST_COUNTS, buildPricingClipboardText, buildPricingSummaryRows, computePricing, DEFAULT_BASE_ADDRESS, deriveEventHours, formFromEvent, formatDecimal, normalizePricingMethod, parseMoney, pricingMethodToSheetValue, PRICING_METHOD_CORPORATE_MODIFIERS, PRICING_METHOD_STANDARD, PRICING_METHOD_ZERO_WALK_UP } from '../pricingMath.js';
+import { buildClientContactClipboardText } from './panelUtils.js';
 
 export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   const [isEditable, setIsEditable] = useState(true);
@@ -31,7 +32,8 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLookingUpMileage, setIsLookingUpMileage] = useState(false);
-  const totals = useMemo(() => computePricing(formFromEvent({ raw: { ...event.raw, ...form } })), [event.raw, form]);
+  const pricingForm = useMemo(() => formFromEvent({ raw: { ...event.raw, ...form } }), [event.raw, form]);
+  const totals = useMemo(() => computePricing(pricingForm), [pricingForm]);
   const summaryRows = useMemo(() => buildPricingSummaryRows(totals), [totals]);
   const totalEventHours = useMemo(() => deriveEventHours(form.eventStartTime, form.eventEndTime), [form.eventStartTime, form.eventEndTime]);
 
@@ -39,15 +41,38 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  async function copyClientEmail() {
-    const email = String(form.email || '').trim();
-    if (!email) return;
+  async function copyText(value, successMessage, failureMessage) {
+    if (!value) return;
     try {
-      await navigator.clipboard.writeText(email);
-      setStatus('Client email copied.');
+      await navigator.clipboard.writeText(value);
+      setStatus(successMessage);
     } catch {
-      setStatus('Could not copy the email. Select it and copy it manually.');
+      setStatus(failureMessage);
     }
+  }
+
+  function copyClientContact() {
+    return copyText(
+      buildClientContactClipboardText(form),
+      'Client contact information copied.',
+      'Could not copy the contact information. Select it and copy it manually.',
+    );
+  }
+
+  function copyClientEmail() {
+    return copyText(
+      String(form.email || '').trim(),
+      'Client email copied.',
+      'Could not copy the email. Select it and copy it manually.',
+    );
+  }
+
+  function copyEventPricing() {
+    return copyText(
+      buildPricingClipboardText(pricingForm, totals),
+      'Event pricing table copied.',
+      'Could not copy the pricing table. Select it and copy it manually.',
+    );
   }
 
   async function lookupMileage() {
@@ -136,17 +161,10 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       <Field key={key} label={label}>
         {key === 'eventType' ? (
           <EventTypePicker value={form[key]} onChange={(value) => updateField(key, value)} disabled={!isEditable} />
-        ) : key === 'email' ? (
-          <div className="email-copy-control">
-            <input disabled={!isEditable} type="email" value={form[key]} onChange={(input) => updateField(key, input.target.value)} />
-            <button type="button" className="icon-link-button" onClick={copyClientEmail} disabled={!String(form[key] || '').trim()} aria-label="Copy client email" title="Copy client email">
-              <Copy size={17} />
-            </button>
-          </div>
         ) : (
           <input
             disabled={!isEditable}
-            type={key === 'travelDistance' ? 'number' : 'text'}
+            type={key === 'travelDistance' ? 'number' : key === 'email' ? 'email' : 'text'}
             min={key === 'travelDistance' ? '0' : undefined}
             step={key === 'travelDistance' ? '0.1' : undefined}
             value={form[key]}
@@ -205,6 +223,14 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
             {isLookingUpMileage ? 'Looking Up...' : 'Calculate Mileage'}
           </button>
         </div>
+        <div className="client-copy-actions" aria-label="Copy client information">
+          <button type="button" className="secondary-button" onClick={copyClientContact} disabled={!buildClientContactClipboardText(form)}>
+            <Copy size={16} /> Copy Contact
+          </button>
+          <button type="button" className="secondary-button" onClick={copyClientEmail} disabled={!String(form.email || '').trim()}>
+            <Copy size={16} /> Copy Email
+          </button>
+        </div>
       </section>
 
       <section className="picker-section">
@@ -241,7 +267,12 @@ export function ClientDetailsPanel({ event, onSaved, onDeleted }) {
       </section>
 
       <aside className="pricing-summary full-width">
-        <h3>Event Pricing</h3>
+        <div className="pricing-summary__heading">
+          <h3>Event Pricing</h3>
+          <button type="button" className="secondary-button" onClick={copyEventPricing}>
+            <Copy size={16} /> Copy Pricing
+          </button>
+        </div>
         <dl>
           {summaryRows.map((row, index) =>
             row.divider ? (

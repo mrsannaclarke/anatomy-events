@@ -22,6 +22,7 @@ import {
 } from '../src/pricingMath.js';
 import { ALLOWED_USERS } from '../shared/authPolicy.js';
 import { COUNTER_OPTIONS, STAFF_OPTIONS, STATUS_OPTIONS } from '../src/constants.js';
+import { buildClientContactClipboardText, toggleBoundedSelection } from '../src/panels/panelUtils.js';
 import { getStaffColor } from '../src/staffColors.js';
 
 function pricingForm(overrides = {}) {
@@ -122,6 +123,23 @@ test('staff choices are alphabetical and Jeremy is a counter option', () => {
   const counterNames = COUNTER_OPTIONS.filter((name) => !['None', 'Other'].includes(name));
   assert.deepEqual(counterNames, [...counterNames].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
   assert.ok(COUNTER_OPTIONS.includes('Jeremy'));
+});
+
+test('staff picker can replace assignments when every available slot is already filled', () => {
+  assert.deepEqual(toggleBoundedSelection(['Agnes'], 'Sienna', 1), ['Sienna']);
+  assert.deepEqual(toggleBoundedSelection(['Agnes', 'Sienna'], 'Tomma', 2), ['Agnes', 'Tomma']);
+  assert.deepEqual(toggleBoundedSelection(['Jeremy', 'Marissa'], 'Tomma', 2), ['Jeremy', 'Tomma']);
+  assert.deepEqual(toggleBoundedSelection(['Agnes'], 'Agnes', 1), []);
+  assert.deepEqual(toggleBoundedSelection(['Jeremy'], 'None', 2), ['None']);
+});
+
+test('client contact clipboard text includes available contact fields cleanly', () => {
+  assert.equal(buildClientContactClipboardText({
+    clientName: 'Example Client',
+    email: 'client@example.com',
+    contactPhone: '503-555-0100',
+  }), 'Client: Example Client\nEmail: client@example.com\nPhone: 503-555-0100');
+  assert.equal(buildClientContactClipboardText({ clientName: 'Example Client' }), 'Client: Example Client');
 });
 
 test('event times parse 12-hour, 24-hour, and overnight ranges', () => {

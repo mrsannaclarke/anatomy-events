@@ -117,10 +117,20 @@ function SheetSyncMenu({ syncStatus, syncError, lastSyncAt, onRefresh }) {
     formatSyncTime,
   });
 
+  const menuClassName = [
+    'sheet-sync-menu',
+    syncError ? 'has-error' : '',
+    isBusy ? 'is-busy' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <details className={syncError ? 'sheet-sync-menu has-error' : 'sheet-sync-menu'}>
+    <details className={menuClassName}>
       <summary>
-        <span className="sheet-sync-indicator" aria-hidden="true" />
+        {isBusy ? (
+          <RefreshCw size={15} className="sheet-sync-icon is-spinning" aria-hidden="true" />
+        ) : (
+          <span className="sheet-sync-indicator" aria-hidden="true" />
+        )}
         <strong>{statusLabel}</strong>
       </summary>
       <div className="sheet-sync-menu__body">
@@ -324,11 +334,10 @@ export function App() {
         <div className="brand">
           <button
             type="button"
-            className={syncStatus === 'loading' || syncStatus === 'refreshing' ? 'brand-refresh is-refreshing' : 'brand-refresh'}
-            onClick={loadEvents}
-            disabled={syncStatus === 'loading' || syncStatus === 'refreshing'}
-            title="Refresh current page"
-            aria-label="Refresh current page from Sheet"
+            className="brand-refresh"
+            onClick={() => window.location.reload()}
+            title="Reload app"
+            aria-label="Reload Events App"
           >
             <img src="/app-logo-v3.png" alt="" />
           </button>

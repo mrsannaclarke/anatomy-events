@@ -9,7 +9,7 @@ import { buildPricingPayoutMap, formatPayout, getStaffTypePayPreview } from '../
 import { ARTIST_COUNTS } from '../pricingMath.js';
 import { pullEventByEntryId, pullPricingRulesFromSheet, upsertEventToSheet } from '../sheetClient.js';
 import { getContrastTextForHex, getStaffColor, hexToRgba } from '../staffColors.js';
-import { joinNames, normalizeStaffName, splitNames } from './panelUtils.js';
+import { joinNames, normalizeStaffName, splitNames, toggleBoundedSelection } from './panelUtils.js';
 
 const OTHER_OPTION = 'Other';
 const ARTIST_OPTIONS = [...STAFF_OPTIONS, OTHER_OPTION];
@@ -79,13 +79,6 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
     [artistCount, counterCount, event, pricingPayoutMap],
   );
 
-  function toggleFromList(list, value, max) {
-    if (value === 'None') return list.includes('None') ? [] : ['None'];
-    const base = list.filter((item) => item !== 'None');
-    if (base.includes(value)) return base.filter((item) => item !== value);
-    return [...base, value].slice(0, max);
-  }
-
   async function saveStaffAssignments() {
     const artistNames = expandWriteIn(artists, artistWriteIn, Number(artistCount) || 1).map(normalizeStaffName);
     const counterNames = expandWriteIn(counters, counterWriteIn, 2);
@@ -138,7 +131,7 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
               type="button"
               style={staffChipStyle(name)}
               className={artists.includes(name) ? 'choice-chip selected' : 'choice-chip'}
-              onClick={() => setArtists((current) => toggleFromList(current, name, Number(artistCount) || 1))}
+              onClick={() => setArtists((current) => toggleBoundedSelection(current, name, Number(artistCount) || 1))}
             >
               {name === OTHER_OPTION ? 'Write in' : name}
             </button>
@@ -160,7 +153,7 @@ export function StaffAssignmentsPanel({ event, onSaved }) {
               type="button"
               style={staffChipStyle(name)}
               className={counters.includes(name) ? 'choice-chip selected' : 'choice-chip'}
-              onClick={() => setCounters((current) => toggleFromList(current, name, 2))}
+              onClick={() => setCounters((current) => toggleBoundedSelection(current, name, 2))}
             >
               {name === OTHER_OPTION ? 'Write in' : name}
             </button>

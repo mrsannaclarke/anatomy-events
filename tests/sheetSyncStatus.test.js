@@ -40,7 +40,11 @@ test('keeps the attention state when no usable Sheet data exists', () => {
 test('shows progress and healthy timestamps in their existing states', () => {
   assert.equal(
     getSheetSyncPresentation({ syncStatus: 'refreshing', syncError: '', lastSyncAt: '123', formatSyncTime }).statusLabel,
-    'Updating Sheet data…',
+    'Refreshing events…',
+  );
+  assert.equal(
+    getSheetSyncPresentation({ syncStatus: 'loading', syncError: '', lastSyncAt: '', formatSyncTime }).statusLabel,
+    'Loading events…',
   );
   assert.equal(
     getSheetSyncPresentation({ syncStatus: 'connected', syncError: '', lastSyncAt: '123', formatSyncTime }).statusLabel,
