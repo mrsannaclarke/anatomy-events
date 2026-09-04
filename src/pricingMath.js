@@ -19,7 +19,7 @@ export function normalizePricingMethod(value) {
 
 export function pricingMethodToSheetValue(value) {
   const normalized = normalizePricingMethod(value);
-  if (normalized === PRICING_METHOD_ZERO_WALK_UP) return 'Walk-Up Sales Only';
+  if (normalized === PRICING_METHOD_ZERO_WALK_UP) return '$0 Walk-Up Event';
   return normalized === PRICING_METHOD_CORPORATE_MODIFIERS ? 'Corporate / Walk-Up' : 'Standard';
 }
 

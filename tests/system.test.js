@@ -370,7 +370,7 @@ test('walk-up sales only pricing saves an explicit method and produces no event 
   assert.equal(totals.depositRequired, 0);
   assert.equal(totals.balanceDue, 0);
   const saved = buildPricingEvent({}, form, totals);
-  assert.equal(saved.pricingMethod, 'Walk-Up Sales Only');
+  assert.equal(saved.pricingMethod, '$0 Walk-Up Event');
   assert.equal(saved.totalCharge, '');
   const event = {
     raw: {
